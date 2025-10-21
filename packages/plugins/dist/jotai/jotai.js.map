@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../src/jotai/jotai.ts"],"sourcesContent":["import { atom, useAtom, useAtomValue, useSetAtom, createStore, useStore } from 'jotai'\n\nexport {\n  atom,\n  useAtom,\n  useAtomValue,\n  useSetAtom,\n  useStore as useJotaiStore,\n  createStore as createJotaiStore,\n}"],"mappings":";AAAA,SAAS,MAAM,SAAS,cAAc,YAAY,aAAa,gBAAgB;","names":[]}

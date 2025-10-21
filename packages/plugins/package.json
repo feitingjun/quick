@@ -1,0 +1,35 @@
+{
+  "name": "@quick/plugins",
+  "version": "0.0.1",
+  "description": "",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.18.1",
+  "dependencies": {
+    "@pandacss/node": "^1.4.1",
+    "@quick/app": "workspace:*",
+    "@quick/core": "workspace:*",
+    "glob": "^11.0.3",
+    "jotai": "^2.15.0",
+    "react": "^19.2.0",
+    "react-activation": "^0.13.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/node": "^24.7.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0",
+    "react-router": ">=7.0.0"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "esnext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@quick/utils": [
+        "packages/utils"
+      ],
+      "@quick/core": [
+        "packages/core"
+      ],
+      "@quick/cli": [
+        "packages/cli"
+      ],
+      "@quick/plugins": [
+        "packages/plugins"
+      ],
+      "@quick/app": [
+        "packages/app"
+      ],
+      "@quick/cssinjs": [
+        "packages/cssinjs"
+      ],
+      "@quick/ui": [
+        "packages/ui"
+      ]
+    }
+  }
+}
