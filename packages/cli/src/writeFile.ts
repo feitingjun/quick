@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
-import { renderHbsTpl } from '@quick/utils'
+import { renderHbsTpl } from './hbs'
 
 const __dirname = import.meta.dirname
 const TML_DIR = resolve(__dirname, 'template')
@@ -8,14 +8,8 @@ const TML_DIR = resolve(__dirname, 'template')
 /**写入package.json文件 */
 export function writePackageJson(root: string, description: string) {
   const isDev = process.argv.includes('--development')
-  const appPackageJson = readFileSync(
-    resolve(__dirname, '../../app', 'package.json'),
-    'utf-8'
-  )
-  const corePackageJson = readFileSync(
-    resolve(__dirname, '../../core', 'package.json'),
-    'utf-8'
-  )
+  const appPackageJson = readFileSync(resolve(__dirname, '../../app', 'package.json'), 'utf-8')
+  const corePackageJson = readFileSync(resolve(__dirname, '../../core', 'package.json'), 'utf-8')
   const appVersion = JSON.parse(appPackageJson).version
   const coreVersion = JSON.parse(corePackageJson).version
 

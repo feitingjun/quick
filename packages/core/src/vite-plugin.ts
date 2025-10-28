@@ -2,7 +2,7 @@ import { PluginOption, UserConfig as ViteConfig, mergeConfig } from 'vite'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { resolve, relative } from 'path'
 import { globSync } from 'glob'
-import { renderHbsTpl, debounce } from '@quick/utils'
+import { renderHbsTpl } from '@quick/cli'
 import {
   QuickConfig,
   RouteManifest,
@@ -13,6 +13,17 @@ import {
   MakePropertyOptional
 } from './types'
 import { createTmpDir, writeEntryTsx, writeRoutesTs } from './writeFile'
+
+/**防抖函数 */
+export const debounce = (fn: Function, delay: number) => {
+  let timer: NodeJS.Timeout
+  return (...args: any) => {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      fn.apply(this, args)
+    }, delay)
+  }
+}
 
 /**是否需要重新生成路由 */
 function needGenerateRoutes(path: string, srcDir = 'src') {
@@ -29,10 +40,7 @@ function needGenerateRoutes(path: string, srcDir = 'src') {
     ? path.startsWith(`${srcDir}/pages`)
     : path.startsWith(srcDir)
   return (
-    isRootLayout ||
-    (isPageOrLayout && inPagesDir) ||
-    path === srcDir ||
-    path === `${srcDir}/pages`
+    isRootLayout || (isPageOrLayout && inPagesDir) || path === srcDir || path === `${srcDir}/pages`
   )
 }
 
@@ -81,10 +89,7 @@ function generateRouteManifest(src: string = 'src') {
     const parentId = ids.slice(index + 1).find(v => {
       return v.endsWith('layout') && id.startsWith(v.replace(/\/?layout/, ''))
     })
-    const regex = new RegExp(
-      `^${parentId?.replace(/\/?layout$/, '')}/?|/?layout$`,
-      'g'
-    )
+    const regex = new RegExp(`^${parentId?.replace(/\/?layout$/, '')}/?|/?layout$`, 'g')
     return {
       ...prev,
       [id]: {
@@ -119,10 +124,7 @@ async function watchRoutes(event: string, path: string, srcDir = 'src') {
   path = relative(process.cwd(), path)
   // 重新生成路由
   if (event !== 'change' && needGenerateRoutes(path)) {
-    writeRoutesTs(
-      resolve(process.cwd(), '.quick'),
-      generateRouteManifest(srcDir)
-    )
+    writeRoutesTs(resolve(process.cwd(), '.quick'), generateRouteManifest(srcDir))
   }
 }
 
@@ -175,9 +177,7 @@ async function loadPlugins(plugins: Plugin[], config: QuickConfig) {
   const addWatch: PluginOptions['addWatch'] = fn => {
     watchers.push(fn)
   }
-  const mergeViteConfig: PluginOptions['mergeViteConfig'] = (
-    config: ViteConfig
-  ) => {
+  const mergeViteConfig: PluginOptions['mergeViteConfig'] = (config: ViteConfig) => {
     viteConfig = mergeConfig(viteConfig, config)
   }
   // 解析quick插件
@@ -249,9 +249,7 @@ function loadGlobalStyle(
   }
   // 添加一个监听global.less增删的监听器
   watchers.push((event, path) => {
-    const reg = new RegExp(
-      `^${process.cwd()}/${srcDir}/global.(less|scss|css)$`
-    )
+    const reg = new RegExp(`^${process.cwd()}/${srcDir}/global.(less|scss|css)$`)
     if (!reg.test(path)) return
     if (event === 'add') {
       imports.push({ source: path })

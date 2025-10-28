@@ -1,5 +1,7 @@
-import { S as SxProps, T as Theme } from './types-jh6CJxoN.js';
+import { e as SxProps, T as Theme, d as ComponentCssStyles } from './types-B497DypH.js';
 import 'csstype';
+import './styled-system/native-css.js';
+import './custom-pseudos.js';
 
 type VariantsProps = {
     [key: string]: {
@@ -24,14 +26,14 @@ type PresetProp<T extends {
 }> = T['presets'] extends Record<string, any> ? {
     preset?: keyof T['presets'];
 } : {};
-type StyledComponentProps<C, V extends VariantsProps> = Omit<ComponentPropsType<C>, keyof SxProps> & SxProps & {
+type StyledComponentProps<C, V extends VariantsProps = {}> = Omit<C, keyof ComponentCssStyles> & ComponentCssStyles & {
     children?: React.ReactNode;
-    sx?: SxProps;
+    sx?: SxProps | ((theme: Theme) => SxProps);
 } & {
     [K in keyof V]?: keyof V[K] extends 'true' ? boolean : keyof V[K];
 } & PresetProp<Theme>;
 /**使用styled创建的组件，样式相关prop将会被过滤，不会传递给children*/
-declare function styled<C extends React.ComponentType<any> | React.ForwardRefExoticComponent<any>, T extends VariantsProps = {}>(component: C, recipes?: RecipeProps<T>): React.FC<StyledComponentProps<C, T>>;
-declare function styled<Tag extends keyof React.JSX.IntrinsicElements, T extends VariantsProps = {}>(component: Tag, recipes?: RecipeProps<T>): React.FC<StyledComponentProps<Tag, T>>;
+declare function styled<C extends React.ComponentType<any> | React.ForwardRefExoticComponent<any>, T extends VariantsProps = {}>(component: C, recipes?: RecipeProps<T>): React.FC<StyledComponentProps<ComponentPropsType<C>, T>>;
+declare function styled<Tag extends keyof React.JSX.IntrinsicElements, T extends VariantsProps = {}>(component: Tag, recipes?: RecipeProps<T>): React.FC<StyledComponentProps<ComponentPropsType<Tag>, T>>;
 
 export { type ComponentPropsType, type RecipeProps, type StyledComponentProps, type StyledProps, type VariantsProps, styled };

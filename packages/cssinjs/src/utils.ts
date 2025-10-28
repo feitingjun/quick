@@ -1,6 +1,6 @@
 import { get } from 'styled-system'
-import { SxProps } from './types'
-import { Theme } from './styled-system/define'
+import type { SxProps } from './types'
+import type { Theme, ThemeDefine } from './styled-system/define'
 import styleFn, { cssPropNames } from './styled-system/style-fn'
 import { isCustomPseudo, customPseudos } from './custom-pseudos'
 
@@ -22,7 +22,7 @@ export function getThemeValue(value: any, theme: Theme): any {
   if (value && typeof value === 'object') {
     return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, getThemeValue(v, theme)]))
   }
-  if (typeof value !== 'string' || !/^\{[\s\S]*\}$/.test(value)) {
+  if (typeof value !== 'string' || !/\{([\s\S]*)\}/.test(value)) {
     return value
   }
   if (!themeVarsCache.has(theme)) {
@@ -32,16 +32,13 @@ export function getThemeValue(value: any, theme: Theme): any {
   if (cache.has(value)) {
     return cache.get(value)
   } else {
-    const cssValue = get(
-      theme,
-      value.replace(/\{([\s\S]*)\}/, (_, str) => str)
-    )
+    const cssValue = value.replace(/\{([\s\S]*)\}/, (source, str) => get(theme, str) ?? source)
     cache.set(value, cssValue)
     return cssValue
   }
 }
 
-// 将styled-system对象处理为css样式对象
+/**将styled-system对象处理为css样式对象 */
 export function transform(sx: SxProps, theme: Theme) {
   const sysStyles: Record<string, any> = {}
   const otherStyles: Record<string, any> = {}
@@ -56,7 +53,7 @@ export function transform(sx: SxProps, theme: Theme) {
       return
     }
     // 处理css变量的媒体查询
-    if (k.startsWith('--') && typeof v === 'object') {
+    if (k.startsWith('--') && !!v && typeof v === 'object') {
       Object.entries(v).forEach(([k2, v2]) => {
         const media = transformMediaQueries(k2, theme)
         if (!media) return
@@ -71,10 +68,13 @@ export function transform(sx: SxProps, theme: Theme) {
       !!v && typeof v === 'object' ? transform(v as SxProps, theme) : getThemeValue(v, theme)
     return
   })
-  return deepMerge(otherStyles, mediaQueries, styleFn({ theme, ...sysStyles }))
+  const styles = Object.fromEntries(
+    Object.entries(styleFn({ theme, ...sysStyles })).map(([k, v]) => [k, getThemeValue(v, theme)])
+  )
+  return merge(otherStyles, mediaQueries, styles)
 }
 
-// 转换媒体查询
+/**转换媒体查询 */
 export function transformMediaQueries(
   breakpoint: string,
   theme: {
@@ -86,7 +86,8 @@ export function transformMediaQueries(
   if (size) return `@media screen and (min-width: ${size})`
 }
 
-export function deepMerge<T extends object[]>(...objects: T): T[number] {
+/**合并对象 */
+export function merge<T extends object[]>(...objects: T): T[number] {
   const result: any = {}
   for (const obj of objects) {
     if (!obj || typeof obj !== 'object') continue
@@ -96,7 +97,7 @@ export function deepMerge<T extends object[]>(...objects: T): T[number] {
 
       if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
         if (!result[key]) result[key] = {}
-        result[key] = deepMerge(result[key], value)
+        result[key] = merge(result[key], value)
       } else {
         result[key] = value
       }
@@ -104,4 +105,11 @@ export function deepMerge<T extends object[]>(...objects: T): T[number] {
   }
 
   return result
+}
+
+export const defineTheme = <T extends ThemeDefine>(theme: T) => theme
+
+/**合并多个classname */
+export function cx(...classNames: string[]) {
+  return classNames.filter(c => !!c).join(' ')
 }

@@ -1,8 +1,8 @@
 import mStyled from '@emotion/styled'
 import isPropValid from '@emotion/is-prop-valid'
-import { Theme } from './styled-system/define'
-import { SxProps } from './types'
-import { transform, deepMerge, isCssProp } from './utils'
+import type { Theme } from './styled-system/define'
+import type { SxProps, ComponentCssStyles } from './types'
+import { transform, merge, isCssProp } from './utils'
 
 // 变体(variants)定义
 export type VariantsProps = {
@@ -37,13 +37,13 @@ type PresetProp<T extends { presets?: Record<string, any> } = { presets?: any }>
   T['presets'] extends Record<string, any> ? { preset?: keyof T['presets'] } : {}
 
 // 合并原始 props 和 SxProps
-export type StyledComponentProps<C, V extends VariantsProps> = Omit<
-  ComponentPropsType<C>,
-  keyof SxProps
+export type StyledComponentProps<C, V extends VariantsProps = {}> = Omit<
+  C,
+  keyof ComponentCssStyles
 > &
-  SxProps & {
+  ComponentCssStyles & {
     children?: React.ReactNode
-    sx?: SxProps
+    sx?: SxProps | ((theme: Theme) => SxProps)
   } & {
     [K in keyof V]?: keyof V[K] extends 'true' ? boolean : keyof V[K]
   } & PresetProp<Theme>
@@ -64,13 +64,13 @@ export type StyledComponentProps<C, V extends VariantsProps> = Omit<
 export function styled<
   C extends React.ComponentType<any> | React.ForwardRefExoticComponent<any>,
   T extends VariantsProps = {}
->(component: C, recipes?: RecipeProps<T>): React.FC<StyledComponentProps<C, T>>
+>(component: C, recipes?: RecipeProps<T>): React.FC<StyledComponentProps<ComponentPropsType<C>, T>>
 
 // 重载2：支持原生 HTML 元素
 export function styled<Tag extends keyof React.JSX.IntrinsicElements, T extends VariantsProps = {}>(
   component: Tag,
   recipes?: RecipeProps<T>
-): React.FC<StyledComponentProps<Tag, T>>
+): React.FC<StyledComponentProps<ComponentPropsType<Tag>, T>>
 
 // styled 函数实现
 export function styled(
@@ -79,7 +79,11 @@ export function styled(
 ) {
   return mStyled(component as any, {
     shouldForwardProp: prop => {
-      return !(isCssProp(prop) || (typeof component === 'string' && !isPropValid(prop)))
+      return !(
+        isCssProp(prop) ||
+        prop === 'sx' ||
+        (typeof component === 'string' && !isPropValid(prop))
+      )
     }
   })(props => {
     const { sx, theme, preset, ...args } = props
@@ -108,14 +112,15 @@ export function styled(
       }
     }, {})
 
-    const results = deepMerge(
-      // 分别转换之后合并，避免 color: { sm: 'red', md: 'blue' } 等媒体查询覆盖默认 color: 'green' 的情况
-      transform(base ?? {}, theme),
-      transform(variantStyles ?? {}, theme),
-      transform(theme?.presets?.[preset] ?? {}, theme),
-      transform(sx ?? {}, theme),
-      transform(otherStyles, theme)
-    )
+    const mergeArgs = []
+    if (base) mergeArgs.push(transform(base, theme))
+    if (variantStyles) mergeArgs.push(transform(variantStyles, theme))
+    if (theme?.presets?.[preset]) mergeArgs.push(transform(theme.presets[preset], theme))
+    if (sx) mergeArgs.push(transform(typeof sx === 'function' ? sx(theme) : sx, theme))
+    if (otherStyles) mergeArgs.push(transform(otherStyles, theme))
+
+    // 分别转换之后合并，避免 color: { sm: 'red', md: 'blue' } 等媒体查询覆盖默认 color: 'green' 的情况
+    const results = merge(...mergeArgs)
     return results
   })
 }

@@ -27,16 +27,16 @@ export interface ThemeDefine<TLength = TLengthStyledSystem> {
   fontWeights?: ObjectOrArray<CSS.Property.FontWeight>
   lineHeights?: ObjectOrArray<CSS.Property.LineHeight<TLength>>
   letterSpacings?: ObjectOrArray<CSS.Property.LetterSpacing<TLength>>
-  sizes?: ObjectOrArray<CSS.Property.Height<{}> | CSS.Property.Width<{}>>
-  borders?: ObjectOrArray<CSS.Property.Border<{}>>
-  borderStyles?: ObjectOrArray<CSS.Property.Border<{}>>
+  sizes?: ObjectOrArray<CSS.Property.Height<TLength> | CSS.Property.Width<TLength>>
+  borders?: ObjectOrArray<CSS.Property.Border>
+  borderStyles?: ObjectOrArray<CSS.Property.Border>
   borderWidths?: ObjectOrArray<CSS.Property.BorderWidth<TLength>>
   radii?: ObjectOrArray<CSS.Property.BorderRadius<TLength>>
   shadows?: ObjectOrArray<CSS.Property.BoxShadow>
   zIndices?: ObjectOrArray<CSS.Property.ZIndex>
   // 预设样式
   presets?: {
-    [key: string]: SxProps<Theme>
+    [key: string]: SxProps
   }
 }
 
@@ -268,6 +268,10 @@ export interface TypographyProps<ThemeType extends ThemeDefine = Theme>
  * Layout
  */
 
+export interface CursorProps<ThemeType extends ThemeDefine = Theme> {
+  cursor?: ResponsiveValue<CSS.Property.Cursor, ThemeType> | undefined
+}
+
 export interface DisplayProps<ThemeType extends ThemeDefine = Theme> {
   /**
    * The display CSS property defines the display type of an element, which consists of the two basic qualities
@@ -281,7 +285,7 @@ export interface DisplayProps<ThemeType extends ThemeDefine = Theme> {
 
 export interface WidthProps<
   ThemeType extends ThemeDefine = Theme,
-  TVal = CSS.Property.Width<number>
+  TVal = ThemeValue<'sizes', ThemeType>
 > {
   /**
    *   The width utility parses a component's `width` prop and converts it into a CSS width declaration.
@@ -291,13 +295,13 @@ export interface WidthProps<
    *   - String values are passed as raw CSS values.
    *   - And arrays are converted to responsive width styles.
    */
-  width?: ResponsiveValue<TVal, ThemeType> | undefined
-  w?: ResponsiveValue<TVal, ThemeType> | undefined
+  width?: ResponsiveValue<TVal | CSS.Property.Width<number>, ThemeType> | undefined
+  w?: ResponsiveValue<TVal | CSS.Property.Width<number>, ThemeType> | undefined
 }
 
 export interface MaxWidthProps<
   ThemeType extends ThemeDefine = Theme,
-  TVal = CSS.Property.MaxWidth<number>
+  TVal = ThemeValue<'sizes', ThemeType>
 > {
   /**
    * The max-width CSS property sets the maximum width of an element.
@@ -305,13 +309,13 @@ export interface MaxWidthProps<
    *
    * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/max-width)
    */
-  maxWidth?: ResponsiveValue<TVal, ThemeType> | undefined
-  maxW?: ResponsiveValue<TVal, ThemeType> | undefined
+  maxWidth?: ResponsiveValue<TVal | CSS.Property.MaxWidth, ThemeType> | undefined
+  maxW?: ResponsiveValue<TVal | CSS.Property.MaxWidth, ThemeType> | undefined
 }
 
 export interface MinWidthProps<
   ThemeType extends ThemeDefine = Theme,
-  TVal = CSS.Property.MinWidth<number>
+  TVal = ThemeValue<'sizes', ThemeType>
 > {
   /**
    * The min-width CSS property sets the minimum width of an element.
@@ -319,13 +323,13 @@ export interface MinWidthProps<
    *
    * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/min-width)
    */
-  minWidth?: ResponsiveValue<TVal, ThemeType> | undefined
-  minW?: ResponsiveValue<TVal, ThemeType> | undefined
+  minWidth?: ResponsiveValue<TVal | CSS.Property.MinWidth, ThemeType> | undefined
+  minW?: ResponsiveValue<TVal | CSS.Property.MinWidth, ThemeType> | undefined
 }
 
 export interface HeightProps<
   ThemeType extends ThemeDefine = Theme,
-  TVal = CSS.Property.Height<number>
+  TVal = ThemeValue<'sizes', ThemeType>
 > {
   /**
    * The height CSS property specifies the height of an element. By default, the property defines the height of the
@@ -333,13 +337,13 @@ export interface HeightProps<
    *
    * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/height)
    */
-  height?: ResponsiveValue<TVal, ThemeType> | undefined
-  h?: ResponsiveValue<TVal, ThemeType> | undefined
+  height?: ResponsiveValue<TVal | CSS.Property.Height, ThemeType> | undefined
+  h?: ResponsiveValue<TVal | CSS.Property.Height, ThemeType> | undefined
 }
 
 export interface MaxHeightProps<
   ThemeType extends ThemeDefine = Theme,
-  TVal = CSS.Property.MaxHeight<number>
+  TVal = ThemeValue<'sizes', ThemeType>
 > {
   /**
    * The max-height CSS property sets the maximum height of an element. It prevents the used value of the height
@@ -347,13 +351,13 @@ export interface MaxHeightProps<
    *
    * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/max-height)
    */
-  maxHeight?: ResponsiveValue<TVal, ThemeType> | undefined
-  maxH?: ResponsiveValue<TVal, ThemeType> | undefined
+  maxHeight?: ResponsiveValue<TVal | CSS.Property.MaxHeight, ThemeType> | undefined
+  maxH?: ResponsiveValue<TVal | CSS.Property.MaxHeight, ThemeType> | undefined
 }
 
 export interface MinHeightProps<
   ThemeType extends ThemeDefine = Theme,
-  TVal = CSS.Property.MinHeight<number>
+  TVal = ThemeValue<'sizes', ThemeType>
 > {
   /**
    * The min-height CSS property sets the minimum height of an element. It prevents the used value of the height
@@ -361,15 +365,15 @@ export interface MinHeightProps<
    *
    * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/display)
    */
-  minHeight?: ResponsiveValue<TVal, ThemeType> | undefined
-  minH?: ResponsiveValue<TVal, ThemeType> | undefined
+  minHeight?: ResponsiveValue<TVal | CSS.Property.MinHeight, ThemeType> | undefined
+  minH?: ResponsiveValue<TVal | CSS.Property.MinHeight, ThemeType> | undefined
 }
 
 export interface SizeProps<
   ThemeType extends ThemeDefine = Theme,
-  TVal = CSS.Property.Height<number>
+  TVal = ThemeValue<'sizes', ThemeType>
 > {
-  sizes?: ResponsiveValue<TVal, ThemeType> | undefined
+  sizes?: ResponsiveValue<TVal | CSS.Property.Height, ThemeType> | undefined
 }
 
 export interface VerticalAlignProps<
@@ -723,7 +727,8 @@ export interface LayoutProps<ThemeType extends ThemeDefine = Theme>
     DisplayProps<ThemeType>,
     VerticalAlignProps<ThemeType>,
     SizeProps<ThemeType>,
-    OverflowProps<ThemeType> {}
+    OverflowProps<ThemeType>,
+    CursorProps<ThemeType> {}
 
 /**
  * Borders
@@ -934,20 +939,9 @@ export interface BorderRadiusProps<
     | undefined
 }
 
-export interface BordersProps<ThemeType extends ThemeDefine = Theme>
-  extends BorderProps<ThemeType>,
-    BorderTopProps<ThemeType>,
-    BorderRightProps<ThemeType>,
-    BorderBottomProps<ThemeType>,
-    BorderLeftProps<ThemeType>,
-    BorderWidthProps<ThemeType>,
-    BorderColorProps<ThemeType>,
-    BorderStyleProps<ThemeType>,
-    BorderRadiusProps<ThemeType> {}
-
 export interface BorderProps<
   ThemeType extends ThemeDefine = Theme,
-  TVal = CSS.Property.Border<number>
+  TVal = ThemeValue<'borders', ThemeType>
 > extends BorderWidthProps<ThemeType>,
     BorderStyleProps<ThemeType>,
     BorderColorProps<ThemeType>,
@@ -962,9 +956,9 @@ export interface BorderProps<
    *
    * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/border)
    */
-  border?: ResponsiveValue<TVal, ThemeType> | undefined
-  borderX?: ResponsiveValue<TVal, ThemeType> | undefined
-  borderY?: ResponsiveValue<TVal, ThemeType> | undefined
+  border?: ResponsiveValue<TVal | CSS.Property.Border, ThemeType> | undefined
+  borderX?: ResponsiveValue<TVal | CSS.Property.Border, ThemeType> | undefined
+  borderY?: ResponsiveValue<TVal | CSS.Property.Border, ThemeType> | undefined
 }
 
 export interface BoxShadowProps<
@@ -1176,4 +1170,31 @@ export interface PositionProps<ThemeType extends ThemeDefine = Theme>
    * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/position)
    */
   position?: ResponsiveValue<CSS.Property.Position, ThemeType> | undefined
+}
+
+export interface AnimationProps<ThemeType extends ThemeDefine = Theme> {
+  /**
+   * The animation CSS property is a shorthand property for animation-name, animation-duration,
+   * animation-timing-function, and animation-delay.
+   *
+   * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/animation)
+   */
+  animation?: ResponsiveValue<CSS.Property.Animation, ThemeType> | undefined
+  animationName?: ResponsiveValue<CSS.Property.AnimationName, ThemeType> | undefined
+  animationDuration?: ResponsiveValue<CSS.Property.AnimationDuration, ThemeType> | undefined
+  animationTimingFunction?:
+    | ResponsiveValue<CSS.Property.AnimationTimingFunction, ThemeType>
+    | undefined
+  animationDelay?: ResponsiveValue<CSS.Property.AnimationDelay, ThemeType> | undefined
+  animationIterationCount?:
+    | ResponsiveValue<CSS.Property.AnimationIterationCount, ThemeType>
+    | undefined
+  animationDirection?: ResponsiveValue<CSS.Property.AnimationDirection, ThemeType> | undefined
+  animationFillMode?: ResponsiveValue<CSS.Property.AnimationFillMode, ThemeType> | undefined
+  animationPlayState?: ResponsiveValue<CSS.Property.AnimationPlayState, ThemeType> | undefined
+  animationTimeline?: ResponsiveValue<CSS.Property.AnimationTimeline, ThemeType> | undefined
+  animationRange?: ResponsiveValue<CSS.Property.AnimationRange, ThemeType> | undefined
+  animationRangeStart?: ResponsiveValue<CSS.Property.AnimationRangeStart, ThemeType> | undefined
+  animationRangeEnd?: ResponsiveValue<CSS.Property.AnimationRangeEnd, ThemeType> | undefined
+  AnimationComposition?: ResponsiveValue<CSS.Property.AnimationComposition, ThemeType> | undefined
 }

@@ -1,7 +1,6 @@
 import * as ReactJSXRuntimeDev from 'react/jsx-dev-runtime'
 import { jsxDEV as emotionJsxDev } from '@emotion/react/jsx-dev-runtime'
 import { transform } from './utils'
-import { SxProps } from './types'
 
 export const Fragment = ReactJSXRuntimeDev.Fragment
 
@@ -13,11 +12,11 @@ export const jsxDEV: typeof ReactJSXRuntimeDev.jsxDEV = (
   source,
   self
 ) => {
-  const { sx, ...args } = props as { sx?: SxProps }
+  const { sx, ...args } = props as { sx?: any }
   if (sx && typeof type === 'string') {
     return emotionJsxDev(
       type,
-      { ...args, css: (theme: any) => transform(sx, theme) },
+      { ...args, css: (theme: any) => transform(typeof sx === 'function' ? sx(theme) : sx, theme) },
       key,
       isStaticChildren,
       source,

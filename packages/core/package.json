@@ -14,12 +14,13 @@
   "license": "ISC",
   "packageManager": "pnpm@10.18.1",
   "dependencies": {
-    "@quick/utils": "workspace:*",
+    "@quick/cli": "workspace:*",
     "glob": "^11.0.3",
     "vite": "^7.1.9"
   },
   "devDependencies": {
     "@types/node": "^24.7.0",
+    "@types/react": "^19.2.2",
     "tsup": "^8.5.0",
     "typescript": "^5.9.3"
   }

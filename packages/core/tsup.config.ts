@@ -9,8 +9,9 @@ export default defineConfig([
     format: ['esm'],
     dts: true,
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,
     clean: true,
+    splitting: false,
     onSuccess: async () => {
       cpSync('src/template', 'dist/template', { recursive: true })
     }

@@ -9,29 +9,6 @@
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "declarationMap": true,
-    "baseUrl": ".",
-    "paths": {
-      "@quick/utils": [
-        "packages/utils"
-      ],
-      "@quick/core": [
-        "packages/core"
-      ],
-      "@quick/cli": [
-        "packages/cli"
-      ],
-      "@quick/plugins": [
-        "packages/plugins"
-      ],
-      "@quick/app": [
-        "packages/app"
-      ],
-      "@quick/cssinjs": [
-        "packages/cssinjs"
-      ],
-      "@quick/ui": [
-        "packages/ui"
-      ]
-    }
+    "jsx": "react-jsx"
   }
 }

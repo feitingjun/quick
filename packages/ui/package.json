@@ -15,12 +15,21 @@
   "packageManager": "pnpm@10.18.1",
   "dependencies": {
     "@ant-design/cssinjs": "^1.24.0",
+    "@ant-design/icons": "^6.1.0",
+    "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@quick/cssinjs": "workspace:*",
-    "antd": "^5.27.5"
+    "@quick/utils": "workspace:*",
+    "antd": "^5.27.5",
+    "rc-input-number": "^9.5.0",
+    "rc-table": "^7.55.1"
   },
   "devDependencies": {
     "@types/node": "^24.7.0",
+    "@types/react": "^19.2.2",
     "tsup": "^8.5.0",
     "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "react": ">=19.0.0"
   }
 }

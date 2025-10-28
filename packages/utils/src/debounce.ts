@@ -1,6 +1,6 @@
 /**防抖函数 */
 export const debounce = (fn: Function, delay: number) => {
-  let timer: NodeJS.Timeout
+  let timer: number
   return (...args: any) => {
     clearTimeout(timer)
     timer = setTimeout(() => {

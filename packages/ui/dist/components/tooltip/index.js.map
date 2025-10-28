@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../src/components/tooltip/index.tsx"],"sourcesContent":["import { Tooltip as AntdTooltip } from 'antd'\nimport { styled } from '@quick/cssinjs'\n\nexport const Tooltip = styled(AntdTooltip)\n\nexport type TooltipProps = React.ComponentProps<typeof Tooltip>\n"],"mappings":";AAAA,SAAS,WAAW,mBAAmB;AACvC,SAAS,cAAc;AAEhB,IAAM,UAAU,OAAO,WAAW;","names":[]}

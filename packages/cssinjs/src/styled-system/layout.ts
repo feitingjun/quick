@@ -37,6 +37,7 @@ const config: Config = {
   overflowX: true,
   overflowY: true,
   display: true,
+  cursor: true,
   verticalAlign: true
 }
 config.w = config.width

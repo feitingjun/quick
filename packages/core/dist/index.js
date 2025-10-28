@@ -6,8 +6,8 @@ import {
 import "./chunk-55J6XMHW.js";
 import {
   QucikCore
-} from "./chunk-SWDKKHHM.js";
-import "./chunk-X7MHRGSR.js";
+} from "./chunk-WDD7UPWD.js";
+import "./chunk-7CC5FX6A.js";
 
 // src/index.ts
 var index_default = QucikCore;

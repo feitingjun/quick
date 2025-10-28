@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../src/config-provider/context.ts"],"sourcesContent":["import { createContext } from 'react'\nimport { Dicts } from '@/dicts/types'\n\nexport const ConfigContext = createContext<{\n  dicts: Dicts\n}>({\n  dicts: {}\n})\n"],"mappings":";AAAA,SAAS,qBAAqB;AAGvB,IAAM,gBAAgB,cAE1B;AAAA,EACD,OAAO,CAAC;AACV,CAAC;","names":[]}

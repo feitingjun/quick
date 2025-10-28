@@ -1,0 +1,17 @@
+export { defineTheme } from './theme/index.js';
+export { defineDicts } from './dicts/index.js';
+export { Button, ButtonProps } from './components/button/index.js';
+export { Box, BoxProps } from './components/box/index.js';
+export { ConfigProvider, ConfigProviderProps } from './config-provider/index.js';
+export { Input, InputProps } from './components/input/index.js';
+export { InputNumber, InputNumberProps } from './components/input-number/index.js';
+export { Table, defineColumns } from './components/table/table.js';
+export { Actions, AnyObject, ColumnGroupType, ColumnProps, ColumnStatus, ColumnType, SummaryProps, TableProps } from './components/table/types.js';
+export { useTheme } from '@quick/cssinjs';
+export { Theme } from './theme/types.js';
+export { defaultTheme } from './theme/default.js';
+export { useDict, useDictItem, useDictLabel, useDictStatus, useDicts } from './dicts/hooks.js';
+export { DictCode, DictItem, Dicts, TableStatus } from './dicts/types.js';
+import 'react';
+import 'antd';
+import 'rc-input-number';

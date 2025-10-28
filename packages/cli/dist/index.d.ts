@@ -1,1 +1,2 @@
-#!/usr/bin/env node
+export { chalk } from './chalk.js';
+export { renderHbsTpl } from './hbs.js';

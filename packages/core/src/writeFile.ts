@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync } from 'fs'
 import { resolve } from 'path'
-import { renderHbsTpl } from '@quick/utils'
+import { renderHbsTpl } from '@quick/cli'
 import { RouteManifest, AddFileOptions, MakePropertyOptional } from './types'
 
 const __dirname = import.meta.dirname
@@ -45,22 +45,15 @@ export function writeTypesTs(
   pageConfigTypes: AddFileOptions[] = [],
   appConfigTypes: AddFileOptions[] = []
 ) {
-  const all = deepClone([...pageConfigTypes, ...appConfigTypes]).reduce(
-    (acc, item) => {
-      const index = acc.findIndex(v => v.source === item.source)
-      if (
-        index > -1 &&
-        Array.isArray(item.specifier) &&
-        Array.isArray(acc[index].specifier)
-      ) {
-        acc[index].specifier = [...acc[index].specifier, ...item.specifier]
-      } else {
-        acc.push(item)
-      }
-      return acc
-    },
-    [] as AddFileOptions[]
-  )
+  const all = deepClone([...pageConfigTypes, ...appConfigTypes]).reduce((acc, item) => {
+    const index = acc.findIndex(v => v.source === item.source)
+    if (index > -1 && Array.isArray(item.specifier) && Array.isArray(acc[index].specifier)) {
+      acc[index].specifier = [...acc[index].specifier, ...item.specifier]
+    } else {
+      acc.push(item)
+    }
+    return acc
+  }, [] as AddFileOptions[])
   renderHbsTpl({
     sourcePath: resolve(TML_DIR, 'types.ts.hbs'),
     outPath: resolve(outDir, 'types.ts'),
@@ -88,9 +81,7 @@ export function writeRoutesTs(outDir: string, manifest: RouteManifest) {
       manifest: Object.values(manifest).sort((a, b) => {
         const nA = a.id.replace(/\/?layout/, ''),
           nB = b.id.replace(/\/?layout/, '')
-        return nA.length === nB.length
-          ? b.id.indexOf('layout')
-          : nA.length - nB.length
+        return nA.length === nB.length ? b.id.indexOf('layout') : nA.length - nB.length
       })
     }
   })

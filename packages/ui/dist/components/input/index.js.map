@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../src/components/input/index.tsx"],"sourcesContent":["import { Input as AntdInput } from 'antd'\nimport { styled } from '@quick/cssinjs'\n\nexport const Input = styled(AntdInput)\n\nexport type InputProps = React.ComponentProps<typeof AntdInput>\n"],"mappings":";AAAA,SAAS,SAAS,iBAAiB;AACnC,SAAS,cAAc;AAEhB,IAAM,QAAQ,OAAO,SAAS;","names":[]}

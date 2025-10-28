@@ -11,6 +11,7 @@ import {
 } from 'styled-system'
 import { space } from './space'
 import { layout } from './layout'
+import { animation } from './animation'
 
 const styleFn = compose(
   color,
@@ -22,7 +23,8 @@ const styleFn = compose(
   border,
   position,
   shadow,
-  typography
+  typography,
+  animation
 )
 
 export default styleFn
