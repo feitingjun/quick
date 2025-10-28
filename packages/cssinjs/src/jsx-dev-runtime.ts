@@ -13,7 +13,7 @@ export const jsxDEV: typeof ReactJSXRuntimeDev.jsxDEV = (
   self
 ) => {
   const { sx, ...args } = props as { sx?: any }
-  if (sx && typeof type === 'string') {
+  if (sx) {
     return emotionJsxDev(
       type,
       { ...args, css: (theme: any) => transform(typeof sx === 'function' ? sx(theme) : sx, theme) },

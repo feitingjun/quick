@@ -13,8 +13,11 @@ const Button = styled('button', {
 <!-- 顶级css属性 -->
 const Component = () => <Box width={10} />
 
-<!-- sx 属性 -->
+<!-- sx 属性，需要在tsconfig.js中设置 compilerOptions.jsxImportSource="@quick/cssinjs" -->
+<!-- 组件，需要接受参数className -->
 const Component = () => <Box sx={{ height: 10 }} />
+<!-- 普通HTML标签 -->
+const Component = () => <div sx={{ height: 10 }} />
 ```
 
 styled 接受两个参数  
@@ -157,7 +160,7 @@ const Component = () => <Box preset='solid' />
 ```
 
 ## 样式优先级
-组件顶级顶层css属性 > sx样式 > 预设样式 > variant样式 > base样式  
+sx样式 > 组件顶级顶层css属性 > 预设样式 > variant样式 > base样式  
 
 组件顶级顶层css属性:
 ```

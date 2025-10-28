@@ -1,4 +1,5 @@
 import { Button, Box, Input, InputNumber, Table, defineColumns, ColumnProps } from '@quick/ui'
+import { styled } from '@quick/cssinjs'
 
 const data = [
   {
@@ -45,10 +46,16 @@ const columns: ColumnProps<(typeof data)[number]>[] = [
   }
 ]
 
+const Com = ({ children, className }: { children: React.ReactNode; className?: string }) => {
+  return <div className={className}>{children}</div>
+}
+
 export default function Home() {
   return (
     <>
-      <Box
+      <Com sx={{ color: 'red' }}>11111</Com>
+      <div sx={{ color: 'red' }}>222</div>
+      {/* <Box
         sx={{
           display: 'grid',
           gap: 4,
@@ -82,7 +89,7 @@ export default function Home() {
             }
           }
         ]}
-      />
+      /> */}
     </>
   )
 }

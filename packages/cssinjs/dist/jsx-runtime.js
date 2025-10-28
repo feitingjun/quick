@@ -318,32 +318,18 @@ var getCss = (sx, theme) => {
   return transform(sx, theme);
 };
 var jsx = (type, props, key) => {
-  try {
-    const { sx, ...args } = props;
-    if (sx && typeof type === "string") {
-      return emotionJsx(type, { ...args, css: (theme) => getCss(sx, theme) }, key);
-    }
-    return emotionJsx(type, props, key);
-  } catch (err) {
-    const e = new Error(err.message);
-    e.name = err.name;
-    e.stack = err.stack;
-    throw e;
+  const { sx, ...args } = props;
+  if (sx) {
+    return emotionJsx(type, { ...args, css: (theme) => getCss(sx, theme) }, key);
   }
+  return emotionJsx(type, props, key);
 };
 var jsxs = (type, props, key) => {
-  try {
-    const { sx, ...args } = props;
-    if (sx && typeof type === "string") {
-      return emotionJsxs(type, { ...args, css: (theme) => getCss(sx, theme) }, key);
-    }
-    return emotionJsxs(type, props, key);
-  } catch (err) {
-    const e = new Error(err.message);
-    e.name = err.name;
-    e.stack = err.stack;
-    throw e;
+  const { sx, ...args } = props;
+  if (sx) {
+    return emotionJsxs(type, { ...args, css: (theme) => getCss(sx, theme) }, key);
   }
+  return emotionJsxs(type, props, key);
 };
 var Fragment2 = ReactJSXRuntime.Fragment;
 export {

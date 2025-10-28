@@ -321,10 +321,10 @@ function cx(...classNames) {
 function styled(component, recipes = {}) {
   return mStyled(component, {
     shouldForwardProp: (prop) => {
-      return !(isCssProp(prop) || prop === "sx" || typeof component === "string" && !isPropValid(prop));
+      return !(isCssProp(prop) || typeof component === "string" && !isPropValid(prop));
     }
   })((props) => {
-    const { sx, theme, preset, ...args } = props;
+    const { theme, preset, className, ...args } = props;
     let styles = typeof recipes === "function" ? recipes({ theme, ...args }) : recipes;
     const { base = {}, variants = {}, defaultVariants = {} } = styles;
     const variantsAttrs = new Set(Object.keys(variants ?? {}));
@@ -350,7 +350,6 @@ function styled(component, recipes = {}) {
     if (base) mergeArgs.push(transform(base, theme));
     if (variantStyles) mergeArgs.push(transform(variantStyles, theme));
     if (theme?.presets?.[preset]) mergeArgs.push(transform(theme.presets[preset], theme));
-    if (sx) mergeArgs.push(transform(typeof sx === "function" ? sx(theme) : sx, theme));
     if (otherStyles) mergeArgs.push(transform(otherStyles, theme));
     const results = merge(...mergeArgs);
     return results;
@@ -367,32 +366,18 @@ var getCss = (sx, theme) => {
   return transform(sx, theme);
 };
 var jsx = (type, props, key) => {
-  try {
-    const { sx, ...args } = props;
-    if (sx && typeof type === "string") {
-      return emotionJsx(type, { ...args, css: (theme) => getCss(sx, theme) }, key);
-    }
-    return emotionJsx(type, props, key);
-  } catch (err) {
-    const e = new Error(err.message);
-    e.name = err.name;
-    e.stack = err.stack;
-    throw e;
+  const { sx, ...args } = props;
+  if (sx) {
+    return emotionJsx(type, { ...args, css: (theme) => getCss(sx, theme) }, key);
   }
+  return emotionJsx(type, props, key);
 };
 var jsxs = (type, props, key) => {
-  try {
-    const { sx, ...args } = props;
-    if (sx && typeof type === "string") {
-      return emotionJsxs(type, { ...args, css: (theme) => getCss(sx, theme) }, key);
-    }
-    return emotionJsxs(type, props, key);
-  } catch (err) {
-    const e = new Error(err.message);
-    e.name = err.name;
-    e.stack = err.stack;
-    throw e;
+  const { sx, ...args } = props;
+  if (sx) {
+    return emotionJsxs(type, { ...args, css: (theme) => getCss(sx, theme) }, key);
   }
+  return emotionJsxs(type, props, key);
 };
 var Fragment2 = ReactJSXRuntime.Fragment;
 

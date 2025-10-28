@@ -314,7 +314,7 @@ function merge(...objects) {
 var Fragment2 = ReactJSXRuntimeDev.Fragment;
 var jsxDEV = (type, props, key, isStaticChildren, source, self) => {
   const { sx, ...args } = props;
-  if (sx && typeof type === "string") {
+  if (sx) {
     return emotionJsxDev(
       type,
       { ...args, css: (theme) => transform(typeof sx === "function" ? sx(theme) : sx, theme) },

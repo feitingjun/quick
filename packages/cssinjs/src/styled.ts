@@ -41,10 +41,7 @@ export type StyledComponentProps<C, V extends VariantsProps = {}> = Omit<
   C,
   keyof ComponentCssStyles
 > &
-  ComponentCssStyles & {
-    children?: React.ReactNode
-    sx?: SxProps | ((theme: Theme) => SxProps)
-  } & {
+  React.PropsWithChildren<ComponentCssStyles> & {
     [K in keyof V]?: keyof V[K] extends 'true' ? boolean : keyof V[K]
   } & PresetProp<Theme>
 
@@ -79,14 +76,10 @@ export function styled(
 ) {
   return mStyled(component as any, {
     shouldForwardProp: prop => {
-      return !(
-        isCssProp(prop) ||
-        prop === 'sx' ||
-        (typeof component === 'string' && !isPropValid(prop))
-      )
+      return !(isCssProp(prop) || (typeof component === 'string' && !isPropValid(prop)))
     }
   })(props => {
-    const { sx, theme, preset, ...args } = props
+    const { theme, preset, className, ...args } = props
     let styles = typeof recipes === 'function' ? recipes({ theme, ...args }) : recipes
     const { base = {}, variants = {}, defaultVariants = {} } = styles
     // 支持的变体
@@ -116,7 +109,6 @@ export function styled(
     if (base) mergeArgs.push(transform(base, theme))
     if (variantStyles) mergeArgs.push(transform(variantStyles, theme))
     if (theme?.presets?.[preset]) mergeArgs.push(transform(theme.presets[preset], theme))
-    if (sx) mergeArgs.push(transform(typeof sx === 'function' ? sx(theme) : sx, theme))
     if (otherStyles) mergeArgs.push(transform(otherStyles, theme))
 
     // 分别转换之后合并，避免 color: { sm: 'red', md: 'blue' } 等媒体查询覆盖默认 color: 'green' 的情况

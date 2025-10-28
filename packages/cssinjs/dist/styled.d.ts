@@ -26,10 +26,7 @@ type PresetProp<T extends {
 }> = T['presets'] extends Record<string, any> ? {
     preset?: keyof T['presets'];
 } : {};
-type StyledComponentProps<C, V extends VariantsProps = {}> = Omit<C, keyof ComponentCssStyles> & ComponentCssStyles & {
-    children?: React.ReactNode;
-    sx?: SxProps | ((theme: Theme) => SxProps);
-} & {
+type StyledComponentProps<C, V extends VariantsProps = {}> = Omit<C, keyof ComponentCssStyles> & React.PropsWithChildren<ComponentCssStyles> & {
     [K in keyof V]?: keyof V[K] extends 'true' ? boolean : keyof V[K];
 } & PresetProp<Theme>;
 /**使用styled创建的组件，样式相关prop将会被过滤，不会传递给children*/
