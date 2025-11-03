@@ -1,4 +1,4 @@
-import * as CSS from 'csstype'
+import type * as CSS from 'csstype'
 // 原始styled-system定义的类型仅包含通过主题定义的部分，在./styled-system/define.ts中加上了原生css的属性定义
 import type {
   Theme,
@@ -15,7 +15,7 @@ import type {
   OpacityProps,
   AnimationProps
 } from './styled-system/define'
-import { NativeCSS } from './styled-system/native-css'
+import type { NativeCSS } from './styled-system/native-css'
 import type { CustomPseudos } from './custom-pseudos'
 
 export type ValueOf<T> = T[keyof T]

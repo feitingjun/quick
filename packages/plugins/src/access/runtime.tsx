@@ -1,6 +1,6 @@
-import { defineRuntime } from '../../core/define'
-import { useConfig } from '../../app/method'
-import { createContext, useContext, useState, PropsWithChildren } from 'react'
+import { defineRuntime } from '@quick/core'
+import { useConfig } from '@quick/app'
+import { createContext, useContext, useState, type PropsWithChildren } from 'react'
 
 export interface AccessPageConfig {
   /**当前页面权限code */
@@ -55,29 +55,27 @@ export const useAccess = () => {
   return { access, setAccess }
 }
 
-export default defineRuntime(
-  ({ addProvider, addWrapper, appContext: { appConfig } }) => {
-    const { NoAccess } = appConfig as AccessAppConfig
-    addProvider(({ children }) => {
-      const [access, setAccess] = useState<string[]>([])
-      return (
-        <Context.Provider
-          value={{
-            access,
-            setAccess
-          }}
-        >
-          {children}
-        </Context.Provider>
-      )
-    })
+export default defineRuntime(({ addProvider, addWrapper, appContext: { appConfig } }) => {
+  const { NoAccess } = appConfig as AccessAppConfig
+  addProvider(({ children }) => {
+    const [access, setAccess] = useState<string[]>([])
+    return (
+      <Context.Provider
+        value={{
+          access,
+          setAccess
+        }}
+      >
+        {children}
+      </Context.Provider>
+    )
+  })
 
-    addWrapper(({ children }) => {
-      const { access } = useConfig<AccessPageConfig>()
-      // 没有定义access的页面不纳入权限管理
-      if (!access) return children
-      const isAuth = useAuth(access)
-      return isAuth ? children : NoAccess ? <NoAccess /> : <>无权限</>
-    })
-  }
-)
+  addWrapper(({ children }) => {
+    const { access } = useConfig<AccessPageConfig>()
+    // 没有定义access的页面不纳入权限管理
+    if (!access) return children
+    const isAuth = useAuth(access)
+    return isAuth ? children : NoAccess ? <NoAccess /> : <>无权限</>
+  })
+})

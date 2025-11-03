@@ -1,21 +1,15 @@
 import { createRoot } from 'react-dom/client'
+import { createElement, StrictMode, type ReactNode, createContext, useContext } from 'react'
 import {
-  createElement,
-  StrictMode,
-  ReactNode,
-  createContext,
-  useContext
-} from 'react'
-import {
-  RouteObject,
+  type RouteObject,
   useLoaderData as useRouteLoaderData,
   createBrowserRouter,
   createHashRouter,
   createMemoryRouter,
-  LoaderFunction,
+  type LoaderFunction,
   RouterProvider
 } from 'react-router'
-import {
+import type {
   AppContextType,
   PageConfig,
   DataLoadeContext,
@@ -24,7 +18,7 @@ import {
   ManifestClient,
   AppConfig
 } from './types'
-import {
+import type {
   RouteManifest,
   RouteManifestObject,
   Wrapper,
@@ -51,10 +45,7 @@ export const useLoaderData = <T = unknown>() => {
   return useRouteLoaderData<UseLoaderDataReturn<T, unknown>>().data
 }
 
-const loader = (module: {
-  loader?: DataLoader
-  config?: PageConfig
-}): LoaderFunction => {
+const loader = (module: { loader?: DataLoader; config?: PageConfig }): LoaderFunction => {
   const { loader: dataLoader, config: pageConfig = {} } = module
   return async ({ request }) => {
     const { pathname, search, searchParams } = new URL(request.url)
@@ -64,9 +55,7 @@ const loader = (module: {
       query: Object.fromEntries(searchParams.entries())
     }
     const data =
-      dataLoader && typeof dataLoader === 'function'
-        ? await dataLoader({ ctx })
-        : dataLoader
+      dataLoader && typeof dataLoader === 'function' ? await dataLoader({ ctx }) : dataLoader
     return {
       data: data,
       config:

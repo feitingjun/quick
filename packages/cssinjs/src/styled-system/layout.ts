@@ -1,7 +1,8 @@
 import { system, type Config, get } from 'styled-system'
 import { isNumber } from './space'
 
-const getWidth = (n: any, scale: any) => get(scale, n, !isNumber(n) || n > 1 ? n : n * 100 + '%')
+const getWidth = (n: any, scale: any) =>
+  get(scale, n, !isNumber(n) || n > 1 ? n : n === 0 ? 0 : n * 100 + '%')
 
 const config: Config = {
   width: {

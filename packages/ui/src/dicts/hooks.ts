@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { DictItem, Dicts, DictCode } from './types'
+import type { DictItem, Dicts, DictCode } from './types'
 import { ConfigContext } from '@/config-provider/context'
 
 /**获取全部的字典数据 */

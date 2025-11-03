@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import { Table } from 'antd'
-import { isNumber, round, zerofill, thousands, multiply } from '@quick/utils'
-import {
+import { isNumber, round, zerofill, thousands, multiply } from '@/utils'
+import type { SxProps } from '@quick/cssinjs'
+import type {
   ColumnProps,
   ColumnType,
   ColumnGroupType,
@@ -12,7 +13,7 @@ import {
 
 const { Summary } = Table
 
-function flatten(arr: ColumnProps<any>[]) {
+const flatten = (arr: ColumnProps<any>[]) => {
   return arr.reduce((acc, props) => {
     const { children, ...rest } = props as ColumnGroupType
     acc.push(rest)
@@ -21,11 +22,11 @@ function flatten(arr: ColumnProps<any>[]) {
   }, [] as ColumnType[])
 }
 
-export function useSummary<T extends AnyObject = AnyObject>(
+export const useSummary = <T extends AnyObject = AnyObject>(
   columns: ColumnProps<T>[],
   summaryMap?: Record<string, number>,
   rowSelection?: TableProps<T>['rowSelection']
-) {
+) => {
   return useMemo(() => {
     const summaryList = flatten(columns)
     const hasTotal = summaryList.some(item => item.total)
@@ -36,6 +37,7 @@ export function useSummary<T extends AnyObject = AnyObject>(
               {rowSelection && <Summary.Cell index={0} />}
               <Summary.Cell index={rowSelection ? 1 : 0}>合计</Summary.Cell>
               {summaryList.slice(1).map((item, index) => {
+                let sx: SxProps = {}
                 let defaultSummary: SummaryProps = { thousand: true }
                 let value: number | string | undefined =
                   summaryMap?.[item.totalField ?? (item.dataIndex as string)]
@@ -48,7 +50,8 @@ export function useSummary<T extends AnyObject = AnyObject>(
                   percent,
                   thousand: thousandNum,
                   formatter,
-                  className
+                  className,
+                  status
                 } = defaultSummary
                 if (typeof formatter === 'function') {
                   value = formatter(value)
@@ -68,11 +71,16 @@ export function useSummary<T extends AnyObject = AnyObject>(
                   if (percent) value = `${value}%`
                 }
                 className = typeof className === 'function' ? className(value) : className
+                if (status) {
+                  const statusColor = typeof status === 'function' ? status(value) : status
+                  sx.color = statusColor === 'default' ? null : statusColor
+                }
                 return (
                   <Summary.Cell
                     className={className ?? undefined}
                     key={index + 1}
                     index={index + 1}
+                    sx={sx}
                   >
                     {value ?? null}
                   </Summary.Cell>

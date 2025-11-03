@@ -1,4 +1,4 @@
-import { resolve, join } from 'path'
+import { resolve } from 'path'
 import { existsSync } from 'fs'
 import { loadConfigAndCreateContext, codegen } from '@pandacss/node'
 import { definePlugin } from '@quick/core'

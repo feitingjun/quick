@@ -77,4 +77,3 @@ var Activation = class {
 export {
   Activation as default
 };
-//# sourceMappingURL=activation.js.map

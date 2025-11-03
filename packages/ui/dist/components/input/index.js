@@ -1,8 +1,10 @@
+import { Input as Input$1 } from 'antd';
+import { styled } from '@quick/cssinjs';
+
 // src/components/input/index.tsx
-import { Input as AntdInput } from "antd";
-import { styled } from "@quick/cssinjs";
-var Input = styled(AntdInput);
-export {
-  Input
-};
+var Input = styled(Input$1);
+var input_default = Input;
+
+export { input_default as default };
+//# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map

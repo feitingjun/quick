@@ -12,4 +12,3 @@ var atom_default = definePlugin({
 export {
   atom_default as default
 };
-//# sourceMappingURL=index.js.map

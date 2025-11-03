@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "dev": "tsup --watch",
+    "dev": "tsup --watch --env.NODE_ENV=development",
     "build": "tsup"
   },
   "keywords": [],
@@ -18,18 +18,22 @@
     "@ant-design/icons": "^6.1.0",
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@quick/cssinjs": "workspace:*",
-    "@quick/utils": "workspace:*",
     "antd": "^5.27.5",
+    "bignumber.js": "^9.3.1",
+    "copy-to-clipboard": "^3.3.3",
+    "dayjs": "^1.11.18",
+    "rc-field-form": "^2.7.0",
     "rc-input-number": "^9.5.0",
+    "rc-picker": "^4.11.3",
     "rc-table": "^7.55.1"
   },
   "devDependencies": {
-    "@types/node": "^24.7.0",
     "@types/react": "^19.2.2",
     "tsup": "^8.5.0",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
-    "react": ">=19.0.0"
+    "react": ">=19.0.0",
+    "react-router": ">=7.0.0"
   }
 }

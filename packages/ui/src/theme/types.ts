@@ -1,8 +1,13 @@
-import { SxProps } from '@quick/cssinjs'
+import type { SxProps } from '@quick/cssinjs'
+import type { DeepRequired } from '@/utils'
 
 export interface Theme {
   /**颜色配置 */
   colors?: {
+    /**基础组件背景 */
+    bg?: string
+    /**layout背景,浅灰 */
+    bgLayout?: string
     /**主题颜色 */
     primary?: string
     /**成功颜色 */
@@ -131,10 +136,6 @@ export interface Theme {
   presets?: {
     [key: string]: SxProps
   }
-}
-
-type DeepRequired<T> = {
-  [K in keyof T]-?: DeepRequired<T[K]>
 }
 
 type UITheme = DeepRequired<Omit<Theme, 'presets'>>

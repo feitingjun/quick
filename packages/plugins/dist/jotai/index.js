@@ -12,4 +12,3 @@ var jotai_default = definePlugin({
 export {
   jotai_default as default
 };
-//# sourceMappingURL=index.js.map

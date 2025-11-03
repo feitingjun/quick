@@ -94,4 +94,3 @@ export {
   useAtomValue,
   useSetAtom
 };
-//# sourceMappingURL=atom.js.map

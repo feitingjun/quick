@@ -1,8 +1,6 @@
-// src/dicts/hooks.ts
-import { useContext } from "react";
+import { createContext, useContext } from 'react';
 
-// src/config-provider/context.ts
-import { createContext } from "react";
+// src/dicts/hooks.ts
 var ConfigContext = createContext({
   dicts: {}
 });
@@ -31,12 +29,7 @@ function useDictStatus(code, value) {
 
 // src/dicts/index.ts
 var defineDicts = (dicts) => dicts;
-export {
-  defineDicts,
-  useDict,
-  useDictItem,
-  useDictLabel,
-  useDictStatus,
-  useDicts
-};
+
+export { defineDicts, useDict, useDictItem, useDictLabel, useDictStatus, useDicts };
+//# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map

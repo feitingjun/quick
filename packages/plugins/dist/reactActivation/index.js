@@ -41,4 +41,3 @@ var reactActivation_default = definePlugin({
 export {
   reactActivation_default as default
 };
-//# sourceMappingURL=index.js.map

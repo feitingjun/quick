@@ -1,12 +1,19 @@
+import { createContext, useMemo } from 'react';
+import { StyleProvider } from '@ant-design/cssinjs';
+import { ThemeProvider } from '@quick/cssinjs';
+import { ConfigProvider as ConfigProvider$1, App } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
+import 'bignumber.js';
+import 'dayjs/locale/zh-cn';
+import { jsx } from '@quick/cssinjs/jsx-runtime';
+
 // src/config-provider/index.tsx
-import { useMemo } from "react";
-import { StyleProvider } from "@ant-design/cssinjs";
-import { ThemeProvider, merge } from "@quick/cssinjs";
-import { ConfigProvider as AntdConfigProvider } from "antd";
 
 // src/theme/default.ts
 var defaultTheme = {
   colors: {
+    bg: "#fff",
+    bgLayout: "#f5f5f5",
     primary: "#1DA57A",
     success: "#52c41a",
     warning: "#faad14",
@@ -15,7 +22,7 @@ var defaultTheme = {
     link: "#1677ff",
     text: "#000",
     secondary: "#616161",
-    border: "#d9d9d9",
+    border: "#e1e1e1",
     borderSecondary: "#f0f0f0",
     disabled: "#c0c0c0"
   },
@@ -83,18 +90,31 @@ var defaultTheme = {
     max: 2147483647
   }
 };
-
-// src/theme/index.ts
-import { useTheme } from "@quick/cssinjs";
-
-// src/config-provider/context.ts
-import { createContext } from "react";
 var ConfigContext = createContext({
   dicts: {}
 });
 
-// src/config-provider/index.tsx
-import { jsx } from "@quick/cssinjs/jsx-runtime";
+// src/utils/objects.ts
+function merge(...objects) {
+  const result = {};
+  for (const obj of objects) {
+    if (!obj || typeof obj !== "object") continue;
+    for (const key in obj) {
+      const value = obj[key];
+      if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+        if (!result[key]) result[key] = {};
+        result[key] = merge(result[key], value);
+      } else {
+        result[key] = value;
+      }
+    }
+  }
+  return result;
+}
+var useRegisterMessage = () => {
+  const { message: messageInstance } = App.useApp();
+  return null;
+};
 var useToken = (theme) => {
   return useMemo(
     () => ({
@@ -108,6 +128,8 @@ var useToken = (theme) => {
       colorText: theme?.colors?.text,
       colorTextSecondary: theme?.colors?.secondary,
       colorBorder: theme?.colors?.border,
+      colorBgBase: theme?.colors?.bg,
+      colorBgLayout: theme?.colors?.bgLayout,
       fontSize: theme?.fontSizes?.body,
       fontSizeSM: theme?.fontSizes?.caption,
       fontSizeLG: theme?.fontSizes?.subtitle,
@@ -124,12 +146,16 @@ var useToken = (theme) => {
     [theme]
   );
 };
+function Register({ children }) {
+  useRegisterMessage();
+  return children;
+}
 function ConfigProvider({ theme = {}, dicts = {}, children }) {
   const margedtheme = useMemo(() => merge(defaultTheme, theme), [theme]);
   const token = useToken(margedtheme);
-  return /* @__PURE__ */ jsx(ThemeProvider, { theme: margedtheme, children: /* @__PURE__ */ jsx(StyleProvider, { layer: true, children: /* @__PURE__ */ jsx(AntdConfigProvider, { theme: { token }, children: /* @__PURE__ */ jsx(ConfigContext.Provider, { value: { dicts }, children }) }) }) });
+  return /* @__PURE__ */ jsx(ThemeProvider, { theme: margedtheme, children: /* @__PURE__ */ jsx(StyleProvider, { layer: true, children: /* @__PURE__ */ jsx(ConfigProvider$1, { theme: { token }, locale: zhCN, children: /* @__PURE__ */ jsx(ConfigContext.Provider, { value: { dicts }, children: /* @__PURE__ */ jsx(App, { children: /* @__PURE__ */ jsx(Register, { children }) }) }) }) }) });
 }
-export {
-  ConfigProvider
-};
+
+export { ConfigProvider, Register };
+//# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map

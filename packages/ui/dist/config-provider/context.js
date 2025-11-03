@@ -1,9 +1,10 @@
+import { createContext } from 'react';
+
 // src/config-provider/context.ts
-import { createContext } from "react";
 var ConfigContext = createContext({
   dicts: {}
 });
-export {
-  ConfigContext
-};
+
+export { ConfigContext };
+//# sourceMappingURL=context.js.map
 //# sourceMappingURL=context.js.map

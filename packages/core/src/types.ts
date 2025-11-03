@@ -1,6 +1,6 @@
-import { UserConfig } from 'vite'
+import type { UserConfig } from 'vite'
 import { Stats } from 'fs'
-import { ComponentType, PropsWithChildren } from 'react'
+import type { ComponentType, PropsWithChildren } from 'react'
 
 /**路由清单对象值 */
 export interface RouteManifestObject {
@@ -15,8 +15,7 @@ export interface RouteManifestObject {
 export type RouteManifest = Record<string, RouteManifestObject>
 
 /**使类型的某一个属性可选 */
-export type MakePropertyOptional<T, K extends keyof T> = Omit<T, K> &
-  Partial<Pick<T, K>>
+export type MakePropertyOptional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 
 /**插件 */
 export interface Plugin {
@@ -105,9 +104,7 @@ export interface PluginOptions {
   /**添加从quick命名空间导出的模块 */
   addExport: (options: AddFileOptions & { type?: boolean }) => void
   /**在入口文件的最前面添加import */
-  addEntryImport: (
-    options: MakePropertyOptional<AddFileOptions, 'specifier'>
-  ) => void
+  addEntryImport: (options: MakePropertyOptional<AddFileOptions, 'specifier'>) => void
   /**在入口文件的最前插入代码 */
   addEntryCodeAhead: (code: string) => void
   /**在入口文件的最后插入代码 */

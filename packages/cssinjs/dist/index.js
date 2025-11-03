@@ -132,7 +132,7 @@ var space = system(configs);
 
 // src/styled-system/layout.ts
 import { system as system2, get } from "styled-system";
-var getWidth = (n, scale) => get(scale, n, !isNumber(n) || n > 1 ? n : n * 100 + "%");
+var getWidth = (n, scale) => get(scale, n, !isNumber(n) || n > 1 ? n : n === 0 ? 0 : n * 100 + "%");
 var config = {
   width: {
     property: "width",
@@ -381,15 +381,6 @@ var jsxs = (type, props, key) => {
 };
 var Fragment2 = ReactJSXRuntime.Fragment;
 
-// src/index.ts
-import {
-  ThemeProvider,
-  ThemeContext,
-  useTheme as useTheme2,
-  withTheme,
-  keyframes
-} from "@emotion/react";
-
 // src/css.ts
 import { __unsafe_useEmotionCache, useTheme, css } from "@emotion/react";
 var useClassName = (sx) => {
@@ -400,6 +391,23 @@ var useClassName = (sx) => {
   cache?.insert(`.${cls}`, serialized, cache.sheet, true);
   return cls;
 };
+
+// src/hooks.ts
+import {
+  ThemeProvider as ThemeProvider2,
+  ThemeContext as ThemeContext2,
+  useTheme as useTheme2,
+  withTheme as withTheme2,
+  keyframes
+} from "@emotion/react";
+function useTheme3() {
+  return useTheme2();
+}
+function withTheme(Component) {
+  return withTheme2(Component);
+}
+var ThemeContext = ThemeContext2;
+var ThemeProvider = ThemeProvider2;
 export {
   Fragment2 as Fragment,
   ThemeContext,
@@ -417,6 +425,6 @@ export {
   transform,
   transformMediaQueries,
   useClassName,
-  useTheme2 as useTheme,
+  useTheme3 as useTheme,
   withTheme
 };

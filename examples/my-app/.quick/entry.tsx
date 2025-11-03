@@ -1,3 +1,4 @@
+import '/Users/feitingjun/Documents/文档/study/quick/examples/my-app/src/global.css'
 import { createApp } from '@quick/app'
 import app from '/Users/feitingjun/Documents/文档/study/quick/examples/my-app/src/app'
 import manifest from './manifest'

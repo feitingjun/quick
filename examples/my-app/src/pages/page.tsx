@@ -1,5 +1,17 @@
-import { Button, Box, Input, InputNumber, Table, defineColumns, ColumnProps } from '@quick/ui'
-import { styled } from '@quick/cssinjs'
+import {
+  Button,
+  Box,
+  Input,
+  InputNumber,
+  Table,
+  type ColumnProps,
+  Search,
+  Page,
+  DatePicker,
+  RangePicker
+} from '@quick/ui'
+import { useState } from 'react'
+import dayjs from 'dayjs'
 
 const data = [
   {
@@ -42,39 +54,28 @@ const columns: ColumnProps<(typeof data)[number]>[] = [
     tooltip: '123',
     dictCode: 'sys',
     total: true,
-    totalField: 'age1'
+    totalField: 'age1',
+    hidden: true
   }
 ]
 
-const Com = ({ children, className }: { children: React.ReactNode; className?: string }) => {
-  return <div className={className}>{children}</div>
-}
+const sleep = (time: number) => new Promise(resolve => setTimeout(resolve, time))
 
 export default function Home() {
+  const [count, setCount] = useState(0)
   return (
-    <>
-      <Com sx={{ color: 'red' }}>11111</Com>
-      <div sx={{ color: 'red' }}>222</div>
-      {/* <Box
-        sx={{
-          display: 'grid',
-          gap: 4,
-          gridAutoColumns: 200,
-          gridAutoFlow: 'column'
+    <div>
+      <Page
+        onSearch={async values => {
+          await sleep(1000)
         }}
-      >
-        <Button type='primary'>按钮</Button>
-        <Input placeholder='请输入' />
-        <InputNumber placeholder='请输入' w={1} />
-      </Box>
-      <Table
         rowKey={row => row.name}
         dataSource={data}
         columns={columns}
-        rowSelection={{}}
         summaryMap={{
           age1: 10000.32323
         }}
+        bordered
         actions={[
           {
             title: '操作1',
@@ -89,7 +90,20 @@ export default function Home() {
             }
           }
         ]}
-      /> */}
-    </>
+      >
+        <Search.Item label='姓名' name='name'>
+          <Input />
+        </Search.Item>
+        <Search.Item label='年龄' name='id'>
+          <InputNumber />
+        </Search.Item>
+        <Search.Item label='日期' name='date'>
+          <DatePicker />
+        </Search.Item>
+        <Search.Item label='时间' names={['beginTime', 'endTime']} span={2}>
+          <RangePicker />
+        </Search.Item>
+      </Page>
+    </div>
   )
 }

@@ -1,8 +1,10 @@
+import { Space as Space$1 } from 'antd';
+import { styled } from '@quick/cssinjs';
+
 // src/components/space/index.tsx
-import { Space as AntdSpace } from "antd";
-import { styled } from "@quick/cssinjs";
-var Space = styled(AntdSpace);
-export {
-  Space
-};
+var Space = styled(Space$1);
+var space_default = Space;
+
+export { space_default as default };
+//# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map

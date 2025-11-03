@@ -1,12 +1,15 @@
-import {
-  KeepAliveContext,
-  ScopeContext
-} from "../chunk-BZBKARWE.js";
-
 // src/keepAlive/fixContext.ts
 import React from "react";
 import jsxRuntime from "react/jsx-runtime";
 import jsxDevRuntime from "react/jsx-dev-runtime";
+
+// src/keepAlive/context.ts
+import { createContext } from "react";
+var BridgeContext = createContext([]);
+var ScopeContext = createContext(null);
+var KeepAliveContext = createContext(null);
+
+// src/keepAlive/fixContext.ts
 var fixedContext = [];
 var contextCaches = /* @__PURE__ */ new Map();
 function getFixedContext(name) {
@@ -35,4 +38,3 @@ repair(jsxDevRuntime, ["jsxDEV"]);
 export {
   getFixedContext
 };
-//# sourceMappingURL=fixContext.js.map

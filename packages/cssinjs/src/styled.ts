@@ -21,9 +21,13 @@ export type StyledProps<T extends VariantsProps = VariantsProps> = {
 }
 
 // 样式函数参数类型，支持对象或函数形式
-export type RecipeProps<T extends VariantsProps = VariantsProps> =
+export type RecipeProps<C, T extends VariantsProps = VariantsProps> =
   | StyledProps<T>
-  | ((props: { theme?: Theme }) => StyledProps<T>)
+  | ((
+      props: {
+        theme?: Theme
+      } & ComponentPropsType<C>
+    ) => StyledProps<T>)
 
 // 提取组件的原始 props 类型
 export type ComponentPropsType<C> = C extends React.ComponentType<infer P>
@@ -41,7 +45,7 @@ export type StyledComponentProps<C, V extends VariantsProps = {}> = Omit<
   C,
   keyof ComponentCssStyles
 > &
-  React.PropsWithChildren<ComponentCssStyles> & {
+  ComponentCssStyles & {
     [K in keyof V]?: keyof V[K] extends 'true' ? boolean : keyof V[K]
   } & PresetProp<Theme>
 
@@ -61,18 +65,21 @@ export type StyledComponentProps<C, V extends VariantsProps = {}> = Omit<
 export function styled<
   C extends React.ComponentType<any> | React.ForwardRefExoticComponent<any>,
   T extends VariantsProps = {}
->(component: C, recipes?: RecipeProps<T>): React.FC<StyledComponentProps<ComponentPropsType<C>, T>>
+>(
+  component: C,
+  recipes?: RecipeProps<C, T>
+): React.FC<StyledComponentProps<ComponentPropsType<C>, T>>
 
 // 重载2：支持原生 HTML 元素
 export function styled<Tag extends keyof React.JSX.IntrinsicElements, T extends VariantsProps = {}>(
   component: Tag,
-  recipes?: RecipeProps<T>
+  recipes?: RecipeProps<Tag, T>
 ): React.FC<StyledComponentProps<ComponentPropsType<Tag>, T>>
 
 // styled 函数实现
 export function styled(
   component: React.ComponentType<any> | keyof React.JSX.IntrinsicElements,
-  recipes: RecipeProps = {}
+  recipes: RecipeProps<any> = {}
 ) {
   return mStyled(component as any, {
     shouldForwardProp: prop => {

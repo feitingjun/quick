@@ -1,6 +1,6 @@
-import { RouteObject } from 'react-router'
-import { RouteManifest, RouteManifestObject } from '@quick/core'
-import { ComponentType, PropsWithChildren } from 'react'
+import type { RouteObject } from 'react-router'
+import type { RouteManifest, RouteManifestObject } from '@quick/core'
+import type { ComponentType, PropsWithChildren } from 'react'
 
 /**AppContext */
 export interface AppContextType<T = Record<string, unknown>> {
@@ -52,13 +52,7 @@ export type PageConfig<T extends {} = {}, D = unknown> =
 export type UseLoaderDataReturn<D = unknown, P = unknown> = {
   data: LoaderData<D>
   config: P extends PageConfig
-    ? P extends ({
-        ctx,
-        data
-      }: {
-        ctx: DataLoadeContext
-        data: LoaderData<D>
-      }) => infer T
+    ? P extends ({ ctx, data }: { ctx: DataLoadeContext; data: LoaderData<D> }) => infer T
       ? T extends Promise<infer T_1>
         ? T_1
         : T
@@ -78,10 +72,7 @@ export type ManifestClient = {
 }
 
 /**app配置 */
-export type AppConfig<
-  T extends {} = {},
-  D extends Record<string, unknown> = {}
-> = {
+export type AppConfig<T extends {} = {}, D extends Record<string, unknown> = {}> = {
   // 根节点，默认app
   root?: string
   // 是否启用react的严格模式

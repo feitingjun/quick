@@ -1,5 +1,5 @@
 import { useConfig as usePageConfig, useAppContext } from '@quick/app'
-import { PageConfig, AppConfig, DataLoader } from './types'
+import type { PageConfig, AppConfig, DataLoader } from './types'
 import app from '/Users/feitingjun/Documents/文档/study/quick/examples/my-app/src/app'
 
 export const defineConfig = <P extends {}>(pageConfig: PageConfig<P>) => pageConfig

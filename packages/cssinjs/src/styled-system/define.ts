@@ -1,5 +1,5 @@
-import * as CSS from 'csstype'
-import { SxProps } from '../types'
+import type * as CSS from 'csstype'
+import type { SxProps } from '../types'
 
 export interface Theme {}
 
@@ -189,7 +189,7 @@ export interface FontSizeProps<
    * - String values are passed as raw CSS values.
    * - And array values are converted into responsive values.
    */
-  fontSize?: ResponsiveValue<TVal | CSS.Property.FontSize, ThemeType> | undefined
+  fontSize?: ResponsiveValue<TVal | CSS.Property.FontSize<number>, ThemeType> | undefined
 }
 
 export interface FontFamilyProps<ThemeType extends ThemeDefine = Theme> {
@@ -309,8 +309,8 @@ export interface MaxWidthProps<
    *
    * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/max-width)
    */
-  maxWidth?: ResponsiveValue<TVal | CSS.Property.MaxWidth, ThemeType> | undefined
-  maxW?: ResponsiveValue<TVal | CSS.Property.MaxWidth, ThemeType> | undefined
+  maxWidth?: ResponsiveValue<TVal | CSS.Property.MaxWidth<number>, ThemeType> | undefined
+  maxW?: ResponsiveValue<TVal | CSS.Property.MaxWidth<number>, ThemeType> | undefined
 }
 
 export interface MinWidthProps<
@@ -323,8 +323,8 @@ export interface MinWidthProps<
    *
    * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/min-width)
    */
-  minWidth?: ResponsiveValue<TVal | CSS.Property.MinWidth, ThemeType> | undefined
-  minW?: ResponsiveValue<TVal | CSS.Property.MinWidth, ThemeType> | undefined
+  minWidth?: ResponsiveValue<TVal | CSS.Property.MinWidth<number>, ThemeType> | undefined
+  minW?: ResponsiveValue<TVal | CSS.Property.MinWidth<number>, ThemeType> | undefined
 }
 
 export interface HeightProps<
@@ -337,8 +337,8 @@ export interface HeightProps<
    *
    * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/height)
    */
-  height?: ResponsiveValue<TVal | CSS.Property.Height, ThemeType> | undefined
-  h?: ResponsiveValue<TVal | CSS.Property.Height, ThemeType> | undefined
+  height?: ResponsiveValue<TVal | CSS.Property.Height<number>, ThemeType> | undefined
+  h?: ResponsiveValue<TVal | CSS.Property.Height<number>, ThemeType> | undefined
 }
 
 export interface MaxHeightProps<
@@ -351,8 +351,8 @@ export interface MaxHeightProps<
    *
    * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/max-height)
    */
-  maxHeight?: ResponsiveValue<TVal | CSS.Property.MaxHeight, ThemeType> | undefined
-  maxH?: ResponsiveValue<TVal | CSS.Property.MaxHeight, ThemeType> | undefined
+  maxHeight?: ResponsiveValue<TVal | CSS.Property.MaxHeight<number>, ThemeType> | undefined
+  maxH?: ResponsiveValue<TVal | CSS.Property.MaxHeight<number>, ThemeType> | undefined
 }
 
 export interface MinHeightProps<
@@ -365,15 +365,15 @@ export interface MinHeightProps<
    *
    * [MDN reference](https://developer.mozilla.org/en-US/docs/Web/CSS/display)
    */
-  minHeight?: ResponsiveValue<TVal | CSS.Property.MinHeight, ThemeType> | undefined
-  minH?: ResponsiveValue<TVal | CSS.Property.MinHeight, ThemeType> | undefined
+  minHeight?: ResponsiveValue<TVal | CSS.Property.MinHeight<number>, ThemeType> | undefined
+  minH?: ResponsiveValue<TVal | CSS.Property.MinHeight<number>, ThemeType> | undefined
 }
 
 export interface SizeProps<
   ThemeType extends ThemeDefine = Theme,
   TVal = ThemeValue<'sizes', ThemeType>
 > {
-  sizes?: ResponsiveValue<TVal | CSS.Property.Height, ThemeType> | undefined
+  sizes?: ResponsiveValue<TVal | CSS.Property.Height<number>, ThemeType> | undefined
 }
 
 export interface VerticalAlignProps<
@@ -844,7 +844,7 @@ export interface BorderColorProps<
 
 export interface BorderTopProps<
   ThemeType extends ThemeDefine = Theme,
-  TVal = CSS.Property.BorderTop<number>
+  TVal = ThemeValue<'borders', ThemeType>
 > {
   /**
    * The border-top CSS property is a shorthand that sets the values of border-top-width, border-top-style,
@@ -857,7 +857,7 @@ export interface BorderTopProps<
 
 export interface BorderRightProps<
   ThemeType extends ThemeDefine = Theme,
-  TVal = CSS.Property.BorderRight<number>
+  TVal = ThemeValue<'borders', ThemeType>
 > {
   /**
    * The border-right CSS property is a shorthand that sets border-right-width, border-right-style,
@@ -870,7 +870,7 @@ export interface BorderRightProps<
 
 export interface BorderBottomProps<
   ThemeType extends ThemeDefine = Theme,
-  TVal = CSS.Property.BorderBottom<number>
+  TVal = ThemeValue<'borders', ThemeType>
 > {
   /**
    * The border-bottom CSS property sets an element's bottom border. It's a shorthand for
@@ -883,7 +883,7 @@ export interface BorderBottomProps<
 
 export interface BorderLeftProps<
   ThemeType extends ThemeDefine = Theme,
-  TVal = CSS.Property.BorderLeft<number>
+  TVal = ThemeValue<'borders', ThemeType>
 > {
   /**
    * The border-left CSS property is a shorthand that sets the values of border-left-width,

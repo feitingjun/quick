@@ -1,1 +1,0 @@
-{"version":3,"sources":["../src/index.ts"],"sourcesContent":["export * from './types'\nexport * from './define'\nimport vitePlugin from './vite-plugin'\n\nexport default vitePlugin\n"],"mappings":";;;;;;;;;;;;AAIA,IAAO,gBAAQ;","names":[]}

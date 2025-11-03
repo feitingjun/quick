@@ -42,4 +42,3 @@ var model_default = definePlugin({
 export {
   model_default as default
 };
-//# sourceMappingURL=index.js.map

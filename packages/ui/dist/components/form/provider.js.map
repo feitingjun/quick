@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../src/components/form/provider.tsx"],"names":[],"mappings":";;;;AAGA,IAAM,QAAA,GAAW,MAAA,CAAO,IAAA,CAAK,QAAQ,CAAA;AAErC,IAAO,gBAAA,GAAQ","file":"provider.js","sourcesContent":["import { Form } from 'antd'\nimport { styled } from '@quick/cssinjs'\n\nconst Provider = styled(Form.Provider)\n\nexport default Provider\n"]}

@@ -13,7 +13,7 @@ export type PageConfig<P extends {}> = PageRouteConfig<P & ExtendPageConfig, unk
 
 export type AppConfig<T={}, D extends Record<string, unknown>={}> = AppConfigType<T & ExtendAppConfig, D>
 
-export {
+export type {
   DataLoader,
   DataLoadeContext
 }

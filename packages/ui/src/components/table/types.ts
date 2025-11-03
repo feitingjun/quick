@@ -1,9 +1,11 @@
-import { TableColumnType, TableProps as AntdTableProps } from 'antd'
-import { StyledComponentProps } from '@quick/cssinjs'
-import { DictCode, TableStatus } from '@/dicts'
-import { ButtonProps } from '@/components/button'
+import type { TableColumnType, TableProps as AntdTableProps } from 'antd'
+import type { StyledComponentProps } from '@quick/cssinjs'
+import type { DictCode, TableStatus } from '@/dicts'
+import type { ButtonProps } from '@/components/button'
 
 export type AnyObject = Record<string, any>
+
+export type SummaryStatus = 'success' | 'error' | 'default'
 
 export interface SummaryProps {
   precision?: number | boolean
@@ -15,6 +17,8 @@ export interface SummaryProps {
   thousand?: boolean
   /**格式化函数 */
   formatter?: (value: any) => any
+  /**显示状态 */
+  status?: SummaryStatus | ((num: any) => SummaryStatus)
   className?: string | ((num: any) => string)
 }
 
@@ -63,7 +67,7 @@ export type ColumnProps<RecordType extends AnyObject = AnyObject> =
   | ColumnType<RecordType>
   | ColumnGroupType<RecordType>
 
-export interface Actions<RecordType extends AnyObject = AnyObject>
+export interface Action<RecordType extends AnyObject = AnyObject>
   extends Omit<ButtonProps, 'className' | 'title' | 'onClick'> {
   title?: React.ReactNode
   onClick?: (e: React.MouseEvent, record: RecordType, index: number) => void
@@ -76,7 +80,7 @@ export interface TableProps<RecordType extends AnyObject = AnyObject>
   extends StyledComponentProps<AntdTableProps<RecordType>> {
   columns?: ColumnProps<RecordType>[]
   /**操作栏内容 */
-  actions?: Actions<RecordType>[]
+  actions?: Action<RecordType>[]
   /**操作栏宽度 */
   actionWidth?: number
   /**操作栏位置 */

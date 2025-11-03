@@ -21,6 +21,8 @@
     "@quick/cssinjs": "workspace:*",
     "@quick/ui": "workspace:*",
     "antd": "^5.27.5",
+    "dayjs": "^1.11.18",
+    "import": "^0.0.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "^7.3.0",

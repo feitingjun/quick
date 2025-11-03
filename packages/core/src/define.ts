@@ -1,4 +1,4 @@
-import { QuickConfig, Runtime, Plugin } from './types'
+import type { QuickConfig, Runtime, Plugin } from './types'
 
 /**定义用户配置 */
 export function defineConfig(config: QuickConfig) {
@@ -6,9 +6,7 @@ export function defineConfig(config: QuickConfig) {
 }
 
 /**定义插件 */
-export function definePlugin<T extends Plugin | ((...args: any[]) => Plugin)>(
-  plugin: T
-) {
+export function definePlugin<T extends Plugin | ((...args: any[]) => Plugin)>(plugin: T) {
   return plugin
 }
 

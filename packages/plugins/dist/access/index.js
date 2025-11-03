@@ -21,4 +21,3 @@ var access_default = definePlugin({
 export {
   access_default as default
 };
-//# sourceMappingURL=index.js.map

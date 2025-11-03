@@ -8,4 +8,3 @@ export {
   useStore as useJotaiStore,
   useSetAtom
 };
-//# sourceMappingURL=jotai.js.map

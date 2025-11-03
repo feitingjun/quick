@@ -1,7 +1,10 @@
-import { Theme } from './types'
+import type { DeepRequired } from '@/utils'
+import type { Theme } from './types'
 
-export const defaultTheme: Theme = {
+export const defaultTheme: Omit<DeepRequired<Theme>, 'presets'> = {
   colors: {
+    bg: '#fff',
+    bgLayout: '#f5f5f5',
     primary: '#1DA57A',
     success: '#52c41a',
     warning: '#faad14',
@@ -10,7 +13,7 @@ export const defaultTheme: Theme = {
     link: '#1677ff',
     text: '#000',
     secondary: '#616161',
-    border: '#d9d9d9',
+    border: '#e1e1e1',
     borderSecondary: '#f0f0f0',
     disabled: '#c0c0c0'
   },

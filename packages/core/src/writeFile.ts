@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync } from 'fs'
 import { resolve } from 'path'
 import { renderHbsTpl } from '@quick/cli'
-import { RouteManifest, AddFileOptions, MakePropertyOptional } from './types'
+import type { RouteManifest, AddFileOptions, MakePropertyOptional } from './types'
 
 const __dirname = import.meta.dirname
 const TML_DIR = resolve(__dirname, 'template')

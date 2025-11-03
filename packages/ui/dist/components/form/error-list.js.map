@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../src/components/form/error-list.tsx"],"names":[],"mappings":";;;;AAGA,IAAM,SAAA,GAAY,MAAA,CAAO,IAAA,CAAK,SAAS,CAAA;AAEvC,IAAO,kBAAA,GAAQ","file":"error-list.js","sourcesContent":["import { Form } from 'antd'\nimport { styled } from '@quick/cssinjs'\n\nconst ErrorList = styled(Form.ErrorList)\n\nexport default ErrorList\n"]}

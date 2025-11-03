@@ -1,6 +1,8 @@
 // src/theme/default.ts
 var defaultTheme = {
   colors: {
+    bg: "#fff",
+    bgLayout: "#f5f5f5",
     primary: "#1DA57A",
     success: "#52c41a",
     warning: "#faad14",
@@ -9,7 +11,7 @@ var defaultTheme = {
     link: "#1677ff",
     text: "#000",
     secondary: "#616161",
-    border: "#d9d9d9",
+    border: "#e1e1e1",
     borderSecondary: "#f0f0f0",
     disabled: "#c0c0c0"
   },
@@ -77,7 +79,7 @@ var defaultTheme = {
     max: 2147483647
   }
 };
-export {
-  defaultTheme
-};
+
+export { defaultTheme };
+//# sourceMappingURL=default.js.map
 //# sourceMappingURL=default.js.map

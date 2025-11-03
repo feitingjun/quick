@@ -1,28 +1,42 @@
+import { createContext, useMemo, useContext } from 'react';
+import { QuestionCircleOutlined } from '@ant-design/icons';
+import copy from 'copy-to-clipboard';
+import Bignumber from 'bignumber.js';
+import { useNavigate } from 'react-router';
+import { Tooltip as Tooltip$1, Space as Space$1, Button as Button$1 } from 'antd';
+import { styled } from '@quick/cssinjs';
+import { jsxs, jsx } from '@quick/cssinjs/jsx-runtime';
+
 // src/components/table/column.tsx
-import { useMemo } from "react";
-import { zerofill, round, isNumber, thousands, useNavigate, multiply } from "@quick/utils";
-import { QuestionCircleOutlined } from "@ant-design/icons";
-
-// src/components/tooltip/index.tsx
-import { Tooltip as AntdTooltip } from "antd";
-import { styled } from "@quick/cssinjs";
-var Tooltip = styled(AntdTooltip);
-
-// src/components/space/index.tsx
-import { Space as AntdSpace } from "antd";
-import { styled as styled2 } from "@quick/cssinjs";
-var Space = styled2(AntdSpace);
-
-// src/components/button/index.tsx
-import { styled as styled3 } from "@quick/cssinjs";
-import { Button as AntdButton } from "antd";
-var Button = styled3(AntdButton);
-
-// src/dicts/hooks.ts
-import { useContext } from "react";
-
-// src/config-provider/context.ts
-import { createContext } from "react";
+function thousands(num) {
+  if (!isNumber(num)) return num;
+  const arr = String(num).split(".");
+  const intPart = arr[0].replace(/(\d)(?=(\d{3})+$)/g, "$1,");
+  return arr[1] ? `${intPart}.${arr[1]}` : intPart;
+}
+function round(num, n = 2) {
+  return new Bignumber(num).decimalPlaces(n, Bignumber.ROUND_HALF_UP).toNumber();
+}
+function zerofill(num, n = 2) {
+  const [intPart, decPart = ""] = String(num).split(".");
+  if (decPart.length >= n) return num;
+  const filledDec = decPart.padEnd(n, "0").slice(0, n);
+  return `${intPart}.${filledDec}`;
+}
+function isNumber(num) {
+  const n = new Bignumber(num);
+  return n.isFinite() && !n.isNaN();
+}
+function multiply(a, b) {
+  return new Bignumber(a).times(b).toNumber();
+}
+var Tooltip = styled(Tooltip$1);
+var tooltip_default = Tooltip;
+var Space = styled(Space$1);
+var space_default = Space;
+var Button = styled(Button$1);
+var button_default = Button;
+var message;
 var ConfigContext = createContext({
   dicts: {}
 });
@@ -32,10 +46,18 @@ function useDicts() {
   const { dicts } = useContext(ConfigContext);
   return dicts;
 }
-
-// src/components/table/column.tsx
-import { jsx, jsxs } from "@quick/cssinjs/jsx-runtime";
-function handleStatus(status, value, record, index) {
+var copyText = (e) => {
+  const selection = window.getSelection();
+  selection?.removeAllRanges();
+  const range = document.createRange();
+  range.selectNodeContents(e.currentTarget);
+  selection?.addRange(range);
+  const text = e.currentTarget?.innerText;
+  if (text && copy(text)) {
+    message.success("\u6587\u672C\u5DF2\u590D\u5236");
+  }
+};
+var handleStatus = (status, value, record, index) => {
   let statusStr = typeof status === "function" ? status(value, record, index) : status;
   switch (statusStr) {
     case "completed":
@@ -49,8 +71,8 @@ function handleStatus(status, value, record, index) {
     default:
       return statusStr || null;
   }
-}
-function handleColumn(col, dicts, navigate) {
+};
+var handleColumn = (col, dicts, navigate) => {
   let {
     status,
     bold,
@@ -64,6 +86,7 @@ function handleColumn(col, dicts, navigate) {
     tooltip,
     dictCode,
     render: renderFunc,
+    onCell: onCellFunc,
     ...args
   } = col;
   const render = (value, record, index) => {
@@ -108,25 +131,29 @@ function handleColumn(col, dicts, navigate) {
     children: children?.map((col2) => handleColumn(col2, dicts, navigate)) ?? void 0,
     title: tooltip ? (...arrs) => /* @__PURE__ */ jsxs("span", { children: [
       typeof title === "function" ? title(...arrs) : title,
-      /* @__PURE__ */ jsx(Tooltip, { title: tooltip, verticalAlign: "middle", ml: 1, cursor: "pointer", children: /* @__PURE__ */ jsx(QuestionCircleOutlined, {}) })
+      /* @__PURE__ */ jsx(tooltip_default, { title: tooltip, verticalAlign: "middle", ml: 1, cursor: "pointer", children: /* @__PURE__ */ jsx(QuestionCircleOutlined, {}) })
     ] }) : title,
-    render
+    render,
+    onCell: (record, index) => ({
+      onDoubleClick: copyText,
+      ...onCellFunc ? onCellFunc(record, index) : {}
+    })
   };
-}
-function handleActions(actions, actionFixed, actionTitle, actionWidth) {
+};
+var handleActions = (actions, actionFixed, actionTitle, actionWidth) => {
   return {
     title: actionTitle || "\u64CD\u4F5C",
     dataIndex: "__actions",
     width: actionWidth,
     fixed: actionFixed ?? "right",
-    render: (_, record, index) => /* @__PURE__ */ jsx(Space, { children: actions.map((action, i) => {
+    render: (_, record, index) => /* @__PURE__ */ jsx(space_default, { children: actions.map((action, i) => {
       let { title, visible = true, render, className, type, onClick, ...args } = action;
       const show = typeof visible === "function" ? visible(record, index) : visible;
       if (!show) return null;
       if (typeof render === "function") title = render(record, index);
       if (typeof className === "function") className = className(record, index);
       return /* @__PURE__ */ jsx(
-        Button,
+        button_default,
         {
           p: 0,
           type: type ?? "link",
@@ -139,16 +166,16 @@ function handleActions(actions, actionFixed, actionTitle, actionWidth) {
       );
     }) })
   };
-}
-function useColumns(columns, actions, actionFixed, actionTitle, actionWidth) {
+};
+var useColumns = (columns, actions, actionFixed, actionTitle, actionWidth) => {
   const navigate = useNavigate();
   const dicts = useDicts();
   return useMemo(
     () => columns.map((col) => handleColumn(col, dicts, navigate)).concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth)),
     [columns, actions, dicts, navigate, actionFixed, actionTitle, actionWidth]
   );
-}
-export {
-  useColumns
 };
+
+export { useColumns };
+//# sourceMappingURL=column.js.map
 //# sourceMappingURL=column.js.map

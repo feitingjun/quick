@@ -1,9 +1,9 @@
-import { PluginOption, UserConfig as ViteConfig, mergeConfig } from 'vite'
+import { type PluginOption, type UserConfig as ViteConfig, mergeConfig } from 'vite'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { resolve, relative } from 'path'
 import { globSync } from 'glob'
 import { renderHbsTpl } from '@quick/cli'
-import {
+import type {
   QuickConfig,
   RouteManifest,
   AddFileOptions,

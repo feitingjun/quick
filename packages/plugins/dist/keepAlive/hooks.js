@@ -1,10 +1,13 @@
-import {
-  KeepAliveContext,
-  ScopeContext
-} from "../chunk-BZBKARWE.js";
-
 // src/keepAlive/hooks.ts
 import { useLayoutEffect, useState, useContext, useRef, useEffect } from "react";
+
+// src/keepAlive/context.ts
+import { createContext } from "react";
+var BridgeContext = createContext([]);
+var ScopeContext = createContext(null);
+var KeepAliveContext = createContext(null);
+
+// src/keepAlive/hooks.ts
 function useGetActivation(name) {
   const [_, setCount] = useState(0);
   const { getActivation } = useContext(ScopeContext);
@@ -20,13 +23,14 @@ function useGetActivation(name) {
 }
 function useAliveController() {
   const ctx = useContext(ScopeContext);
-  if (!ctx) return {
-    destroy: () => {
-    },
-    destroyAll: () => {
-    },
-    cachingNodes: []
-  };
+  if (!ctx)
+    return {
+      destroy: () => {
+      },
+      destroyAll: () => {
+      },
+      cachingNodes: []
+    };
   const { destroy, destroyAll, getCachingNodes } = ctx;
   return { destroy, destroyAll, getCachingNodes };
 }
@@ -74,4 +78,3 @@ export {
   useLoadedLayoutEffect,
   useUnactivate
 };
-//# sourceMappingURL=hooks.js.map

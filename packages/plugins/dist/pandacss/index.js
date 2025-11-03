@@ -57,4 +57,3 @@ var pandacss_default = definePlugin({
 export {
   pandacss_default as default
 };
-//# sourceMappingURL=index.js.map

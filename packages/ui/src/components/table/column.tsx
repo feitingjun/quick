@@ -1,19 +1,37 @@
-import { useMemo } from 'react'
-import { SxProps } from '@quick/cssinjs'
-import { zerofill, round, isNumber, thousands, useNavigate, multiply } from '@quick/utils'
+import { type MouseEvent, useMemo } from 'react'
+import type { SxProps } from '@quick/cssinjs'
 import { QuestionCircleOutlined } from '@ant-design/icons'
-import { Tooltip } from '@/components/tooltip'
-import { Space } from '@/components/space'
-import { Button } from '@/components/button'
-import { useDicts, DictItem } from '@/dicts'
-import type { AnyObject, ColumnProps, ColumnGroupType, Actions, TableProps } from './types'
+import copy from 'copy-to-clipboard'
+import { zerofill, round, isNumber, thousands, multiply } from '@/utils'
+import { useNavigate } from '@/hooks'
+import Tooltip from '@/components/tooltip'
+import Space from '@/components/space'
+import Button from '@/components/button'
+import { message } from '@/components/message'
+import { useDicts, type DictItem } from '@/dicts'
+import type { AnyObject, ColumnProps, ColumnGroupType, Action, TableProps } from './types'
 
-function handleStatus(
+/**复制文本 */
+const copyText = (e: MouseEvent<HTMLTableCellElement>) => {
+  // 选中单元格整行文本
+  const selection = window.getSelection()
+  selection?.removeAllRanges()
+  const range = document.createRange()
+  range.selectNodeContents(e.currentTarget)
+  selection?.addRange(range)
+
+  const text = e.currentTarget?.innerText
+  if (text && copy(text)) {
+    message.success('文本已复制')
+  }
+}
+
+const handleStatus = (
   status: ColumnProps<any>['status'],
   value: any,
   record: AnyObject,
   index: number
-) {
+) => {
   let statusStr = typeof status === 'function' ? status(value, record, index) : status
   switch (statusStr) {
     case 'completed':
@@ -29,11 +47,11 @@ function handleStatus(
   }
 }
 
-function handleColumn<T extends AnyObject = AnyObject>(
+const handleColumn = <T extends AnyObject = AnyObject>(
   col: ColumnProps<T>,
   dicts: ReturnType<typeof useDicts>,
   navigate: ReturnType<typeof useNavigate>
-): ColumnProps<T> {
+): ColumnProps<T> => {
   let {
     status,
     bold,
@@ -47,6 +65,7 @@ function handleColumn<T extends AnyObject = AnyObject>(
     tooltip,
     dictCode,
     render: renderFunc,
+    onCell: onCellFunc,
     ...args
   } = col
   const render = (value: any, record: T, index: number) => {
@@ -110,16 +129,20 @@ function handleColumn<T extends AnyObject = AnyObject>(
           </span>
         )
       : title,
-    render
+    render,
+    onCell: (record, index) => ({
+      onDoubleClick: copyText,
+      ...(onCellFunc ? onCellFunc(record, index) : {})
+    })
   }
 }
 
-function handleActions<T extends AnyObject = AnyObject>(
-  actions: Actions<T>[],
+const handleActions = <T extends AnyObject = AnyObject>(
+  actions: Action<T>[],
   actionFixed: TableProps['actionFixed'],
   actionTitle: TableProps['actionTitle'],
   actionWidth: TableProps['actionWidth']
-): ColumnProps<T> {
+): ColumnProps<T> => {
   return {
     title: actionTitle || '操作',
     dataIndex: '__actions',
@@ -150,13 +173,13 @@ function handleActions<T extends AnyObject = AnyObject>(
     )
   }
 }
-export function useColumns<T extends AnyObject = AnyObject>(
+export const useColumns = <T extends AnyObject = AnyObject>(
   columns: ColumnProps<T>[],
-  actions?: Actions<T>[],
+  actions?: Action<T>[],
   actionFixed?: TableProps['actionFixed'],
   actionTitle?: TableProps['actionTitle'],
   actionWidth?: TableProps['actionWidth']
-): ColumnProps<T>[] {
+): ColumnProps<T>[] => {
   const navigate = useNavigate()
   const dicts = useDicts()
   return useMemo(

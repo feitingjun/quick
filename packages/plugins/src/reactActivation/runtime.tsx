@@ -1,12 +1,7 @@
 import { defineRuntime } from '@quick/core'
-import { useConfig, DefaultPageConfig } from '@quick/app'
+import { useConfig, type DefaultPageConfig } from '@quick/app'
 // @ts-ignore
-import {
-  AliveScope,
-  KeepAlive,
-  useAliveController,
-  CachingNode
-} from 'react-activation'
+import { AliveScope, KeepAlive, useAliveController, type CachingNode } from 'react-activation'
 import { useLocation } from 'react-router'
 
 export type KeepAlivePageConfig = {
@@ -44,9 +39,7 @@ export const useCachingNodes = (includeLayout?: boolean) => {
         if (!arr.includes(node.name!)) arr.push(node.name!)
         // 查询子级
         if (node.layout && direction !== 'up') {
-          const childs = cachingNodes.filter(
-            v => v.parendRouteId === node.routeId
-          )
+          const childs = cachingNodes.filter(v => v.parendRouteId === node.routeId)
           recursion(
             childs.map(v => v.name!),
             'down'
@@ -56,9 +49,7 @@ export const useCachingNodes = (includeLayout?: boolean) => {
         // 查询打开的兄弟节点，没有则将父级也清除
         const sibling = cachingNodes.filter(
           v =>
-            v.parendRouteId === node.parendRouteId &&
-            v.name !== node.name &&
-            !arr.includes(v.name!)
+            v.parendRouteId === node.parendRouteId && v.name !== node.name && !arr.includes(v.name!)
         )
         if (sibling.length > 0) return
         const parent = cachingNodes.find(v => v.routeId === node.parendRouteId)
@@ -70,47 +61,43 @@ export const useCachingNodes = (includeLayout?: boolean) => {
     return arr
   }
   return {
-    cachingNodes: includeLayout
-      ? cachingNodes
-      : cachingNodes.filter(v => !v.layout),
+    cachingNodes: includeLayout ? cachingNodes : cachingNodes.filter(v => !v.layout),
     dropScope,
     clear
   }
 }
 
-export default defineRuntime(
-  ({ addProvider, addWrapper, appContext: { appConfig } }) => {
-    const { keepAlive: keep } = appConfig as KeepAliveAppConfig
-    addProvider(({ children }) => {
-      return <AliveScope>{children}</AliveScope>
-    })
-    addWrapper(({ children, routeId, layout, parentId }) => {
-      let { pathname, search } = useLocation()
-      const id = layout ? routeId : routeId + search
-      const { keepAlive = keep?.default, pagename } =
-        useConfig<DefaultPageConfig<KeepAlivePageConfig>>() ?? {}
-      if (!keepAlive) return children
-      return (
-        <KeepAlive
-          name={id}
-          cacheKey={id}
-          id={search}
-          pagename={pagename}
-          pathname={pathname}
-          search={search}
-          routeId={routeId}
-          layout={layout}
-          parendRouteId={parentId}
-          /**
-           * react-freeze与React.createRoot搭配使用会导致React.useLayoutEffec多次重复执行，
-           * 从而造成antd的Button组件在页面切换时显示loading，使用autoFreeze关闭react-freeze，但会导致性能下降
-           * 或者降级到react17
-           * */
-          autoFreeze={false}
-        >
-          {children}
-        </KeepAlive>
-      )
-    })
-  }
-)
+export default defineRuntime(({ addProvider, addWrapper, appContext: { appConfig } }) => {
+  const { keepAlive: keep } = appConfig as KeepAliveAppConfig
+  addProvider(({ children }) => {
+    return <AliveScope>{children}</AliveScope>
+  })
+  addWrapper(({ children, routeId, layout, parentId }) => {
+    let { pathname, search } = useLocation()
+    const id = layout ? routeId : routeId + search
+    const { keepAlive = keep?.default, pagename } =
+      useConfig<DefaultPageConfig<KeepAlivePageConfig>>() ?? {}
+    if (!keepAlive) return children
+    return (
+      <KeepAlive
+        name={id}
+        cacheKey={id}
+        id={search}
+        pagename={pagename}
+        pathname={pathname}
+        search={search}
+        routeId={routeId}
+        layout={layout}
+        parendRouteId={parentId}
+        /**
+         * react-freeze与React.createRoot搭配使用会导致React.useLayoutEffec多次重复执行，
+         * 从而造成antd的Button组件在页面切换时显示loading，使用autoFreeze关闭react-freeze，但会导致性能下降
+         * 或者降级到react17
+         * */
+        autoFreeze={false}
+      >
+        {children}
+      </KeepAlive>
+    )
+  })
+})

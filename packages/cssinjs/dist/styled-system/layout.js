@@ -114,7 +114,7 @@ configs.py = configs.paddingY;
 var space = system(configs);
 
 // src/styled-system/layout.ts
-var getWidth = (n, scale) => get(scale, n, !isNumber(n) || n > 1 ? n : n * 100 + "%");
+var getWidth = (n, scale) => get(scale, n, !isNumber(n) || n > 1 ? n : n === 0 ? 0 : n * 100 + "%");
 var config = {
   width: {
     property: "width",

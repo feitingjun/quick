@@ -1,16 +1,16 @@
 import {
+  type ReactNode,
+  type Context,
+  type ReactElement,
   useRef,
-  ReactNode,
   useContext,
-  Context,
-  ReactElement,
   cloneElement,
   useLayoutEffect,
   useMemo
 } from 'react'
 import { ScopeContext, KeepAliveContext } from './context'
 import { getFixedContext } from './fixContext'
-import Activation, { Bridge } from './activation'
+import Activation, { type Bridge } from './activation'
 import { useLoadedLayoutEffect } from './hooks'
 
 function Wrapper(props: {
@@ -22,16 +22,16 @@ function Wrapper(props: {
   const { name, children, bridges, ...args } = props
   const wrapperRef = useRef<HTMLDivElement>(null)
   const scope = useContext(ScopeContext)
-  if(!scope) return children
+  if (!scope) return children
   const { addActivation, getActivation } = scope
   // 获取父keep-alive的状态
   const pctx = useContext(KeepAliveContext)
   const { addActiveListeners } = pctx || {}
-  
+
   // 激活时执行函数
   const handleActivate = () => {
     let at = getActivation(name)
-    if(!at) {
+    if (!at) {
       at = new Activation(name)
       at.props = args
       at.bridges = bridges
@@ -45,7 +45,7 @@ function Wrapper(props: {
   // 失活时执行函数
   const handleUnactivate = () => {
     let at = getActivation(name)
-    if(!at) return
+    if (!at) return
     at.active = false
     at.saveScroll(at.dom)
     at.update()
@@ -64,8 +64,8 @@ function Wrapper(props: {
    * 并且需要依赖props以获取最新的bridges、children等
    */
   useLayoutEffect(() => {
-    const removeListener = addActiveListeners?.((active) => {
-      active ? handleActivate(): handleUnactivate()
+    const removeListener = addActiveListeners?.(active => {
+      active ? handleActivate() : handleUnactivate()
     })
     return () => removeListener?.()
   }, [props])
@@ -73,7 +73,7 @@ function Wrapper(props: {
   // props变化时，更新缓存组件的props(避免创建时执行多次update，所以使用useLoadedLayoutEffect)
   useLoadedLayoutEffect(() => {
     let at = getActivation(name)
-    if(!at) return
+    if (!at) return
     at.props = args
     at.bridges = bridges
     at.children = children
@@ -84,23 +84,42 @@ function Wrapper(props: {
 }
 
 // 获取上级context的value，然后传递给缓存组件的桥接器
-const Bridge = ({children, bridges, ctx}:{children: ReactElement<{bridges:Bridge[]}>, bridges: Bridge[], ctx: Context<any>}) => {
+const Bridge = ({
+  children,
+  bridges,
+  ctx
+}: {
+  children: ReactElement<{ bridges: Bridge[] }>
+  bridges: Bridge[]
+  ctx: Context<any>
+}) => {
   const value = useContext(ctx)
   return cloneElement(children, { bridges: [{ context: ctx, value }, ...bridges] })
 }
 
-export default function KeepAlive(props:{
+export default function KeepAlive(props: {
   name: string
   children: ReactNode
   [prop: string]: any
-}){
+}) {
   const { name, children, ...args } = props
   const scope = useContext(ScopeContext)
-  if(!scope) return children
+  if (!scope) return children
   // 按顺序获取上级的context及其value，然后传递给缓存组件
-  return useMemo(() => (
-    getFixedContext(name)!.reduce((prev, ctx) => {
-      return <Bridge bridges={prev.props.bridges} ctx={ctx}>{prev}</Bridge> 
-    }, <Wrapper bridges={[]} name={name} {...args}>{children}</Wrapper>)
-  ), [props])
+  return useMemo(
+    () =>
+      getFixedContext(name)!.reduce(
+        (prev, ctx) => {
+          return (
+            <Bridge bridges={prev.props.bridges} ctx={ctx}>
+              {prev}
+            </Bridge>
+          )
+        },
+        <Wrapper bridges={[]} name={name} {...args}>
+          {children}
+        </Wrapper>
+      ),
+    [props]
+  )
 }
