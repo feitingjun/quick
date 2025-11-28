@@ -4,14 +4,14 @@ import type { Theme } from './styled-system/define'
 import type { SxProps, ComponentCssStyles } from './types'
 import { transform, merge, isCssProp } from './utils'
 
-// 变体(variants)定义
+/**变体(variants)定义 */
 export type VariantsProps = {
   [key: string]: {
     [key: string]: SxProps
   }
 }
 
-// styled函数的第二个参数返回类型
+/**styled函数的第二个参数返回类型 */
 export type StyledProps<T extends VariantsProps = VariantsProps> = {
   base?: SxProps
   variants?: T
@@ -20,34 +20,32 @@ export type StyledProps<T extends VariantsProps = VariantsProps> = {
   }
 }
 
-// 样式函数参数类型，支持对象或函数形式
-export type RecipeProps<C, T extends VariantsProps = VariantsProps> =
+/**样式函数参数类型，支持对象或函数形式 */
+export type RecipeProps<
+  C extends keyof React.JSX.IntrinsicElements | React.JSXElementConstructor<any>,
+  T extends VariantsProps = VariantsProps
+> =
   | StyledProps<T>
   | ((
       props: {
         theme?: Theme
-      } & ComponentPropsType<C>
+      } & React.ComponentProps<C>
     ) => StyledProps<T>)
-
-// 提取组件的原始 props 类型
-export type ComponentPropsType<C> = C extends React.ComponentType<infer P>
-  ? P
-  : C extends keyof React.JSX.IntrinsicElements
-  ? React.JSX.IntrinsicElements[C]
-  : {}
 
 // 预设样式类型
 type PresetProp<T extends { presets?: Record<string, any> } = { presets?: any }> =
   T['presets'] extends Record<string, any> ? { preset?: keyof T['presets'] } : {}
 
-// 合并原始 props 和 SxProps
-export type StyledComponentProps<C, V extends VariantsProps = {}> = Omit<
-  C,
+/**合并原始 props 和 SxProps */
+export type StyledComponentProps<P, V extends VariantsProps = {}> = Omit<
+  P,
   keyof ComponentCssStyles
 > &
   ComponentCssStyles & {
     [K in keyof V]?: keyof V[K] extends 'true' ? boolean : keyof V[K]
   } & PresetProp<Theme>
+//
+export type StyledComponent<P, V extends VariantsProps = {}> = React.FC<StyledComponentProps<P, V>>
 
 // type ForbidSystemProps<T extends React.ComponentType<any>> = Extract<
 //   keyof React.ComponentProps<T>,
@@ -62,19 +60,16 @@ export type StyledComponentProps<C, V extends VariantsProps = {}> = Omit<
 //     }
 
 /**使用styled创建的组件，样式相关prop将会被过滤，不会传递给children*/
-export function styled<
-  C extends React.ComponentType<any> | React.ForwardRefExoticComponent<any>,
-  T extends VariantsProps = {}
->(
+export function styled<C extends React.JSXElementConstructor<any>, V extends VariantsProps = {}>(
   component: C,
-  recipes?: RecipeProps<C, T>
-): React.FC<StyledComponentProps<ComponentPropsType<C>, T>>
+  recipes?: RecipeProps<C, V>
+): StyledComponent<React.ComponentProps<C>, V>
 
 // 重载2：支持原生 HTML 元素
 export function styled<Tag extends keyof React.JSX.IntrinsicElements, T extends VariantsProps = {}>(
   component: Tag,
   recipes?: RecipeProps<Tag, T>
-): React.FC<StyledComponentProps<ComponentPropsType<Tag>, T>>
+): StyledComponent<React.ComponentProps<Tag>, T>
 
 // styled 函数实现
 export function styled(

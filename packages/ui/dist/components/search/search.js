@@ -3,7 +3,7 @@ import { useMemo, useCallback, useEffect, useActionState, startTransition } from
 import { RedoOutlined, SearchOutlined } from '@ant-design/icons';
 import { Form, Button as Button$1 } from 'antd';
 import { styled, useTheme } from '@quick/cssinjs';
-import { jsxs, jsx } from '@quick/cssinjs/jsx-runtime';
+import { jsxs, jsx, Fragment } from '@quick/cssinjs/jsx-runtime';
 import { useSearchParams } from 'react-router';
 import Bignumber from 'bignumber.js';
 
@@ -115,7 +115,30 @@ function Search({
       form.submit();
     }
   }, [query, form, initLoad]);
-  return /* @__PURE__ */ jsxs(
+  const btns = useMemo(() => {
+    return /* @__PURE__ */ jsxs(
+      box_default,
+      {
+        sx: {
+          position: "absolute",
+          right: 4 * theme.space,
+          bottom: 4 * theme.space,
+          w: colWidth / 2,
+          display: "flex",
+          justifyContent: "space-between",
+          ".ant-btn": {
+            px: 2.5,
+            gap: 1
+          }
+        },
+        children: [
+          /* @__PURE__ */ jsx(button_default, { mr: 2, onClick: onClear, icon: /* @__PURE__ */ jsx(RedoOutlined, {}), children: resetText }),
+          /* @__PURE__ */ jsx(button_default, { type: "primary", htmlType: "submit", loading, icon: /* @__PURE__ */ jsx(SearchOutlined, {}), children: okText })
+        ]
+      }
+    );
+  }, [loading, onClear, okText, resetText, theme, colWidth]);
+  return /* @__PURE__ */ jsx(
     form_default,
     {
       layout: "inline",
@@ -149,30 +172,15 @@ function Search({
         }
       },
       ...props,
-      children: [
+      children: typeof children === "function" ? ((values, form2) => {
+        return /* @__PURE__ */ jsxs(Fragment, { children: [
+          children(values, form2),
+          btns
+        ] });
+      }) : /* @__PURE__ */ jsxs(Fragment, { children: [
         children,
-        /* @__PURE__ */ jsxs(
-          box_default,
-          {
-            sx: {
-              position: "absolute",
-              right: 4 * theme.space,
-              bottom: 4 * theme.space,
-              w: colWidth / 2,
-              display: "flex",
-              justifyContent: "space-between",
-              ".ant-btn": {
-                px: 2.5,
-                gap: 1
-              }
-            },
-            children: [
-              /* @__PURE__ */ jsx(button_default, { mr: 2, onClick: onClear, icon: /* @__PURE__ */ jsx(RedoOutlined, {}), children: resetText }),
-              /* @__PURE__ */ jsx(button_default, { type: "primary", htmlType: "submit", loading, icon: /* @__PURE__ */ jsx(SearchOutlined, {}), children: okText })
-            ]
-          }
-        )
-      ]
+        btns
+      ] })
     }
   );
 }

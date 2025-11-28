@@ -1,29 +1,21 @@
 import * as _quick_cssinjs from '@quick/cssinjs';
-import { SxProps, StyledComponentProps, ComponentCssStyles } from '@quick/cssinjs';
+import { SxProps, StyledComponent, StyledComponentProps, ComponentCssStyles } from '@quick/cssinjs';
 export { useTheme } from '@quick/cssinjs';
 import * as react from 'react';
 import { ComponentProps } from 'react';
 import * as antd from 'antd';
-import { Space as Space$1, Form as Form$1, Input as Input$1, TableProps as TableProps$1, TableColumnType, Dropdown as Dropdown$1, Popover as Popover$1, Checkbox as Checkbox$1 } from 'antd';
+import { Space as Space$1, FormItemProps as FormItemProps$2, Form as Form$1, FormProps as FormProps$1, Input as Input$1, InputNumber as InputNumber$1, DatePickerProps as DatePickerProps$1, TableProps as TableProps$1, TableColumnType, Dropdown as Dropdown$1, Popover as Popover$1, Checkbox as Checkbox$1 } from 'antd';
 export { FormInstance } from 'antd';
-import * as antd_es_tooltip from 'antd/es/tooltip';
 import { MessageInstance } from 'antd/es/message/interface';
-import * as rc_field_form_lib_interface from 'rc-field-form/lib/interface';
-import * as rc_field_form from 'rc-field-form';
 import * as antd_es_form_hooks_useFormInstance from 'antd/es/form/hooks/useFormInstance';
 import * as antd_es_form_Form from 'antd/es/form/Form';
 import * as antd_es_form from 'antd/es/form';
 import * as antd_es_form_context from 'antd/es/form/context';
-import * as rc_input_number from 'rc-input-number';
-import * as rc_picker from 'rc-picker';
-import * as antd_es_date_picker_generatePicker from 'antd/es/date-picker/generatePicker';
-import * as dayjs from 'dayjs';
-import dayjs__default from 'dayjs';
+import * as antd_es_tooltip from 'antd/es/tooltip';
 import * as antd_es_checkbox from 'antd/es/checkbox';
-import * as antd_es_date_picker_generatePicker_interface from 'antd/es/date-picker/generatePicker/interface';
-import * as antd_es_config_provider from 'antd/es/config-provider';
-import * as antd_es__util_statusUtils from 'antd/es/_util/statusUtils';
-import * as antd_es_button from 'antd/es/button';
+import * as axios from 'axios';
+import { ResponseType, AxiosRequestConfig } from 'axios';
+import { RangePickerProps as RangePickerProps$1 } from 'antd/es/date-picker';
 
 type DeepRequired<T> = {
     [K in keyof T]-?: DeepRequired<T[K]>;
@@ -210,39 +202,37 @@ declare function Register({ children }: {
 }): react.ReactNode;
 declare function ConfigProvider({ theme, dicts, children }: ConfigProviderProps): _quick_cssinjs.JSX.Element;
 
-declare const Button: react.FC<_quick_cssinjs.StyledComponentProps<antd.ButtonProps & react.RefAttributes<HTMLAnchorElement | HTMLButtonElement>, {}>>;
+declare const Button: _quick_cssinjs.StyledComponent<antd.ButtonProps & react.RefAttributes<HTMLAnchorElement | HTMLButtonElement>, {}>;
 type ButtonProps = ComponentProps<typeof Button>;
 
-declare const StyledBox: react.FC<_quick_cssinjs.StyledComponentProps<react.DetailedHTMLProps<react.HTMLAttributes<HTMLDivElement>, HTMLDivElement>, {}>>;
+declare const StyledBox: _quick_cssinjs.StyledComponent<react.DetailedHTMLProps<react.HTMLAttributes<HTMLDivElement>, HTMLDivElement>, {}>;
 type BoxProps = ComponentProps<typeof StyledBox> & {
     as?: keyof React.JSX.IntrinsicElements;
 };
 declare const Box: (props: BoxProps) => _quick_cssinjs.JSX.Element;
 
-declare const Space: react.FC<_quick_cssinjs.StyledComponentProps<antd.SpaceProps & react.RefAttributes<HTMLDivElement>, {}>>;
+declare const Space: _quick_cssinjs.StyledComponent<antd.SpaceProps & react.RefAttributes<HTMLDivElement>, {}>;
 type SpaceProps = typeof Space$1;
 
-declare const Tooltip: react.FC<_quick_cssinjs.StyledComponentProps<antd.TooltipProps & react.RefAttributes<antd_es_tooltip.TooltipRef>, {}>>;
+declare const Tooltip: _quick_cssinjs.StyledComponent<any, {}>;
 type TooltipProps = React.ComponentProps<typeof Tooltip>;
 
 declare let message: MessageInstance;
 
-declare const StyledItem: react.FC<_quick_cssinjs.StyledComponentProps<antd.FormItemProps<any>, {}>>;
+declare const StyledItem: StyledComponent<FormItemProps$2>;
 type CompoundedComponent$3 = typeof StyledItem & {
     useStatus: typeof Form$1.Item.useStatus;
 };
 declare const Item$1: CompoundedComponent$3;
 
-declare const ErrorList: react.FC<_quick_cssinjs.StyledComponentProps<antd_es_form.ErrorListProps, {}>>;
+declare const ErrorList: _quick_cssinjs.StyledComponent<antd_es_form.ErrorListProps, {}>;
 
-declare const Provider: react.FC<_quick_cssinjs.StyledComponentProps<antd_es_form_context.FormProviderProps, {}>>;
+declare const Provider: _quick_cssinjs.StyledComponent<antd_es_form_context.FormProviderProps, {}>;
 
 declare const useForm: typeof antd_es_form_Form.useForm;
 declare const useFormInstance: typeof antd_es_form_hooks_useFormInstance.default;
-declare const useWatch: typeof rc_field_form.useWatch;
-declare const StyledForm: react.FC<_quick_cssinjs.StyledComponentProps<antd.FormProps<any> & {
-    children?: react.ReactNode | undefined;
-} & react.RefAttributes<rc_field_form_lib_interface.FormRef<any>>, {}>>;
+declare const useWatch: typeof antd_es_form_Form.useWatch;
+declare const StyledForm: StyledComponent<FormProps$1>;
 type CompoundedComponent$2 = typeof StyledForm & {
     Item: typeof Item$1;
     List: typeof Form$1.List;
@@ -285,37 +275,17 @@ type CompoundedComponent$1 = typeof Search$1 & {
 };
 declare const Search: CompoundedComponent$1;
 
-declare const Input: react.FC<_quick_cssinjs.StyledComponentProps<antd.InputProps & react.RefAttributes<antd.InputRef>, {}>>;
+declare const Input: _quick_cssinjs.StyledComponent<antd.InputProps & react.RefAttributes<antd.InputRef>, {}>;
 type InputProps = React.ComponentProps<typeof Input$1>;
 
-declare const InputNumber: react.FC<_quick_cssinjs.StyledComponentProps<antd.InputNumberProps<rc_input_number.ValueType> & {
-    children?: react.ReactNode | undefined;
-} & react.RefAttributes<HTMLInputElement>, {}>>;
+declare const InputNumber: StyledComponent<typeof InputNumber$1>;
 type InputNumberProps = React.ComponentProps<typeof InputNumber>;
 
-declare const StyledRangePicker: react.FC<_quick_cssinjs.StyledComponentProps<Omit<rc_picker.RangePickerProps<dayjs__default.Dayjs>, "locale" | "classNames" | "styles" | "generateConfig" | "hideHeader"> & {
-    locale?: antd_es_date_picker_generatePicker.PickerLocale;
-    size?: antd_es_button.ButtonSize;
-    placement?: "bottomLeft" | "bottomRight" | "topLeft" | "topRight";
-    bordered?: boolean;
-    status?: antd_es__util_statusUtils.InputStatus;
-    variant?: antd_es_config_provider.Variant;
-    dropdownClassName?: string;
-    popupClassName?: string;
-    rootClassName?: string;
-    popupStyle?: React.CSSProperties;
-    styles?: antd_es_date_picker_generatePicker_interface.PickerStyles;
-    classNames?: antd_es_date_picker_generatePicker_interface.PickerClassNames;
-} & react.RefAttributes<rc_picker.PickerRef>, {}>>;
+declare const StyledRangePicker: StyledComponent<RangePickerProps$1>;
 type RangePickerProps = React.ComponentProps<typeof StyledRangePicker>;
 declare function RangePicker({ showTime, allowEmpty, ...props }: RangePickerProps): _quick_cssinjs.JSX.Element;
 
-declare const DatePicker: react.FC<_quick_cssinjs.StyledComponentProps<Omit<antd_es_date_picker_generatePicker.PickerProps<dayjs.Dayjs>, "value" | "defaultValue" | "onChange" | "onOk"> & react.RefAttributes<rc_picker.PickerRef> & {
-    defaultValue?: unknown;
-    value?: unknown;
-    onChange?: ((date: unknown, dateString: string | string[]) => void) | undefined;
-    onOk?: ((date: unknown) => void) | undefined;
-}, {}>>;
+declare const DatePicker: StyledComponent<DatePickerProps$1>;
 type DatePickerProps = typeof DatePicker;
 
 type AnyObject = Record<string, any>;
@@ -367,7 +337,7 @@ interface ColumnGroupType<RecordType extends AnyObject = AnyObject> extends Omit
     children?: ColumnType<RecordType>[];
 }
 type ColumnProps<RecordType extends AnyObject = AnyObject> = ColumnType<RecordType> | ColumnGroupType<RecordType>;
-interface Action$1<RecordType extends AnyObject = AnyObject> extends Omit<ButtonProps, 'className' | 'title' | 'onClick'> {
+interface Action$2<RecordType extends AnyObject = AnyObject> extends Omit<ButtonProps, keyof SxProps | 'className' | 'title' | 'onClick'> {
     title?: React.ReactNode;
     onClick?: (e: React.MouseEvent, record: RecordType, index: number) => void;
     visible?: boolean | ((record: RecordType, index: number) => boolean);
@@ -377,7 +347,7 @@ interface Action$1<RecordType extends AnyObject = AnyObject> extends Omit<Button
 interface TableProps<RecordType extends AnyObject = AnyObject> extends StyledComponentProps<TableProps$1<RecordType>> {
     columns?: ColumnProps<RecordType>[];
     /**操作栏内容 */
-    actions?: Action$1<RecordType>[];
+    actions?: Action$2<RecordType>[];
     /**操作栏宽度 */
     actionWidth?: number;
     /**操作栏位置 */
@@ -395,27 +365,87 @@ declare function defineColumns<const T extends ColumnProps<AnyObject>[]>(columns
     dataIndex: string;
 } ? T[number]["dataIndex"] : never]: any; } & AnyObject>[];
 
-interface Action<RecordType extends AnyObject = AnyObject> extends Action$1<RecordType> {
-    display?: 'table' | 'search' | undefined;
+interface Action$1 extends Omit<ButtonProps, keyof SxProps | 'title'> {
+    title?: React.ReactNode;
 }
-type PageProps<RecordType extends AnyObject = AnyObject> = ComponentCssStyles & TableProps<RecordType> & SearchProps & {
+
+type Action<RecordType extends AnyObject = AnyObject> = Action$1 | (Action$2<RecordType> & {
+    display: 'table';
+});
+type PageProps<RecordType extends AnyObject = AnyObject> = ComponentCssStyles & Omit<TableProps<RecordType>, 'actions'> & Omit<SearchProps, 'onSearch'> & {
+    /**请求路径 */
+    url?: string;
+    /**请求方式 */
+    method?: 'get' | 'post' | 'put' | 'delete' | 'patch';
+    /**请求参数位置，get默认是query，其它默认是body */
+    paramsLocation?: 'query' | 'body';
+    /**额外的请求参数 */
+    params?: Record<string, any>;
+    /**数据请求完成后的回调，data为经过request.internalResponseHandler处理后的数据 */
+    onRequestComplete?: (data: any) => RecordType[] | Promise<RecordType[]>;
+    onSearch?: (values: Record<string, any>) => Record<string, any> | Promise<Record<string, any>>;
+    colWidth?: number;
+    /**页面操作按钮 */
     actions?: Action<RecordType>[];
+    /**是否显示工具栏 */
     showTool?: boolean;
 };
-declare function Page<RecordType extends AnyObject = AnyObject>({ okText, resetText, initLoad, onSearch: onSearchPage, onReset: onResetPage, colWidth, children, initialValues, form, size: defaultSize, actions, showTool, columns, ...props }: PageProps<RecordType>): _quick_cssinjs.JSX.Element;
+declare function Page<RecordType extends AnyObject = AnyObject>({ okText, resetText, initLoad, url, method, paramsLocation, params, onRequestComplete, onSearch: onSearchPage, onReset: onResetPage, dataSource: propsDataSource, colWidth, children, initialValues, form, size: defaultSize, actions, showTool, columns, ...props }: PageProps<RecordType>): _quick_cssinjs.JSX.Element;
 
-declare const Dropdown: react.FC<_quick_cssinjs.StyledComponentProps<antd.DropDownProps, {}>>;
+declare const Dropdown: _quick_cssinjs.StyledComponent<antd.DropDownProps, {}>;
 type DropdownProps = React.ComponentProps<typeof Dropdown$1>;
 
-declare const Popover: react.FC<_quick_cssinjs.StyledComponentProps<antd.PopoverProps & react.RefAttributes<antd_es_tooltip.TooltipRef>, {}>>;
+declare const Popover: _quick_cssinjs.StyledComponent<antd.PopoverProps & react.RefAttributes<antd_es_tooltip.TooltipRef>, {}>;
 type PopoverProps = React.ComponentProps<typeof Popover$1>;
 
-declare const StyledCheckbox: react.FC<_quick_cssinjs.StyledComponentProps<antd.CheckboxProps & react.RefAttributes<antd.CheckboxRef>, {}>>;
-declare const StyledGroup: react.FC<_quick_cssinjs.StyledComponentProps<antd_es_checkbox.CheckboxGroupProps<any> & react.RefAttributes<HTMLDivElement>, {}>>;
+declare const StyledCheckbox: _quick_cssinjs.StyledComponent<antd.CheckboxProps & react.RefAttributes<antd.CheckboxRef>, {}>;
+declare const StyledGroup: _quick_cssinjs.StyledComponent<antd_es_checkbox.CheckboxGroupProps<any> & react.RefAttributes<HTMLDivElement>, {}>;
 type CompoundedComponent = typeof StyledCheckbox & {
     Group: typeof StyledGroup;
 };
 declare const Checkbox: CompoundedComponent;
 type CheckboxProps = React.ComponentProps<typeof Checkbox$1>;
 
-export { Box, type BoxProps, Button, type ButtonProps, Checkbox, type CheckboxProps, type ColumnProps, type ColumnStatus, ConfigProvider, type ConfigProviderProps, DatePicker, type DatePickerProps, type DictCode, type DictItem, type Dicts, Dropdown, type DropdownProps, Form, type FormErrorListProps, type FormItemProps$1 as FormItemProps, type FormListProps, type FormProps, type FormProviderProps, Input, InputNumber, type InputNumberProps, type InputProps, Page, type Action as PageAction, type PageProps, Popover, type PopoverProps, RangePicker, type RangePickerProps, Register, Search, type SearchItemProps, type SearchProps, Space, type SpaceProps, type SummaryProps, Table, type Action$1 as TableAction, type TableProps, type TableStatus, type Theme, Tooltip, type TooltipProps, defaultTheme, defineColumns, defineDicts, defineTheme, message, useDict, useDictItem, useDictLabel, useDictStatus, useDicts };
+declare module 'axios' {
+    interface AxiosRequestConfig {
+        skipErrorHandler?: boolean;
+    }
+}
+interface RequestInit {
+    /**请求基础路径 */
+    baseURL?: string;
+    /**额外的请求头信息 */
+    headers?: Record<string, string>;
+    /**请求超时时间 */
+    timeout?: number;
+    /**响应数据格式，默认json */
+    responseType?: ResponseType;
+    /**根据服务器返回数据自定义错误，返回null时表示没有错误 */
+    responseError?: (data: any) => string | null;
+    /**为带数据请求功能的组件定义统一的response处理 */
+    internalResponseHandler?: {
+        all?: (data: any) => any;
+        select?: (data: any) => Record<string, any>[];
+        page?: (data: any) => {
+            dataSource: Record<string, any>[];
+            total: number;
+            pageSize: number;
+            page: number;
+        };
+    };
+}
+declare const request: {
+    _internalResponseHandler: RequestInit["internalResponseHandler"];
+    /**初始化配置 */
+    init(config: RequestInit): void;
+    request: <T = any>(config: AxiosRequestConfig<T>) => Promise<T | undefined>;
+    get: <T = any>(url: string, config?: AxiosRequestConfig<T>) => Promise<T | undefined>;
+    post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig<T>) => Promise<T | undefined>;
+    put: <T = any>(url: string, data?: any, config?: AxiosRequestConfig<T>) => Promise<T | undefined>;
+    delete: <T = any>(url: string, config?: AxiosRequestConfig<T>) => Promise<T | undefined>;
+    patch: <T = any>(url: string, data?: any, config?: AxiosRequestConfig<T>) => Promise<T | undefined>;
+    all: typeof axios.all;
+    spread: typeof axios.spread;
+};
+
+export { Box, type BoxProps, Button, type ButtonProps, Checkbox, type CheckboxProps, type ColumnProps, type ColumnStatus, ConfigProvider, type ConfigProviderProps, DatePicker, type DatePickerProps, type DictCode, type DictItem, type Dicts, Dropdown, type DropdownProps, Form, type FormErrorListProps, type FormItemProps$1 as FormItemProps, type FormListProps, type FormProps, type FormProviderProps, Input, InputNumber, type InputNumberProps, type InputProps, Page, type Action as PageAction, type PageProps, Popover, type PopoverProps, RangePicker, type RangePickerProps, Register, Search, type SearchItemProps, type SearchProps, Space, type SpaceProps, type SummaryProps, Table, type Action$2 as TableAction, type TableProps, type TableStatus, type Theme, Tooltip, type TooltipProps, defaultTheme, defineColumns, defineDicts, defineTheme, message, request, useDict, useDictItem, useDictLabel, useDictStatus, useDicts };

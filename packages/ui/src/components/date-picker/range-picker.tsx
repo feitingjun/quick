@@ -1,11 +1,12 @@
 import { useMemo } from 'react'
 import { DatePicker as AntdDatePicker } from 'antd'
-import { styled, useClassName } from '@quick/cssinjs'
+import { type RangePickerProps as AntdRangePickerProps } from 'antd/es/date-picker'
+import { styled, useClassName, type StyledComponent } from '@quick/cssinjs'
 import dayjs, { Dayjs } from 'dayjs'
 
 const { RangePicker: AntdRangePicker } = AntdDatePicker
 
-const StyledRangePicker = styled(AntdRangePicker)
+const StyledRangePicker = styled(AntdRangePicker) as StyledComponent<AntdRangePickerProps>
 
 export type RangePickerProps = React.ComponentProps<typeof StyledRangePicker>
 

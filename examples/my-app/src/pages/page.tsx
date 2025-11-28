@@ -8,31 +8,19 @@ import {
   Search,
   Page,
   DatePicker,
-  RangePicker
+  RangePicker,
+  request
 } from '@quick/ui'
 import { useState } from 'react'
 import dayjs from 'dayjs'
 
-const data = [
+const columns: ColumnProps<{ label: string; value: string }>[] = [
   {
-    name: 'John Brown',
-    age: 1,
-    address: 'New York No. 1 Lake Park'
-  },
-  {
-    name: 'Jim Green',
-    age: 2,
-    address: 'London No. 1 Lake Park'
-  }
-]
-
-const columns: ColumnProps<(typeof data)[number]>[] = [
-  {
-    title: 'name',
-    dataIndex: 'name',
+    title: 'Label',
+    dataIndex: 'label',
     status: 'success',
     width: 300,
-    render: (text, record) => <span>{record.name}</span>
+    render: (text, record) => <span>{record.label}</span>
     // children: [
     //   {
     //     title: 'name',
@@ -45,8 +33,8 @@ const columns: ColumnProps<(typeof data)[number]>[] = [
     // ]
   },
   {
-    title: 'age',
-    dataIndex: 'age',
+    title: 'Value',
+    dataIndex: 'value',
     thousand: true,
     width: 300,
     precision: 2,
@@ -62,15 +50,17 @@ const columns: ColumnProps<(typeof data)[number]>[] = [
 const sleep = (time: number) => new Promise(resolve => setTimeout(resolve, time))
 
 export default function Home() {
-  const [count, setCount] = useState(0)
+  const onSearch = async (values: Record<string, any>) => {
+    // await sleep(1000)
+    return values
+  }
   return (
     <div>
       <Page
-        onSearch={async values => {
-          await sleep(1000)
-        }}
-        rowKey={row => row.name}
-        dataSource={data}
+        url='/'
+        method='post'
+        onSearch={onSearch}
+        rowKey={row => row.label}
         columns={columns}
         summaryMap={{
           age1: 10000.32323
@@ -79,15 +69,15 @@ export default function Home() {
         actions={[
           {
             title: '操作1',
+            display: 'table',
             onClick: (e, record) => {
               console.log(e, record)
             }
           },
           {
             title: '操作2',
-            onClick: (e, record) => {
-              console.log(e, record)
-            }
+            type: 'primary',
+            onClick: () => {}
           }
         ]}
       >

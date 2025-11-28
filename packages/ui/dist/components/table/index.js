@@ -141,6 +141,7 @@ var handleColumn = (col, dicts, navigate) => {
   };
 };
 var handleActions = (actions, actionFixed, actionTitle, actionWidth) => {
+  if (!actions || actions.length === 0) return null;
   return {
     title: actionTitle || "\u64CD\u4F5C",
     dataIndex: "__actions",
@@ -171,7 +172,7 @@ var useColumns = (columns, actions, actionFixed, actionTitle, actionWidth) => {
   const navigate = useNavigate();
   const dicts = useDicts();
   return useMemo(
-    () => columns.map((col) => handleColumn(col, dicts, navigate)).concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth)),
+    () => columns.map((col) => handleColumn(col, dicts, navigate)).concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth) ?? []),
     [columns, actions, dicts, navigate, actionFixed, actionTitle, actionWidth]
   );
 };

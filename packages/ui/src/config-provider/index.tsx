@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
-import { StyleProvider } from '@ant-design/cssinjs'
 import { ThemeProvider } from '@quick/cssinjs'
 import { ConfigProvider as AntdConfigProvider, type ThemeConfig, App as AntdApp } from 'antd'
+import { StyleProvider, legacyLogicalPropertiesTransformer } from '@ant-design/cssinjs'
 import zhCN from 'antd/locale/zh_CN'
 import { type Theme, defaultTheme } from '@/theme'
 import { type Dicts } from '@/dicts'

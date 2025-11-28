@@ -1,7 +1,7 @@
 import { createContext, useMemo } from 'react';
-import { StyleProvider } from '@ant-design/cssinjs';
 import { ThemeProvider } from '@quick/cssinjs';
 import { ConfigProvider as ConfigProvider$1, App } from 'antd';
+import { StyleProvider } from '@ant-design/cssinjs';
 import zhCN from 'antd/locale/zh_CN';
 import 'bignumber.js';
 import 'dayjs/locale/zh-cn';

@@ -20,7 +20,7 @@
     "@quick/core": "workspace:*",
     "@quick/cssinjs": "workspace:*",
     "@quick/ui": "workspace:*",
-    "antd": "^5.27.5",
+    "antd": "^6.0.0",
     "dayjs": "^1.11.18",
     "import": "^0.0.6",
     "react": "^19.0.0",

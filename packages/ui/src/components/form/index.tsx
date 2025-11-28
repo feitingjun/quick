@@ -1,13 +1,12 @@
-import { Form as AntdForm, type FormInstance } from 'antd'
-import { styled } from '@quick/cssinjs'
+import { Form as AntdForm, type FormInstance, type FormProps as AntdFormProps } from 'antd'
+import { styled, type StyledComponent } from '@quick/cssinjs'
 import Item from './item'
 import ErrorList from './error-list'
 import Provider from './provider'
 
 const { useForm, useFormInstance, useWatch } = AntdForm
 
-// 不能推断泛型默认值，所以要手动传入泛型any
-const StyledForm = styled<typeof AntdForm<any>>(AntdForm)
+const StyledForm = styled(AntdForm) as StyledComponent<AntdFormProps>
 
 type CompoundedComponent = typeof StyledForm & {
   Item: typeof Item

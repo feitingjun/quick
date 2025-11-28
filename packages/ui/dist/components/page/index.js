@@ -1,12 +1,13 @@
-import { createContext, useMemo, useState, useCallback, useActionState, startTransition, useEffect, useContext, cloneElement, isValidElement } from 'react';
+import { createContext, useState, useMemo, useCallback, useActionState, startTransition, useEffect, useContext, cloneElement, isValidElement } from 'react';
 import { Tooltip as Tooltip$1, Space as Space$1, Button as Button$1, Table, Form, Dropdown as Dropdown$1, Popover as Popover$1, Checkbox as Checkbox$1 } from 'antd';
 import { styled, useTheme } from '@quick/cssinjs';
 import { RedoOutlined, SearchOutlined, ColumnHeightOutlined, SettingOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import copy from 'copy-to-clipboard';
 import Bignumber from 'bignumber.js';
 import { useSearchParams, useNavigate } from 'react-router';
-import { jsxs, jsx } from '@quick/cssinjs/jsx-runtime';
+import { jsxs, jsx, Fragment } from '@quick/cssinjs/jsx-runtime';
 import dayjs, { isDayjs } from 'dayjs';
+import axios from 'axios';
 
 // src/components/page/index.tsx
 function thousands(num) {
@@ -169,6 +170,7 @@ var handleColumn = (col, dicts, navigate) => {
   };
 };
 var handleActions = (actions, actionFixed, actionTitle, actionWidth) => {
+  if (!actions || actions.length === 0) return null;
   return {
     title: actionTitle || "\u64CD\u4F5C",
     dataIndex: "__actions",
@@ -199,7 +201,7 @@ var useColumns = (columns, actions, actionFixed, actionTitle, actionWidth) => {
   const navigate = useNavigate();
   const dicts = useDicts();
   return useMemo(
-    () => columns.map((col) => handleColumn(col, dicts, navigate)).concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth)),
+    () => columns.map((col) => handleColumn(col, dicts, navigate)).concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth) ?? []),
     [columns, actions, dicts, navigate, actionFixed, actionTitle, actionWidth]
   );
 };
@@ -366,7 +368,30 @@ function Search({
       form.submit();
     }
   }, [query, form, initLoad]);
-  return /* @__PURE__ */ jsxs(
+  const btns = useMemo(() => {
+    return /* @__PURE__ */ jsxs(
+      box_default,
+      {
+        sx: {
+          position: "absolute",
+          right: 4 * theme.space,
+          bottom: 4 * theme.space,
+          w: colWidth / 2,
+          display: "flex",
+          justifyContent: "space-between",
+          ".ant-btn": {
+            px: 2.5,
+            gap: 1
+          }
+        },
+        children: [
+          /* @__PURE__ */ jsx(button_default, { mr: 2, onClick: onClear, icon: /* @__PURE__ */ jsx(RedoOutlined, {}), children: resetText }),
+          /* @__PURE__ */ jsx(button_default, { type: "primary", htmlType: "submit", loading, icon: /* @__PURE__ */ jsx(SearchOutlined, {}), children: okText })
+        ]
+      }
+    );
+  }, [loading, onClear, okText, resetText, theme, colWidth]);
+  return /* @__PURE__ */ jsx(
     form_default,
     {
       layout: "inline",
@@ -400,30 +425,15 @@ function Search({
         }
       },
       ...props,
-      children: [
+      children: typeof children === "function" ? ((values, form2) => {
+        return /* @__PURE__ */ jsxs(Fragment, { children: [
+          children(values, form2),
+          btns
+        ] });
+      }) : /* @__PURE__ */ jsxs(Fragment, { children: [
         children,
-        /* @__PURE__ */ jsxs(
-          box_default,
-          {
-            sx: {
-              position: "absolute",
-              right: 4 * theme.space,
-              bottom: 4 * theme.space,
-              w: colWidth / 2,
-              display: "flex",
-              justifyContent: "space-between",
-              ".ant-btn": {
-                px: 2.5,
-                gap: 1
-              }
-            },
-            children: [
-              /* @__PURE__ */ jsx(button_default, { mr: 2, onClick: onClear, icon: /* @__PURE__ */ jsx(RedoOutlined, {}), children: resetText }),
-              /* @__PURE__ */ jsx(button_default, { type: "primary", htmlType: "submit", loading, icon: /* @__PURE__ */ jsx(SearchOutlined, {}), children: okText })
-            ]
-          }
-        )
-      ]
+        btns
+      ] })
     }
   );
 }
@@ -514,6 +524,79 @@ function Item2({
 var Search2 = Search;
 Search2.Item = Item2;
 var search_default = Search2;
+var CustomError = class {
+  name;
+  message;
+  code = "ERR_CUSTOM";
+  data;
+  config;
+  constructor(message2, data, config) {
+    this.name = "CustomError";
+    this.message = message2;
+    this.data = data;
+    this.config = config;
+  }
+};
+axios.defaults.validateStatus = (status) => {
+  return status >= 200 && status < 300;
+};
+axios.defaults.responseType = "json";
+axios.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    let errorMsg = error.message || "\u672A\u77E5\u9519\u8BEF";
+    let data = null;
+    if (axios.isAxiosError(error)) {
+      errorMsg = error.message;
+      data = error.response?.data;
+    }
+    if (error instanceof CustomError) {
+      errorMsg = error.message;
+      data = error.data;
+    }
+    if (!error?.config?.skipErrorHandler) {
+      message.error(errorMsg);
+    }
+    return data;
+  }
+);
+var request = {
+  _internalResponseHandler: void 0,
+  /**初始化配置 */
+  init(config) {
+    axios.defaults.baseURL = config.baseURL;
+    Object.entries(config.headers ?? {}).forEach(([key, value]) => {
+      axios.defaults.headers.common[key] = value;
+    });
+    axios.defaults.timeout = config.timeout;
+    axios.defaults.responseType = config.responseType ?? "json";
+    this._internalResponseHandler = config?.internalResponseHandler;
+    axios.defaults.transformResponse = [
+      ...Array.isArray(axios.defaults.transformResponse) ? axios.defaults.transformResponse : axios.defaults.transformResponse ? [axios.defaults.transformResponse] : [],
+      function(data) {
+        const error = config.responseError?.(data);
+        if (error) {
+          throw new CustomError(error, data, this);
+        }
+        return data;
+      }
+    ];
+  },
+  request: (config) => axios.request(config),
+  get: (url, config) => axios.get(url, config),
+  post: (url, data, config) => axios.post(url, data, config),
+  put: (url, data, config) => axios.put(url, data, config),
+  delete: (url, config) => axios.delete(url, config),
+  patch: (url, data, config) => axios.patch(url, data, config),
+  all: axios.all,
+  spread: axios.spread
+};
+var request_default = request;
+function Actions({ actions, size }) {
+  return /* @__PURE__ */ jsx(box_default, { children: actions?.map(({ title, ...props }, i) => {
+    return /* @__PURE__ */ jsx(button_default, { size, ...props, children: title }, i);
+  }) });
+}
 var Dropdown = styled(Dropdown$1);
 var dropdown_default = Dropdown;
 var Popover = styled(Popover$1);
@@ -645,8 +728,14 @@ function Page({
   okText,
   resetText,
   initLoad,
+  url,
+  method = "get",
+  paramsLocation,
+  params,
+  onRequestComplete,
   onSearch: onSearchPage,
   onReset: onResetPage,
+  dataSource: propsDataSource,
   colWidth,
   children,
   initialValues,
@@ -657,19 +746,51 @@ function Page({
   columns,
   ...props
 }) {
+  paramsLocation = paramsLocation ?? (method === "get" ? "query" : "body");
+  const [dataSource, setDataSource] = useState([]);
   const defaultVisibleKeys = useMemo(() => {
     return columns?.filter((col) => !col.hidden).map((col) => col.title) ?? [];
   }, [columns]);
   const [size, setSize] = useState(defaultSize);
   const [visibleKeys, setVisibleKeys] = useState(defaultVisibleKeys);
   const [onSearch, loading] = useAsyncAction(async (values) => {
-    await onSearchPage?.(values);
+    const vals = await onSearchPage?.(values);
+    if (!url) return;
+    const config = {};
+    if (paramsLocation === "query") {
+      Object.assign(config, { params: { ...params ?? {}, ...vals ?? {} } });
+    } else {
+      Object.assign(config, { data: { ...params ?? {}, ...vals ?? {} } });
+    }
+    let res = await request_default.request({
+      url,
+      method,
+      ...config
+    });
+    if (typeof onRequestComplete === "function") {
+      res = await onRequestComplete(res);
+    }
+    setDataSource(res?.dataSource ?? []);
   });
   const onReset = useCallback(async () => {
+    await onResetPage?.();
   }, [onResetPage]);
   const tableColumns = useMemo(() => {
     return columns?.filter((col) => visibleKeys.includes(col.title))?.map((col) => ({ ...col, hidden: false }));
   }, [columns, visibleKeys]);
+  const [pageActions, tableActions] = useMemo(() => {
+    return actions?.reduce(
+      (acc, action) => {
+        if (action.display === "table") {
+          acc[1].push(action);
+        } else {
+          acc[0].push(action);
+        }
+        return acc;
+      },
+      [[], []]
+    ) ?? [[], []];
+  }, [actions]);
   return /* @__PURE__ */ jsxs(
     box_default,
     {
@@ -693,18 +814,31 @@ function Page({
           }
         ),
         /* @__PURE__ */ jsxs(box_default, { bg: "bg", children: [
-          /* @__PURE__ */ jsx(box_default, { px: 4, py: 2, fontSize: "subtitle", children: showTool && /* @__PURE__ */ jsx(
-            Tool,
+          (showTool || pageActions.length > 0) && /* @__PURE__ */ jsxs(box_default, { px: 2, py: 2, fontSize: "subtitle", display: "flex", justifyContent: "space-between", children: [
+            /* @__PURE__ */ jsx(Actions, { actions: pageActions, size }),
+            showTool && /* @__PURE__ */ jsx(
+              Tool,
+              {
+                size,
+                columns,
+                setSize,
+                visibleKeys,
+                defaultVisibleKeys,
+                setVisibleKeys
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsx(
+            table_default,
             {
+              dataSource: propsDataSource || dataSource,
+              columns: tableColumns,
+              actions: tableActions,
+              loading,
               size,
-              columns,
-              setSize,
-              visibleKeys,
-              defaultVisibleKeys,
-              setVisibleKeys
+              ...props
             }
-          ) }),
-          /* @__PURE__ */ jsx(table_default, { columns: tableColumns, loading, size, ...props })
+          )
         ] })
       ]
     }

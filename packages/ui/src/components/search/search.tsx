@@ -73,6 +73,32 @@ export default function Search({
     }
   }, [query, form, initLoad])
 
+  const btns = useMemo(() => {
+    return (
+      <Box
+        sx={{
+          position: 'absolute',
+          right: 4 * theme.space,
+          bottom: 4 * theme.space,
+          w: colWidth / 2,
+          display: 'flex',
+          justifyContent: 'space-between',
+          '.ant-btn': {
+            px: 2.5,
+            gap: 1
+          }
+        }}
+      >
+        <Button mr={2} onClick={onClear} icon={<RedoOutlined />}>
+          {resetText}
+        </Button>
+        <Button type='primary' htmlType='submit' loading={loading} icon={<SearchOutlined />}>
+          {okText}
+        </Button>
+      </Box>
+    )
+  }, [loading, onClear, okText, resetText, theme, colWidth])
+
   return (
     <Form
       layout='inline'
@@ -107,28 +133,21 @@ export default function Search({
       }}
       {...props}
     >
-      {children}
-      <Box
-        sx={{
-          position: 'absolute',
-          right: 4 * theme.space,
-          bottom: 4 * theme.space,
-          w: colWidth / 2,
-          display: 'flex',
-          justifyContent: 'space-between',
-          '.ant-btn': {
-            px: 2.5,
-            gap: 1
-          }
-        }}
-      >
-        <Button mr={2} onClick={onClear} icon={<RedoOutlined />}>
-          {resetText}
-        </Button>
-        <Button type='primary' htmlType='submit' loading={loading} icon={<SearchOutlined />}>
-          {okText}
-        </Button>
-      </Box>
+      {typeof children === 'function' ? (
+        (values, form) => {
+          return (
+            <>
+              {children(values, form)}
+              {btns}
+            </>
+          )
+        }
+      ) : (
+        <>
+          {children}
+          {btns}
+        </>
+      )}
     </Form>
   )
 }

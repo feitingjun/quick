@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { DatePicker } from 'antd';
+import 'antd/es/date-picker';
 import { styled, useClassName } from '@quick/cssinjs';
 import dayjs from 'dayjs';
 import { jsx } from '@quick/cssinjs/jsx-runtime';

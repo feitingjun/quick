@@ -1,5 +1,5 @@
 import type { TableColumnType, TableProps as AntdTableProps } from 'antd'
-import type { StyledComponentProps } from '@quick/cssinjs'
+import type { StyledComponentProps, SxProps } from '@quick/cssinjs'
 import type { DictCode, TableStatus } from '@/dicts'
 import type { ButtonProps } from '@/components/button'
 
@@ -68,7 +68,7 @@ export type ColumnProps<RecordType extends AnyObject = AnyObject> =
   | ColumnGroupType<RecordType>
 
 export interface Action<RecordType extends AnyObject = AnyObject>
-  extends Omit<ButtonProps, 'className' | 'title' | 'onClick'> {
+  extends Omit<ButtonProps, keyof SxProps | 'className' | 'title' | 'onClick'> {
   title?: React.ReactNode
   onClick?: (e: React.MouseEvent, record: RecordType, index: number) => void
   visible?: boolean | ((record: RecordType, index: number) => boolean)

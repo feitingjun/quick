@@ -142,7 +142,8 @@ const handleActions = <T extends AnyObject = AnyObject>(
   actionFixed: TableProps['actionFixed'],
   actionTitle: TableProps['actionTitle'],
   actionWidth: TableProps['actionWidth']
-): ColumnProps<T> => {
+): ColumnProps<T> | null => {
+  if (!actions || actions.length === 0) return null
   return {
     title: actionTitle || '操作',
     dataIndex: '__actions',
@@ -186,7 +187,7 @@ export const useColumns = <T extends AnyObject = AnyObject>(
     () =>
       columns
         .map(col => handleColumn(col, dicts, navigate))
-        .concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth)),
+        .concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth) ?? []),
     [columns, actions, dicts, navigate, actionFixed, actionTitle, actionWidth]
   )
 }
