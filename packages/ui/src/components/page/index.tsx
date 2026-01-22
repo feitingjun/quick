@@ -17,7 +17,7 @@ export type Action<RecordType extends AnyObject = AnyObject> =
   | (TableActions<RecordType> & { display: 'table' })
 
 export type PageProps<RecordType extends AnyObject = AnyObject> = ComponentCssStyles &
-  Omit<TableProps<RecordType>, 'actions'> &
+  Omit<TableProps<RecordType>, 'actions' | 'summaryMap'> &
   Omit<SearchProps, 'onSearch'> & {
     /**请求路径 */
     url?: string

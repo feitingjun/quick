@@ -131,7 +131,7 @@ var handleColumn = (col, dicts, navigate) => {
     children: children?.map((col2) => handleColumn(col2, dicts, navigate)) ?? void 0,
     title: tooltip ? (...arrs) => /* @__PURE__ */ jsxs("span", { children: [
       typeof title === "function" ? title(...arrs) : title,
-      /* @__PURE__ */ jsx(tooltip_default, { title: tooltip, verticalAlign: "middle", ml: 1, cursor: "pointer", children: /* @__PURE__ */ jsx(QuestionCircleOutlined, {}) })
+      /* @__PURE__ */ jsx(tooltip_default, { title: tooltip, children: /* @__PURE__ */ jsx(QuestionCircleOutlined, { sx: { ml: 1, cursor: "pointer" } }) })
     ] }) : title,
     render,
     onCell: (record, index) => ({

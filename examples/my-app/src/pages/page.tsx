@@ -62,9 +62,6 @@ export default function Home() {
         onSearch={onSearch}
         rowKey={row => row.label}
         columns={columns}
-        summaryMap={{
-          age1: 10000.32323
-        }}
         bordered
         actions={[
           {

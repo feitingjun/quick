@@ -123,8 +123,8 @@ const handleColumn = <T extends AnyObject = AnyObject>(
       ? (...arrs) => (
           <span>
             {typeof title === 'function' ? title(...arrs) : title}
-            <Tooltip title={tooltip} verticalAlign='middle' ml={1} cursor='pointer'>
-              <QuestionCircleOutlined />
+            <Tooltip title={tooltip}>
+              <QuestionCircleOutlined sx={{ ml: 1, cursor: 'pointer' }} />
             </Tooltip>
           </span>
         )

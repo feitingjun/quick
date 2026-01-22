@@ -4,7 +4,7 @@ export { useTheme } from '@quick/cssinjs';
 import * as react from 'react';
 import { ComponentProps } from 'react';
 import * as antd from 'antd';
-import { Space as Space$1, FormItemProps as FormItemProps$2, Form as Form$1, FormProps as FormProps$1, Input as Input$1, InputNumber as InputNumber$1, DatePickerProps as DatePickerProps$1, TableProps as TableProps$1, TableColumnType, Dropdown as Dropdown$1, Popover as Popover$1, Checkbox as Checkbox$1 } from 'antd';
+import { Space as Space$1, TooltipProps as TooltipProps$1, FormItemProps as FormItemProps$2, Form as Form$1, FormProps as FormProps$1, Input as Input$1, InputNumberProps as InputNumberProps$1, DatePickerProps as DatePickerProps$1, TableProps as TableProps$1, TableColumnType, Dropdown as Dropdown$1, Popover as Popover$1, Checkbox as Checkbox$1 } from 'antd';
 export { FormInstance } from 'antd';
 import { MessageInstance } from 'antd/es/message/interface';
 import * as antd_es_form_hooks_useFormInstance from 'antd/es/form/hooks/useFormInstance';
@@ -214,7 +214,7 @@ declare const Box: (props: BoxProps) => _quick_cssinjs.JSX.Element;
 declare const Space: _quick_cssinjs.StyledComponent<antd.SpaceProps & react.RefAttributes<HTMLDivElement>, {}>;
 type SpaceProps = typeof Space$1;
 
-declare const Tooltip: _quick_cssinjs.StyledComponent<any, {}>;
+declare const Tooltip: StyledComponent<TooltipProps$1>;
 type TooltipProps = React.ComponentProps<typeof Tooltip>;
 
 declare let message: MessageInstance;
@@ -278,7 +278,7 @@ declare const Search: CompoundedComponent$1;
 declare const Input: _quick_cssinjs.StyledComponent<antd.InputProps & react.RefAttributes<antd.InputRef>, {}>;
 type InputProps = React.ComponentProps<typeof Input$1>;
 
-declare const InputNumber: StyledComponent<typeof InputNumber$1>;
+declare const InputNumber: StyledComponent<InputNumberProps$1>;
 type InputNumberProps = React.ComponentProps<typeof InputNumber>;
 
 declare const StyledRangePicker: StyledComponent<RangePickerProps$1>;
@@ -372,7 +372,7 @@ interface Action$1 extends Omit<ButtonProps, keyof SxProps | 'title'> {
 type Action<RecordType extends AnyObject = AnyObject> = Action$1 | (Action$2<RecordType> & {
     display: 'table';
 });
-type PageProps<RecordType extends AnyObject = AnyObject> = ComponentCssStyles & Omit<TableProps<RecordType>, 'actions'> & Omit<SearchProps, 'onSearch'> & {
+type PageProps<RecordType extends AnyObject = AnyObject> = ComponentCssStyles & Omit<TableProps<RecordType>, 'actions' | 'summaryMap'> & Omit<SearchProps, 'onSearch'> & {
     /**请求路径 */
     url?: string;
     /**请求方式 */
