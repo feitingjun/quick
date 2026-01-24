@@ -1,6 +1,6 @@
 import * as ReactJSXRuntimeDev from 'react/jsx-dev-runtime'
 import { jsxDEV as emotionJsxDev } from '@emotion/react/jsx-dev-runtime'
-import { transform } from './utils'
+import { useTheme } from '@mui/system'
 
 export const Fragment = ReactJSXRuntimeDev.Fragment
 
@@ -13,10 +13,14 @@ export const jsxDEV: typeof ReactJSXRuntimeDev.jsxDEV = (
   self
 ) => {
   const { sx, ...args } = props as { sx?: any }
+  const theme = useTheme()
   if (sx) {
     return emotionJsxDev(
       type,
-      { ...args, css: (theme: any) => transform(typeof sx === 'function' ? sx(theme) : sx, theme) },
+      {
+        ...args,
+        css: theme.unstable_sx(sx)
+      },
       key,
       isStaticChildren,
       source,

@@ -88,7 +88,7 @@ function Search({
   const [form] = form_default.useForm(externalForm);
   const query = useQuery();
   const theme = useTheme();
-  const height = useMemo(() => {
+  useMemo(() => {
     if (size === "small") {
       return theme.sizes.controlHeightSm;
     }
@@ -147,30 +147,6 @@ function Search({
       onFinish,
       initialValues,
       preserve: true,
-      sx: {
-        bg: "bg",
-        mb: 2,
-        display: "grid",
-        gridTemplateColumns: `repeat(auto-fill, minmax(${colWidth / 2}px, 1fr))`,
-        p: 4,
-        gap: 2.5,
-        position: "relative",
-        _after: {
-          content: '""',
-          height,
-          gridColumn: "span 1"
-        },
-        "& > *": {
-          gridColumn: "span 2",
-          mr: 0
-        },
-        ".ant-row": {
-          flexWrap: "nowrap"
-        },
-        ".ant-input-number, .ant-input-select, .ant-picker": {
-          w: 1
-        }
-      },
       ...props,
       children: typeof children === "function" ? ((values, form2) => {
         return /* @__PURE__ */ jsxs(Fragment, { children: [

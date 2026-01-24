@@ -16,6 +16,9 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@emotion/utils": "^1.4.2",
+    "@mui/material": "^7.3.7",
+    "@mui/system": "^7.3.7",
+    "@pigment-css/react": "^0.0.30",
     "@quick/app": "workspace:*",
     "@quick/core": "workspace:*",
     "@quick/cssinjs": "workspace:*",
@@ -29,6 +32,7 @@
     "styled-system": "^5.1.5"
   },
   "devDependencies": {
+    "@pigment-css/vite-plugin": "^0.0.30",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@types/styled-system": "^5.1.24",

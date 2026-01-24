@@ -1,14 +1,12 @@
 import * as ReactJSXRuntime from 'react/jsx-runtime'
 import { jsx as emotionJsx, jsxs as emotionJsxs } from '@emotion/react/jsx-runtime'
-import { transform } from './utils'
-import type { SxProps as SxPropsObject } from './types'
-import type { Theme } from './styled-system/define'
-
-type SxProps = SxPropsObject | ((theme: Theme) => SxPropsObject)
+import { type SxProps, type Theme, useTheme } from '@mui/system'
 
 type WithConditionalCSSProp<P> = 'className' extends keyof P
   ? string extends P['className' & keyof P]
-    ? { sx?: SxProps }
+    ? string extends P['sx' & keyof P]
+      ? {}
+      : { sx?: SxProps<Theme> }
     : {}
   : {}
 
@@ -25,30 +23,25 @@ export declare namespace JSX {
   interface IntrinsicClassAttributes<T> extends React.JSX.IntrinsicClassAttributes<T> {}
   type IntrinsicElements = {
     [K in keyof React.JSX.IntrinsicElements]: React.JSX.IntrinsicElements[K] & {
-      sx?: SxProps
+      sx?: SxProps<Theme>
     }
   }
 }
 
-const getCss = (sx: SxProps, theme: Theme) => {
-  if (typeof sx === 'function') {
-    return transform(sx(theme), theme)
-  }
-  return transform(sx, theme)
-}
-
 export const jsx: typeof ReactJSXRuntime.jsx = (type, props, key) => {
-  const { sx, ...args } = props as { sx?: SxProps }
+  const { sx, ...args } = props as { sx?: SxProps<Theme> }
+  const theme = useTheme()
   if (sx) {
-    return emotionJsx(type, { ...args, css: (theme: Theme) => getCss(sx, theme) }, key)
+    return emotionJsx(type, { ...args, css: theme.unstable_sx(sx) }, key)
   }
   return emotionJsx(type, props, key)
 }
 
 export const jsxs: typeof ReactJSXRuntime.jsxs = (type, props, key) => {
   const { sx, ...args } = props as { sx?: SxProps }
+  const theme = useTheme()
   if (sx) {
-    return emotionJsxs(type, { ...args, css: (theme: Theme) => getCss(sx, theme) }, key)
+    return emotionJsxs(type, { ...args, css: theme.unstable_sx(sx) }, key)
   }
   return emotionJsxs(type, props, key)
 }

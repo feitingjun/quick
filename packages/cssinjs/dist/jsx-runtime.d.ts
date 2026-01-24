@@ -1,13 +1,9 @@
 import * as react from 'react';
 import * as ReactJSXRuntime from 'react/jsx-runtime';
-import { e as SxProps$1, T as Theme } from './types-B-_E467N.js';
-import 'csstype';
-import './styled-system/native-css.js';
-import './custom-pseudos.js';
+import { SxProps, Theme } from '@mui/system';
 
-type SxProps = SxProps$1 | ((theme: Theme) => SxProps$1);
-type WithConditionalCSSProp<P> = 'className' extends keyof P ? string extends P['className' & keyof P] ? {
-    sx?: SxProps;
+type WithConditionalCSSProp<P> = 'className' extends keyof P ? string extends P['className' & keyof P] ? string extends P['sx' & keyof P] ? {} : {
+    sx?: SxProps<Theme>;
 } : {} : {};
 declare namespace JSX {
     type ElementType = React.JSX.ElementType;
@@ -26,7 +22,7 @@ declare namespace JSX {
     }
     type IntrinsicElements = {
         [K in keyof React.JSX.IntrinsicElements]: React.JSX.IntrinsicElements[K] & {
-            sx?: SxProps;
+            sx?: SxProps<Theme>;
         };
     };
 }
