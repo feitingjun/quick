@@ -1,44 +1,58 @@
 import { useMemo, useCallback } from 'react'
-import type { ComponentCssStyles } from '@quick/cssinjs'
+import type { CheckboxChangeEvent } from 'antd'
+import { createStyles } from 'antd-style'
 import { ColumnHeightOutlined, SettingOutlined } from '@ant-design/icons'
 import type { ColumnProps, AnyObject } from '@/components/table'
-import Box from '@/components/box'
-import Space from '@/components/space'
-import Tooltip from '@/components/tooltip'
-import Dropdown from '@/components/dropdown'
-import Popover from '@/components/popover'
-import Checkbox, { type CheckboxChangeEvent } from '@/components/checkbox'
+import { Space, Tooltip, Dropdown, Popover, Checkbox } from '@/components'
 
 const CheckboxGroup = Checkbox.Group
 
 const sizeItem = [
   { key: 'large', label: '宽松' },
-  { key: 'middle', label: '中等' },
+  { key: 'medium', label: '中等' },
   { key: 'small', label: '紧凑' }
 ] satisfies { key: string; label: string }[]
 
-type Size = 'large' | 'middle' | 'small'
+type Size = 'large' | 'medium' | 'small'
 
 interface ContentProps<RecordType extends AnyObject = AnyObject> {
   columns?: ColumnProps<RecordType>[]
-  visibleKeys: string[]
-  defaultVisibleKeys: string[]
-  setVisibleKeys: (keys: string[]) => void
+  hiddenKeys: string[]
+  defaultHiddenKeys: string[]
+  setHiddenKeys: (keys: string[]) => void
 }
 
-interface ToolProps<RecordType extends AnyObject = AnyObject>
-  extends ContentProps<RecordType>,
-    ComponentCssStyles {
+interface ToolProps<RecordType extends AnyObject = AnyObject> extends ContentProps<RecordType> {
   size?: Size
   setSize?: (size: Size) => void
 }
 
+const useStyles = createStyles(({ token }) => ({
+  all: {
+    paddingBottom: token.sizeUnit * 2,
+    marginBottom: token.sizeUnit * 2,
+    minWidth: 100,
+    display: 'flex',
+    justifyContent: 'space-between'
+  },
+  reset: {
+    color: token.colorPrimary,
+    cursor: 'pointer'
+  },
+  checkboxGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: token.sizeUnit
+  }
+}))
+
 const Content = <RecordType extends AnyObject>({
   columns,
-  visibleKeys,
-  defaultVisibleKeys,
-  setVisibleKeys
+  hiddenKeys,
+  defaultHiddenKeys,
+  setHiddenKeys
 }: ContentProps<RecordType>) => {
+  const { styles } = useStyles()
   const options = useMemo(() => {
     return columns?.map(col => col.title as string) ?? []
   }, [columns])
@@ -46,60 +60,43 @@ const Content = <RecordType extends AnyObject>({
   const checkAll = useCallback(
     (e: CheckboxChangeEvent) => {
       if (e.target.checked) {
-        setVisibleKeys(options)
+        setHiddenKeys([])
       } else {
-        setVisibleKeys([])
+        setHiddenKeys(options)
       }
     },
     [options]
   )
 
   return (
-    <Box>
-      <Box
-        sx={{
-          pb: 2,
-          mb: 2,
-          minW: 120,
-          display: 'flex',
-          justifyContent: 'space-between'
-        }}
-      >
+    <div>
+      <div className={styles.all}>
         <Checkbox
           onChange={checkAll}
-          checked={visibleKeys.length === options.length}
-          indeterminate={visibleKeys.length > 0 && visibleKeys.length < options.length}
+          checked={hiddenKeys.length === 0}
+          indeterminate={hiddenKeys.length > 0 && hiddenKeys.length < options.length}
         >
           全选
         </Checkbox>
-        <Box
-          as='span'
-          color='primary'
-          cursor='pointer'
-          onClick={() => setVisibleKeys(defaultVisibleKeys)}
-        >
+        <span className={styles.reset} onClick={() => setHiddenKeys(defaultHiddenKeys)}>
           重置
-        </Box>
-      </Box>
+        </span>
+      </div>
       <CheckboxGroup
         options={options}
-        value={visibleKeys}
-        onChange={e => setVisibleKeys(e)}
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 1
-        }}
+        value={options.filter(option => !hiddenKeys.includes(option))}
+        onChange={e => setHiddenKeys(options.filter(option => !e.includes(option)))}
+        className={styles.checkboxGroup}
       />
-    </Box>
+    </div>
   )
 }
 
 export default function Tool<RecordType extends AnyObject = AnyObject>({
-  size = 'middle',
-  visibleKeys,
-  defaultVisibleKeys,
-  setVisibleKeys,
+  size = 'medium',
+  hiddenKeys,
+  defaultHiddenKeys,
+  setHiddenKeys,
   setSize,
   columns,
   ...props
@@ -127,9 +124,9 @@ export default function Tool<RecordType extends AnyObject = AnyObject>({
           content={
             <Content
               columns={columns}
-              visibleKeys={visibleKeys}
-              defaultVisibleKeys={defaultVisibleKeys}
-              setVisibleKeys={setVisibleKeys}
+              hiddenKeys={hiddenKeys}
+              defaultHiddenKeys={defaultHiddenKeys}
+              setHiddenKeys={setHiddenKeys}
             />
           }
         >

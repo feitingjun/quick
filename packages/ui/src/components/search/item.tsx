@@ -1,7 +1,7 @@
 import { cloneElement, isValidElement } from 'react'
 import dayjs, { Dayjs, isDayjs } from 'dayjs'
 import { isNumber } from '@/utils'
-import Form from '@/components/form'
+import { Form } from '@/components'
 
 type FormItemProps = React.ComponentProps<typeof Form.Item>
 
@@ -97,6 +97,7 @@ export default function Item({
     <Form.Item
       name={name}
       initialValue={initialValue}
+      style={{ gridColumn: `span ${span}` }}
       {...props}
       // 将children的值存入form
       getValueFromEvent={e => {

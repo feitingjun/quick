@@ -1,0 +1,42 @@
+{
+  "name": "@quick/vite-plugin-file-router",
+  "version": "0.0.1",
+  "description": "一个基于 Vite 的 React 约定式文件路由插件",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./client.d.ts"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "client": [
+        "types/client.d.ts"
+      ]
+    }
+  },
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.18.1",
+  "dependencies": {
+    "vite": "^8.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.0",
+    "typescript": "^6.0.2"
+  },
+  "peerDependencies": {
+    "react-router": "^7.0.0"
+  }
+}

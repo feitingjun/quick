@@ -15,7 +15,6 @@ export default defineConfig(options => [
     outDir: 'dist',
     treeshake: true,
     sourcemap: options.env?.NODE_ENV === 'development',
-    external: ['react', 'react-dom', 'antd', '@quick/cssinjs'],
     clean: true,
     splitting: false
   }

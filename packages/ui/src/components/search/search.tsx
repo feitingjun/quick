@@ -1,12 +1,11 @@
 import { isDayjs } from 'dayjs'
 import { useCallback, useEffect, useMemo } from 'react'
+import { createStyles } from 'antd-style'
 import { SearchOutlined, RedoOutlined } from '@ant-design/icons'
-import Form, { type FormProps } from '@/components/form'
+import { Form, type FormProps } from '@/components'
 import Button from '@/components/button'
-import Box from '@/components/box'
 import useQuery from '@/hooks/use-query'
 import useAsyncAction from '@/hooks/use-async-action'
-import { useTheme } from '@/theme'
 
 export interface SearchProps extends FormProps {
   okText?: React.ReactNode
@@ -17,6 +16,56 @@ export interface SearchProps extends FormProps {
   colWidth?: number
 }
 
+const useStyles = createStyles(
+  ({ token }, { colWidth, size }: { colWidth: number; size: SearchProps['size'] }) => {
+    let controlHeight = token.controlHeight
+    if (size === 'small') controlHeight = token.controlHeightSM
+    if (size === 'large') controlHeight = token.controlHeightLG
+    return {
+      btns: {
+        position: 'absolute',
+        right: token.sizeUnit * 4,
+        bottom: token.sizeUnit * 4,
+        display: 'flex',
+        justifyContent: 'space-between',
+        '& .ant-btn': {
+          paddingInline: token.sizeUnit * 2,
+          gap: token.sizeUnit,
+          '&:first-of-type': {
+            marginRight: token.sizeUnit * 2
+          }
+        }
+      },
+      form: {
+        backgroundColor: token.colorBgContainer,
+        marginBottom: token.sizeUnit * 2,
+        padding: token.sizeUnit * 4,
+        display: 'grid',
+        gridTemplateColumns: `repeat(auto-fill, minmax(${colWidth}px, 1fr))`,
+        gap: token.sizeUnit * 2.5,
+        position: 'relative',
+        '&:after': {
+          width: colWidth,
+          content: '""',
+          height: controlHeight
+        },
+        '&>*': {
+          marginRight: 0
+        },
+        '& .ant-row': {
+          flexWrap: 'nowrap'
+        },
+        '& .ant-form-item-label': {
+          flexShrink: 0
+        },
+        '& .ant-input-number, & .ant-input-select, & .ant-picker': {
+          width: '100%'
+        }
+      }
+    }
+  }
+)
+
 export default function Search({
   children,
   okText = '查询',
@@ -24,7 +73,7 @@ export default function Search({
   initLoad,
   onSearch,
   onReset,
-  colWidth = 280,
+  colWidth = 240,
   size = 'middle',
   form: externalForm,
   initialValues,
@@ -37,20 +86,10 @@ export default function Search({
   ) {
     throw new Error('Search 不接收 dayjs 类型的初始值，请使用字符串格式化日期')
   }
+  const { styles } = useStyles({ colWidth, size })
   const [form] = Form.useForm(externalForm)
   // 获取url参数
   const query = useQuery()
-  const theme = useTheme()
-  // 控件高度
-  const height = useMemo(() => {
-    if (size === 'small') {
-      return theme.sizes.controlHeightSm
-    }
-    if (size === 'large') {
-      return theme.sizes.controlHeightLg
-    }
-    return theme.sizes.controlHeight
-  }, [theme, size])
 
   const [onFinish, loading] = useAsyncAction<Record<string, any>>(async values => {
     if (typeof onSearch === 'function') {
@@ -75,29 +114,16 @@ export default function Search({
 
   const btns = useMemo(() => {
     return (
-      <Box
-        sx={{
-          position: 'absolute',
-          right: 4 * theme.space,
-          bottom: 4 * theme.space,
-          w: colWidth / 2,
-          display: 'flex',
-          justifyContent: 'space-between',
-          '.ant-btn': {
-            px: 2.5,
-            gap: 1
-          }
-        }}
-      >
-        <Button mr={2} onClick={onClear} icon={<RedoOutlined />}>
+      <div className={styles.btns}>
+        <Button onClick={onClear} icon={<RedoOutlined />}>
           {resetText}
         </Button>
         <Button type='primary' htmlType='submit' loading={loading} icon={<SearchOutlined />}>
           {okText}
         </Button>
-      </Box>
+      </div>
     )
-  }, [loading, onClear, okText, resetText, theme, colWidth])
+  }, [loading, onClear, okText, resetText, colWidth])
 
   return (
     <Form
@@ -107,47 +133,13 @@ export default function Search({
       onFinish={onFinish}
       initialValues={initialValues}
       preserve
-      sx={{
-        bg: 'bg',
-        mb: 2,
-        display: 'grid',
-        gridTemplateColumns: `repeat(auto-fill, minmax(${colWidth / 2}px, 1fr))`,
-        p: 4,
-        gap: 2.5,
-        position: 'relative',
-        _after: {
-          content: '""',
-          height,
-          gridColumn: 'span 1'
-        },
-        '& > *': {
-          gridColumn: 'span 2',
-          mr: 0
-        },
-        '.ant-row': {
-          flexWrap: 'nowrap'
-        },
-        '.ant-input-number, .ant-input-select, .ant-picker': {
-          w: 1
-        }
-      }}
+      className={styles.form}
       {...props}
     >
-      {typeof children === 'function' ? (
-        (values, form) => {
-          return (
-            <>
-              {children(values, form)}
-              {btns}
-            </>
-          )
-        }
-      ) : (
-        <>
-          {children}
-          {btns}
-        </>
-      )}
+      <>
+        {children}
+        {btns}
+      </>
     </Form>
   )
 }

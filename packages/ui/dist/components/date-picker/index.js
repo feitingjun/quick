@@ -1,13 +1,11 @@
-import { DatePicker as DatePicker$1 } from 'antd';
-import { styled, useClassName } from '@quick/cssinjs';
+import { DatePicker } from 'antd';
 import { useMemo } from 'react';
-import 'antd/es/date-picker';
+import { createStyles } from 'antd-style';
 import dayjs from 'dayjs';
-import { jsx } from '@quick/cssinjs/jsx-runtime';
+import { jsx } from 'react/jsx-runtime';
 
 // src/components/date-picker/index.tsx
-var { RangePicker: AntdRangePicker } = DatePicker$1;
-var StyledRangePicker = styled(AntdRangePicker);
+var { RangePicker: AntdRangePicker } = DatePicker;
 var usePresets = (showTime, allowEmpty) => {
   const presets = useMemo(() => {
     const arr = showTime ? [
@@ -77,26 +75,29 @@ var usePresets = (showTime, allowEmpty) => {
   }, [showTime, allowEmpty]);
   return presets;
 };
+var useStyles = createStyles({
+  container: {
+    [`& .ant-picker-presets`]: {
+      minHeight: "330px"
+    }
+  }
+});
 function RangePicker({
   showTime,
   allowEmpty = [true, true],
   ...props
 }) {
   const presets = usePresets(showTime, allowEmpty);
-  const popupRootCls = useClassName({
-    ".ant-picker-panel-layout": {
-      minHeight: 330
-    }
-  });
+  const { styles } = useStyles();
   return /* @__PURE__ */ jsx(
-    StyledRangePicker,
+    AntdRangePicker,
     {
       presets,
       showTime,
       allowEmpty,
       classNames: {
         popup: {
-          root: popupRootCls
+          container: styles.container
         }
       },
       ...props
@@ -105,7 +106,6 @@ function RangePicker({
 }
 
 // src/components/date-picker/index.tsx
-var DatePicker = styled(DatePicker$1);
 var date_picker_default = DatePicker;
 
 export { RangePicker, date_picker_default as default };

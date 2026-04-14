@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { Table } from 'antd'
 import { isNumber, round, zerofill, thousands, multiply } from '@/utils'
-import type { SxProps } from '@quick/cssinjs'
 import type {
   ColumnProps,
   ColumnType,
@@ -37,7 +36,7 @@ export const useSummary = <T extends AnyObject = AnyObject>(
               {rowSelection && <Summary.Cell index={0} />}
               <Summary.Cell index={rowSelection ? 1 : 0}>合计</Summary.Cell>
               {summaryList.slice(1).map((item, index) => {
-                let sx: SxProps = {}
+                const cls = []
                 let defaultSummary: SummaryProps = { thousand: true }
                 let value: number | string | undefined =
                   summaryMap?.[item.totalField ?? (item.dataIndex as string)]
@@ -70,17 +69,18 @@ export const useSummary = <T extends AnyObject = AnyObject>(
                   // 添加%
                   if (percent) value = `${value}%`
                 }
-                className = typeof className === 'function' ? className(value) : className
+                if (className) {
+                  cls.push(typeof className === 'function' ? className(value) : className)
+                }
                 if (status) {
                   const statusColor = typeof status === 'function' ? status(value) : status
-                  sx.color = statusColor === 'default' ? null : statusColor
+                  if (statusColor !== 'default') cls.push(`text-${statusColor}`)
                 }
                 return (
                   <Summary.Cell
-                    className={className ?? undefined}
+                    className={cls?.length ? cls.join(' ') : undefined}
                     key={index + 1}
                     index={index + 1}
-                    sx={sx}
                   >
                     {value ?? null}
                   </Summary.Cell>

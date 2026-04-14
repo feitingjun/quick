@@ -1,12 +1,12 @@
-import { createContext, useState, useMemo, useCallback, useActionState, startTransition, useEffect, useContext, cloneElement, isValidElement } from 'react';
-import { Tooltip as Tooltip$1, Space as Space$1, Button as Button$1, Table, Form, Dropdown as Dropdown$1, Popover as Popover$1, Checkbox as Checkbox$1 } from 'antd';
-import { styled, useTheme } from '@quick/cssinjs';
+import { createContext, useState, useMemo, useCallback, useActionState, startTransition, useEffect, useContext, isValidElement, cloneElement } from 'react';
+import { createStyles } from 'antd-style';
+import { DatePicker, Table, Checkbox, Form, Button, Space, Tooltip, Dropdown, Popover } from 'antd';
 import { RedoOutlined, SearchOutlined, ColumnHeightOutlined, SettingOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import copy from 'copy-to-clipboard';
 import Bignumber from 'bignumber.js';
 import { useSearchParams, useNavigate } from 'react-router';
-import { jsxs, jsx, Fragment } from '@quick/cssinjs/jsx-runtime';
-import dayjs, { isDayjs } from 'dayjs';
+import dayjs2, { isDayjs } from 'dayjs';
+import { jsxs, jsx, Fragment } from 'react/jsx-runtime';
 import axios from 'axios';
 
 // src/components/page/index.tsx
@@ -35,20 +35,23 @@ function multiply(a, b) {
 function useQuery() {
   const [query] = useSearchParams();
   return useMemo(
-    () => query.entries().reduce((acc, [key, value]) => {
-      if (value === "undefined") {
-        acc[key] = void 0;
-      } else if (value === "null") {
-        acc[key] = null;
-      } else if (value.length <= 16 && isNumber(value)) {
-        acc[key] = Number(value);
-      } else if (value.includes(",")) {
-        acc[key] = value.split(",").map((item) => isNumber(item) ? Number(item) : item);
-      } else {
-        acc[key] = value;
-      }
-      return acc;
-    }, {}),
+    () => Array.from(query.entries()).reduce(
+      (acc, [key, value]) => {
+        if (value === "undefined") {
+          acc[key] = void 0;
+        } else if (value === "null") {
+          acc[key] = null;
+        } else if (value.length <= 16 && isNumber(value)) {
+          acc[key] = Number(value);
+        } else if (value.includes(",")) {
+          acc[key] = value.split(",").map((item) => isNumber(item) ? Number(item) : item);
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {}
+    ),
     [query]
   );
 }
@@ -59,13 +62,216 @@ function useAsyncAction(dispatch) {
   );
   return [(values) => startTransition(() => action(values)), loading];
 }
-var Tooltip = styled(Tooltip$1);
-var tooltip_default = Tooltip;
-var Space = styled(Space$1);
-var space_default = Space;
-var Button = styled(Button$1);
 var button_default = Button;
+var { RangePicker: AntdRangePicker } = DatePicker;
+createStyles({
+  container: {
+    [`& .ant-picker-presets`]: {
+      minHeight: "330px"
+    }
+  }
+});
 var message;
+var useStyles2 = createStyles(
+  ({ token }, { colWidth, size }) => {
+    let controlHeight = token.controlHeight;
+    if (size === "small") controlHeight = token.controlHeightSM;
+    if (size === "large") controlHeight = token.controlHeightLG;
+    return {
+      btns: {
+        position: "absolute",
+        right: token.sizeUnit * 4,
+        bottom: token.sizeUnit * 4,
+        display: "flex",
+        justifyContent: "space-between",
+        "& .ant-btn": {
+          paddingInline: token.sizeUnit * 2,
+          gap: token.sizeUnit,
+          "&:first-of-type": {
+            marginRight: token.sizeUnit * 2
+          }
+        }
+      },
+      form: {
+        backgroundColor: token.colorBgContainer,
+        marginBottom: token.sizeUnit * 2,
+        padding: token.sizeUnit * 4,
+        display: "grid",
+        gridTemplateColumns: `repeat(auto-fill, minmax(${colWidth}px, 1fr))`,
+        gap: token.sizeUnit * 2.5,
+        position: "relative",
+        "&:after": {
+          width: colWidth,
+          content: '""',
+          height: controlHeight
+        },
+        "&>*": {
+          marginRight: 0
+        },
+        "& .ant-row": {
+          flexWrap: "nowrap"
+        },
+        "& .ant-form-item-label": {
+          flexShrink: 0
+        },
+        "& .ant-input-number, & .ant-input-select, & .ant-picker": {
+          width: "100%"
+        }
+      }
+    };
+  }
+);
+function Search({
+  children,
+  okText = "\u67E5\u8BE2",
+  resetText = "\u91CD\u7F6E",
+  initLoad,
+  onSearch,
+  onReset,
+  colWidth = 240,
+  size = "middle",
+  form: externalForm,
+  initialValues,
+  ...props
+}) {
+  if (Object.values(initialValues ?? {}).some(
+    (item) => Array.isArray(item) ? item.some((i) => isDayjs(i)) : isDayjs(item)
+  )) {
+    throw new Error("Search \u4E0D\u63A5\u6536 dayjs \u7C7B\u578B\u7684\u521D\u59CB\u503C\uFF0C\u8BF7\u4F7F\u7528\u5B57\u7B26\u4E32\u683C\u5F0F\u5316\u65E5\u671F");
+  }
+  const { styles } = useStyles2({ colWidth, size });
+  const [form] = Form.useForm(externalForm);
+  const query = useQuery();
+  const [onFinish, loading] = useAsyncAction(async (values) => {
+    if (typeof onSearch === "function") {
+      onSearch(values);
+    }
+  });
+  const onClear = useCallback(async () => {
+    form.resetFields();
+    if (typeof onReset === "function") {
+      await onReset();
+    }
+    form.submit();
+  }, [form, onReset]);
+  useEffect(() => {
+    form.setFieldsValue(query);
+    if (initLoad) {
+      form.submit();
+    }
+  }, [query, form, initLoad]);
+  const btns = useMemo(() => {
+    return /* @__PURE__ */ jsxs("div", { className: styles.btns, children: [
+      /* @__PURE__ */ jsx(button_default, { onClick: onClear, icon: /* @__PURE__ */ jsx(RedoOutlined, {}), children: resetText }),
+      /* @__PURE__ */ jsx(button_default, { type: "primary", htmlType: "submit", loading, icon: /* @__PURE__ */ jsx(SearchOutlined, {}), children: okText })
+    ] });
+  }, [loading, onClear, okText, resetText, colWidth]);
+  return /* @__PURE__ */ jsx(
+    Form,
+    {
+      layout: "inline",
+      size,
+      form,
+      onFinish,
+      initialValues,
+      preserve: true,
+      className: styles.form,
+      ...props,
+      children: /* @__PURE__ */ jsxs(Fragment, { children: [
+        children,
+        btns
+      ] })
+    }
+  );
+}
+var isDate = (value, format) => {
+  if (!value) return false;
+  if (isNumber(value)) {
+    return dayjs2(value, format).isValid();
+  }
+  return dayjs2(value).isValid();
+};
+var parseDate = (value, format) => {
+  if (!value) return value;
+  if (Array.isArray(value)) {
+    return value.map((v) => v && isDate(v, format) ? dayjs2(v) : v);
+  }
+  return isDate(value, format) ? dayjs2(value) : value;
+};
+var formatDate = (value, format) => {
+  if (!value) return value;
+  if (Array.isArray(value)) {
+    return value.map((v) => isDayjs(v) ? v.format(format) : v);
+  }
+  return isDayjs(value) ? value.format(format) : value;
+};
+var getFormat = (format, child) => {
+  if (format) return format;
+  if (child?.props?.showTime) return "YYYY-MM-DD HH:mm:ss";
+  return "YYYY-MM-DD";
+};
+function Item({
+  span = 1,
+  name,
+  names,
+  format,
+  initialValue,
+  children,
+  ...props
+}) {
+  if (Array.isArray(initialValue) ? initialValue.some((i) => isDayjs(i)) : isDayjs(initialValue)) {
+    throw new Error("Search.Item \u4E0D\u63A5\u6536 dayjs \u7C7B\u578B\u7684\u521D\u59CB\u503C\uFF0C\u8BF7\u4F7F\u7528\u5B57\u7B26\u4E32\u683C\u5F0F\u5316\u65E5\u671F");
+  }
+  if (names) {
+    return /* @__PURE__ */ jsxs(Form.Item, { style: { gridColumn: `span ${span * 2}` }, ...props, children: [
+      names.map((v, i) => /* @__PURE__ */ jsx(Form.Item, { name: v, hidden: true, noStyle: true, initialValue: initialValue?.[i] }, v)),
+      /* @__PURE__ */ jsx(
+        Form.Item,
+        {
+          noStyle: true,
+          shouldUpdate: (preVal, nextVal) => {
+            return names.some((n) => preVal[n] !== nextVal[n]);
+          },
+          children: (props2) => {
+            const values = props2.getFieldsValue(names);
+            const child = typeof children === "function" ? children(props2) : children;
+            return isValidElement(child) ? cloneElement(child, {
+              value: names.map((n) => parseDate(values[n], getFormat(format, child))),
+              onChange: (originalValue) => {
+                const value = formatDate(originalValue, getFormat(format, child));
+                props2.setFieldsValue(
+                  names.reduce((acc, n, i) => ({ ...acc, [n]: value?.[i] }), {})
+                );
+              }
+            }) : child;
+          }
+        }
+      )
+    ] });
+  }
+  return /* @__PURE__ */ jsx(
+    Form.Item,
+    {
+      name,
+      initialValue,
+      style: { gridColumn: `span ${span}` },
+      ...props,
+      getValueFromEvent: (e) => {
+        const value = e?.currentTarget?.value ?? e?.target?.value ?? e;
+        return formatDate(value, getFormat(format, children));
+      },
+      getValueProps: (value) => ({
+        value: parseDate(value, getFormat(format, children))
+      }),
+      children
+    }
+  );
+}
+
+// src/components/search/index.tsx
+var Search2 = Search;
+Search2.Item = Item;
+var search_default = Search2;
 var ConfigContext = createContext({
   dicts: {}
 });
@@ -75,6 +281,36 @@ function useDicts() {
   const { dicts } = useContext(ConfigContext);
   return dicts;
 }
+var useStyles3 = createStyles(({ token }) => ({
+  link: {
+    color: token.colorLink
+  },
+  pointer: {
+    cursor: "pointer"
+  },
+  bold: {
+    fontWeight: "bold"
+  },
+  question: {
+    marginLeft: token.sizeUnit,
+    cursor: "pointer"
+  },
+  actionBtn: {
+    padding: 0
+  },
+  success: {
+    color: token.colorSuccess
+  },
+  error: {
+    color: token.colorError
+  },
+  warning: {
+    color: token.colorWarning
+  },
+  disabled: {
+    color: token.colorTextDisabled
+  }
+}));
 var copyText = (e) => {
   const selection = window.getSelection();
   selection?.removeAllRanges();
@@ -101,7 +337,7 @@ var handleStatus = (status, value, record, index) => {
       return statusStr || null;
   }
 };
-var handleColumn = (col, dicts, navigate) => {
+var handleColumn = (col, dicts, navigate, styles) => {
   let {
     status,
     bold,
@@ -119,7 +355,7 @@ var handleColumn = (col, dicts, navigate) => {
     ...args
   } = col;
   const render = (value, record, index) => {
-    const sx = {};
+    const classNames = [];
     value = renderFunc?.(value, record, index) ?? value;
     if (dictCode) {
       const dict = dicts[dictCode];
@@ -132,12 +368,13 @@ var handleColumn = (col, dicts, navigate) => {
     if (link) {
       link = typeof link === "function" ? link(value, record, index) : link;
       if (link) {
-        sx.color = "link";
-        sx.cursor = "pointer";
+        classNames.push(styles.link);
+        classNames.push(styles.pointer);
       }
     }
-    if (status) sx.color = handleStatus(status, value, record, index);
-    if (bold) sx.fontWeight = "bold";
+    const statusStr = handleStatus(status, value, record, index);
+    if (statusStr) classNames.push(styles[statusStr]);
+    if (bold) classNames.push(styles.bold);
     if (isNumber(value)) {
       if (percent) value = multiply(value, 100);
       if (precision === true) precision = 2;
@@ -149,18 +386,25 @@ var handleColumn = (col, dicts, navigate) => {
       }
       if (percent) value = `${value}%`;
     }
-    return /* @__PURE__ */ jsxs("span", { sx, onClick: link ? () => navigate(link) : void 0, children: [
-      value,
-      suffix ?? null
-    ] });
+    return /* @__PURE__ */ jsxs(
+      "span",
+      {
+        className: classNames.join(" "),
+        onClick: link ? () => navigate(link) : void 0,
+        children: [
+          value,
+          suffix ?? null
+        ]
+      }
+    );
   };
   const children = col.children;
   return {
     ...args,
-    children: children?.map((col2) => handleColumn(col2, dicts, navigate)) ?? void 0,
+    children: children?.map((col2) => handleColumn(col2, dicts, navigate, styles)) ?? void 0,
     title: tooltip ? (...arrs) => /* @__PURE__ */ jsxs("span", { children: [
       typeof title === "function" ? title(...arrs) : title,
-      /* @__PURE__ */ jsx(tooltip_default, { title: tooltip, children: /* @__PURE__ */ jsx(QuestionCircleOutlined, { sx: { ml: 1, cursor: "pointer" } }) })
+      /* @__PURE__ */ jsx(Tooltip, { title: tooltip, children: /* @__PURE__ */ jsx(QuestionCircleOutlined, { className: styles.question }) })
     ] }) : title,
     render,
     onCell: (record, index) => ({
@@ -169,14 +413,14 @@ var handleColumn = (col, dicts, navigate) => {
     })
   };
 };
-var handleActions = (actions, actionFixed, actionTitle, actionWidth) => {
+var handleActions = (actions, actionFixed, actionTitle, actionWidth, styles) => {
   if (!actions || actions.length === 0) return null;
   return {
     title: actionTitle || "\u64CD\u4F5C",
     dataIndex: "__actions",
     width: actionWidth,
     fixed: actionFixed ?? "right",
-    render: (_, record, index) => /* @__PURE__ */ jsx(space_default, { children: actions.map((action, i) => {
+    render: (_, record, index) => /* @__PURE__ */ jsx(Space, { children: actions.map((action, i) => {
       let { title, visible = true, render, className, type, onClick, ...args } = action;
       const show = typeof visible === "function" ? visible(record, index) : visible;
       if (!show) return null;
@@ -185,7 +429,9 @@ var handleActions = (actions, actionFixed, actionTitle, actionWidth) => {
       return /* @__PURE__ */ jsx(
         button_default,
         {
-          p: 0,
+          classNames: {
+            root: styles.actionBtn
+          },
           type: type ?? "link",
           className,
           onClick: (e) => onClick?.(e, record, index),
@@ -200,8 +446,9 @@ var handleActions = (actions, actionFixed, actionTitle, actionWidth) => {
 var useColumns = (columns, actions, actionFixed, actionTitle, actionWidth) => {
   const navigate = useNavigate();
   const dicts = useDicts();
+  const { styles } = useStyles3();
   return useMemo(
-    () => columns.map((col) => handleColumn(col, dicts, navigate)).concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth) ?? []),
+    () => columns.map((col) => handleColumn(col, dicts, navigate, styles)).concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth, styles) ?? []),
     [columns, actions, dicts, navigate, actionFixed, actionTitle, actionWidth]
   );
 };
@@ -222,7 +469,7 @@ var useSummary = (columns, summaryMap, rowSelection) => {
       rowSelection && /* @__PURE__ */ jsx(Summary.Cell, { index: 0 }),
       /* @__PURE__ */ jsx(Summary.Cell, { index: rowSelection ? 1 : 0, children: "\u5408\u8BA1" }),
       summaryList.slice(1).map((item, index) => {
-        let sx = {};
+        const cls = [];
         let defaultSummary = { thousand: true };
         let value = summaryMap?.[item.totalField ?? item.dataIndex];
         if (typeof item.total === "object") {
@@ -249,17 +496,18 @@ var useSummary = (columns, summaryMap, rowSelection) => {
           if (thousandNum) value = value ? thousands(value) : value;
           if (percent) value = `${value}%`;
         }
-        className = typeof className === "function" ? className(value) : className;
+        if (className) {
+          cls.push(typeof className === "function" ? className(value) : className);
+        }
         if (status) {
           const statusColor = typeof status === "function" ? status(value) : status;
-          sx.color = statusColor === "default" ? null : statusColor;
+          if (statusColor !== "default") cls.push(`text-${statusColor}`);
         }
         return /* @__PURE__ */ jsx(
           Summary.Cell,
           {
-            className: className ?? void 0,
+            className: cls?.length ? cls.join(" ") : void 0,
             index: index + 1,
-            sx,
             children: value ?? null
           },
           index + 1
@@ -268,7 +516,6 @@ var useSummary = (columns, summaryMap, rowSelection) => {
     ] }) }) : void 0;
   }, [columns, summaryMap]);
 };
-var StyledTable = styled(Table);
 function Table2({
   columns = [],
   actionFixed,
@@ -283,7 +530,7 @@ function Table2({
   const cols = useColumns(columns, actions, actionFixed, actionTitle, actionWidth);
   const summary = useSummary(cols, summaryMap, rowSelection);
   return /* @__PURE__ */ jsx(
-    StyledTable,
+    Table,
     {
       rowKey,
       columns: cols,
@@ -296,234 +543,6 @@ function Table2({
 
 // src/components/table/index.tsx
 var table_default = Table2;
-var StyledItem = styled(Form.Item);
-var Item = StyledItem;
-Item.useStatus = Form.Item.useStatus;
-var item_default = Item;
-var ErrorList = styled(Form.ErrorList);
-var error_list_default = ErrorList;
-var Provider = styled(Form.Provider);
-var provider_default = Provider;
-
-// src/components/form/index.tsx
-var { useForm, useFormInstance, useWatch } = Form;
-var StyledForm = styled(Form);
-var Form4 = StyledForm;
-Form4.Item = item_default;
-Form4.List = Form.List;
-Form4.ErrorList = error_list_default;
-Form4.Provider = provider_default;
-Form4.useForm = useForm;
-Form4.useFormInstance = useFormInstance;
-Form4.useWatch = useWatch;
-var form_default = Form4;
-var StyledBox = styled("div");
-var Box = (props) => /* @__PURE__ */ jsx(StyledBox, { as: props.as, ...props });
-var box_default = Box;
-function Search({
-  children,
-  okText = "\u67E5\u8BE2",
-  resetText = "\u91CD\u7F6E",
-  initLoad,
-  onSearch,
-  onReset,
-  colWidth = 280,
-  size = "middle",
-  form: externalForm,
-  initialValues,
-  ...props
-}) {
-  if (Object.values(initialValues ?? {}).some(
-    (item) => Array.isArray(item) ? item.some((i) => isDayjs(i)) : isDayjs(item)
-  )) {
-    throw new Error("Search \u4E0D\u63A5\u6536 dayjs \u7C7B\u578B\u7684\u521D\u59CB\u503C\uFF0C\u8BF7\u4F7F\u7528\u5B57\u7B26\u4E32\u683C\u5F0F\u5316\u65E5\u671F");
-  }
-  const [form] = form_default.useForm(externalForm);
-  const query = useQuery();
-  const theme = useTheme();
-  const height = useMemo(() => {
-    if (size === "small") {
-      return theme.sizes.controlHeightSm;
-    }
-    if (size === "large") {
-      return theme.sizes.controlHeightLg;
-    }
-    return theme.sizes.controlHeight;
-  }, [theme, size]);
-  const [onFinish, loading] = useAsyncAction(async (values) => {
-    if (typeof onSearch === "function") {
-      onSearch(values);
-    }
-  });
-  const onClear = useCallback(async () => {
-    form.resetFields();
-    if (typeof onReset === "function") {
-      await onReset();
-    }
-    form.submit();
-  }, [form, onReset]);
-  useEffect(() => {
-    form.setFieldsValue(query);
-    if (initLoad) {
-      form.submit();
-    }
-  }, [query, form, initLoad]);
-  const btns = useMemo(() => {
-    return /* @__PURE__ */ jsxs(
-      box_default,
-      {
-        sx: {
-          position: "absolute",
-          right: 4 * theme.space,
-          bottom: 4 * theme.space,
-          w: colWidth / 2,
-          display: "flex",
-          justifyContent: "space-between",
-          ".ant-btn": {
-            px: 2.5,
-            gap: 1
-          }
-        },
-        children: [
-          /* @__PURE__ */ jsx(button_default, { mr: 2, onClick: onClear, icon: /* @__PURE__ */ jsx(RedoOutlined, {}), children: resetText }),
-          /* @__PURE__ */ jsx(button_default, { type: "primary", htmlType: "submit", loading, icon: /* @__PURE__ */ jsx(SearchOutlined, {}), children: okText })
-        ]
-      }
-    );
-  }, [loading, onClear, okText, resetText, theme, colWidth]);
-  return /* @__PURE__ */ jsx(
-    form_default,
-    {
-      layout: "inline",
-      size,
-      form,
-      onFinish,
-      initialValues,
-      preserve: true,
-      sx: {
-        bg: "bg",
-        mb: 2,
-        display: "grid",
-        gridTemplateColumns: `repeat(auto-fill, minmax(${colWidth / 2}px, 1fr))`,
-        p: 4,
-        gap: 2.5,
-        position: "relative",
-        _after: {
-          content: '""',
-          height,
-          gridColumn: "span 1"
-        },
-        "& > *": {
-          gridColumn: "span 2",
-          mr: 0
-        },
-        ".ant-row": {
-          flexWrap: "nowrap"
-        },
-        ".ant-input-number, .ant-input-select, .ant-picker": {
-          w: 1
-        }
-      },
-      ...props,
-      children: typeof children === "function" ? ((values, form2) => {
-        return /* @__PURE__ */ jsxs(Fragment, { children: [
-          children(values, form2),
-          btns
-        ] });
-      }) : /* @__PURE__ */ jsxs(Fragment, { children: [
-        children,
-        btns
-      ] })
-    }
-  );
-}
-var isDate = (value, format) => {
-  if (!value) return false;
-  if (isNumber(value)) {
-    return dayjs(value, format).isValid();
-  }
-  return dayjs(value).isValid();
-};
-var parseDate = (value, format) => {
-  if (!value) return value;
-  if (Array.isArray(value)) {
-    return value.map((v) => v && isDate(v, format) ? dayjs(v) : v);
-  }
-  return isDate(value, format) ? dayjs(value) : value;
-};
-var formatDate = (value, format) => {
-  if (!value) return value;
-  if (Array.isArray(value)) {
-    return value.map((v) => isDayjs(v) ? v.format(format) : v);
-  }
-  return isDayjs(value) ? value.format(format) : value;
-};
-var getFormat = (format, child) => {
-  if (format) return format;
-  if (child?.props?.showTime) return "YYYY-MM-DD HH:mm:ss";
-  return "YYYY-MM-DD";
-};
-function Item2({
-  span = 1,
-  name,
-  names,
-  format,
-  initialValue,
-  children,
-  ...props
-}) {
-  if (Array.isArray(initialValue) ? initialValue.some((i) => isDayjs(i)) : isDayjs(initialValue)) {
-    throw new Error("Search.Item \u4E0D\u63A5\u6536 dayjs \u7C7B\u578B\u7684\u521D\u59CB\u503C\uFF0C\u8BF7\u4F7F\u7528\u5B57\u7B26\u4E32\u683C\u5F0F\u5316\u65E5\u671F");
-  }
-  if (names) {
-    return /* @__PURE__ */ jsxs(form_default.Item, { style: { gridColumn: `span ${span * 2}` }, ...props, children: [
-      names.map((v, i) => /* @__PURE__ */ jsx(form_default.Item, { name: v, hidden: true, noStyle: true, initialValue: initialValue?.[i] }, v)),
-      /* @__PURE__ */ jsx(
-        form_default.Item,
-        {
-          noStyle: true,
-          shouldUpdate: (preVal, nextVal) => {
-            return names.some((n) => preVal[n] !== nextVal[n]);
-          },
-          children: (props2) => {
-            const values = props2.getFieldsValue(names);
-            const child = typeof children === "function" ? children(props2) : children;
-            return isValidElement(child) ? cloneElement(child, {
-              value: names.map((n) => parseDate(values[n], getFormat(format, child))),
-              onChange: (originalValue) => {
-                const value = formatDate(originalValue, getFormat(format, child));
-                props2.setFieldsValue(
-                  names.reduce((acc, n, i) => ({ ...acc, [n]: value?.[i] }), {})
-                );
-              }
-            }) : child;
-          }
-        }
-      )
-    ] });
-  }
-  return /* @__PURE__ */ jsx(
-    form_default.Item,
-    {
-      name,
-      initialValue,
-      ...props,
-      getValueFromEvent: (e) => {
-        const value = e?.currentTarget?.value ?? e?.target?.value ?? e;
-        return formatDate(value, getFormat(format, children));
-      },
-      getValueProps: (value) => ({
-        value: parseDate(value, getFormat(format, children))
-      }),
-      children
-    }
-  );
-}
-
-// src/components/search/index.tsx
-var Search2 = Search;
-Search2.Item = Item2;
-var search_default = Search2;
 var CustomError = class {
   name;
   message;
@@ -593,106 +612,90 @@ var request = {
 };
 var request_default = request;
 function Actions({ actions, size }) {
-  return /* @__PURE__ */ jsx(box_default, { children: actions?.map(({ title, ...props }, i) => {
+  return /* @__PURE__ */ jsx("div", { children: actions?.map(({ title, ...props }, i) => {
     return /* @__PURE__ */ jsx(button_default, { size, ...props, children: title }, i);
   }) });
 }
-var Dropdown = styled(Dropdown$1);
-var dropdown_default = Dropdown;
-var Popover = styled(Popover$1);
-var popover_default = Popover;
-var { Group: AntdCheckboxGroup } = Checkbox$1;
-var StyledCheckbox = styled(Checkbox$1);
-var StyledGroup = styled(AntdCheckboxGroup);
-var Checkbox = StyledCheckbox;
-Checkbox.Group = StyledGroup;
-var checkbox_default = Checkbox;
-var CheckboxGroup = checkbox_default.Group;
+var CheckboxGroup = Checkbox.Group;
 var sizeItem = [
   { key: "large", label: "\u5BBD\u677E" },
-  { key: "middle", label: "\u4E2D\u7B49" },
+  { key: "medium", label: "\u4E2D\u7B49" },
   { key: "small", label: "\u7D27\u51D1" }
 ];
+var useStyles4 = createStyles(({ token }) => ({
+  all: {
+    paddingBottom: token.sizeUnit * 2,
+    marginBottom: token.sizeUnit * 2,
+    minWidth: 100,
+    display: "flex",
+    justifyContent: "space-between"
+  },
+  reset: {
+    color: token.colorPrimary,
+    cursor: "pointer"
+  },
+  checkboxGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: token.sizeUnit
+  }
+}));
 var Content = ({
   columns,
-  visibleKeys,
-  defaultVisibleKeys,
-  setVisibleKeys
+  hiddenKeys,
+  defaultHiddenKeys,
+  setHiddenKeys
 }) => {
+  const { styles } = useStyles4();
   const options = useMemo(() => {
     return columns?.map((col) => col.title) ?? [];
   }, [columns]);
   const checkAll = useCallback(
     (e) => {
       if (e.target.checked) {
-        setVisibleKeys(options);
+        setHiddenKeys([]);
       } else {
-        setVisibleKeys([]);
+        setHiddenKeys(options);
       }
     },
     [options]
   );
-  return /* @__PURE__ */ jsxs(box_default, { children: [
-    /* @__PURE__ */ jsxs(
-      box_default,
-      {
-        sx: {
-          pb: 2,
-          mb: 2,
-          minW: 120,
-          display: "flex",
-          justifyContent: "space-between"
-        },
-        children: [
-          /* @__PURE__ */ jsx(
-            checkbox_default,
-            {
-              onChange: checkAll,
-              checked: visibleKeys.length === options.length,
-              indeterminate: visibleKeys.length > 0 && visibleKeys.length < options.length,
-              children: "\u5168\u9009"
-            }
-          ),
-          /* @__PURE__ */ jsx(
-            box_default,
-            {
-              as: "span",
-              color: "primary",
-              cursor: "pointer",
-              onClick: () => setVisibleKeys(defaultVisibleKeys),
-              children: "\u91CD\u7F6E"
-            }
-          )
-        ]
-      }
-    ),
+  return /* @__PURE__ */ jsxs("div", { children: [
+    /* @__PURE__ */ jsxs("div", { className: styles.all, children: [
+      /* @__PURE__ */ jsx(
+        Checkbox,
+        {
+          onChange: checkAll,
+          checked: hiddenKeys.length === 0,
+          indeterminate: hiddenKeys.length > 0 && hiddenKeys.length < options.length,
+          children: "\u5168\u9009"
+        }
+      ),
+      /* @__PURE__ */ jsx("span", { className: styles.reset, onClick: () => setHiddenKeys(defaultHiddenKeys), children: "\u91CD\u7F6E" })
+    ] }),
     /* @__PURE__ */ jsx(
       CheckboxGroup,
       {
         options,
-        value: visibleKeys,
-        onChange: (e) => setVisibleKeys(e),
-        sx: {
-          display: "flex",
-          flexDirection: "column",
-          gap: 1
-        }
+        value: options.filter((option) => !hiddenKeys.includes(option)),
+        onChange: (e) => setHiddenKeys(options.filter((option) => !e.includes(option))),
+        className: styles.checkboxGroup
       }
     )
   ] });
 };
 function Tool({
-  size = "middle",
-  visibleKeys,
-  defaultVisibleKeys,
-  setVisibleKeys,
+  size = "medium",
+  hiddenKeys,
+  defaultHiddenKeys,
+  setHiddenKeys,
   setSize,
   columns,
   ...props
 }) {
-  return /* @__PURE__ */ jsxs(space_default, { size, ...props, children: [
-    /* @__PURE__ */ jsx(tooltip_default, { title: "\u5BC6\u5EA6", children: /* @__PURE__ */ jsx(
-      dropdown_default,
+  return /* @__PURE__ */ jsxs(Space, { size, ...props, children: [
+    /* @__PURE__ */ jsx(Tooltip, { title: "\u5BC6\u5EA6", children: /* @__PURE__ */ jsx(
+      Dropdown,
       {
         trigger: ["click"],
         placement: "bottomRight",
@@ -704,8 +707,8 @@ function Tool({
         children: /* @__PURE__ */ jsx(ColumnHeightOutlined, {})
       }
     ) }),
-    /* @__PURE__ */ jsx(tooltip_default, { title: "\u5C55\u793A\u5217", children: /* @__PURE__ */ jsx(
-      popover_default,
+    /* @__PURE__ */ jsx(Tooltip, { title: "\u5C55\u793A\u5217", children: /* @__PURE__ */ jsx(
+      Popover,
       {
         arrow: false,
         trigger: "click",
@@ -714,9 +717,9 @@ function Tool({
           Content,
           {
             columns,
-            visibleKeys,
-            defaultVisibleKeys,
-            setVisibleKeys
+            hiddenKeys,
+            defaultHiddenKeys,
+            setHiddenKeys
           }
         ),
         children: /* @__PURE__ */ jsx(SettingOutlined, {})
@@ -724,6 +727,20 @@ function Tool({
     ) })
   ] });
 }
+var useStyles5 = createStyles(({ token }) => ({
+  root: {
+    width: "100%"
+  },
+  btns: {
+    display: "flex",
+    justifyContent: "space-between",
+    padding: token.sizeUnit * 2,
+    fontSize: token.fontSizeLG
+  },
+  tool: {
+    backgroundColor: token.colorBgContainer
+  }
+}));
 function Page({
   okText,
   resetText,
@@ -746,13 +763,14 @@ function Page({
   columns,
   ...props
 }) {
+  const { styles } = useStyles5();
   paramsLocation = paramsLocation ?? (method === "get" ? "query" : "body");
   const [dataSource, setDataSource] = useState([]);
-  const defaultVisibleKeys = useMemo(() => {
-    return columns?.filter((col) => !col.hidden).map((col) => col.title) ?? [];
+  const defaultHiddenKeys = useMemo(() => {
+    return columns?.filter((col) => !!col.hidden).map((col) => col.title) ?? [];
   }, [columns]);
   const [size, setSize] = useState(defaultSize);
-  const [visibleKeys, setVisibleKeys] = useState(defaultVisibleKeys);
+  const [hiddenKeys, setHiddenKeys] = useState(defaultHiddenKeys);
   const [onSearch, loading] = useAsyncAction(async (values) => {
     const vals = await onSearchPage?.(values);
     if (!url) return;
@@ -776,8 +794,8 @@ function Page({
     await onResetPage?.();
   }, [onResetPage]);
   const tableColumns = useMemo(() => {
-    return columns?.filter((col) => visibleKeys.includes(col.title))?.map((col) => ({ ...col, hidden: false }));
-  }, [columns, visibleKeys]);
+    return columns?.filter((col) => !hiddenKeys.includes(col.title))?.map((col) => ({ ...col, hidden: false }));
+  }, [columns, hiddenKeys]);
   const [pageActions, tableActions] = useMemo(() => {
     return actions?.reduce(
       (acc, action) => {
@@ -791,58 +809,50 @@ function Page({
       [[], []]
     ) ?? [[], []];
   }, [actions]);
-  return /* @__PURE__ */ jsxs(
-    box_default,
-    {
-      sx: {
-        w: 1
-      },
-      children: [
-        children && /* @__PURE__ */ jsx(
-          search_default,
+  return /* @__PURE__ */ jsxs("div", { className: styles.root, children: [
+    children && /* @__PURE__ */ jsx(
+      search_default,
+      {
+        form,
+        initLoad,
+        initialValues,
+        okText,
+        resetText,
+        colWidth,
+        size,
+        onSearch,
+        onReset,
+        children
+      }
+    ),
+    /* @__PURE__ */ jsxs("div", { className: styles.tool, children: [
+      (showTool || pageActions.length > 0) && /* @__PURE__ */ jsxs("div", { className: styles.btns, children: [
+        /* @__PURE__ */ jsx(Actions, { actions: pageActions, size }),
+        showTool && /* @__PURE__ */ jsx(
+          Tool,
           {
-            form,
-            initLoad,
-            initialValues,
-            okText,
-            resetText,
-            colWidth,
             size,
-            onSearch,
-            onReset,
-            children
+            columns,
+            setSize,
+            hiddenKeys,
+            defaultHiddenKeys,
+            setHiddenKeys
           }
-        ),
-        /* @__PURE__ */ jsxs(box_default, { bg: "bg", children: [
-          (showTool || pageActions.length > 0) && /* @__PURE__ */ jsxs(box_default, { px: 2, py: 2, fontSize: "subtitle", display: "flex", justifyContent: "space-between", children: [
-            /* @__PURE__ */ jsx(Actions, { actions: pageActions, size }),
-            showTool && /* @__PURE__ */ jsx(
-              Tool,
-              {
-                size,
-                columns,
-                setSize,
-                visibleKeys,
-                defaultVisibleKeys,
-                setVisibleKeys
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsx(
-            table_default,
-            {
-              dataSource: propsDataSource || dataSource,
-              columns: tableColumns,
-              actions: tableActions,
-              loading,
-              size,
-              ...props
-            }
-          )
-        ] })
-      ]
-    }
-  );
+        )
+      ] }),
+      /* @__PURE__ */ jsx(
+        table_default,
+        {
+          dataSource: propsDataSource || dataSource,
+          columns: tableColumns,
+          actions: tableActions,
+          loading,
+          size,
+          ...props
+        }
+      )
+    ] })
+  ] });
 }
 
 export { Page as default };

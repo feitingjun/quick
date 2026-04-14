@@ -51,6 +51,11 @@ function mod(a, b) {
   return new Bignumber(a).mod(b).toNumber();
 }
 
+// src/utils/strings.ts
+var capitalize = (str) => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
 // src/utils/objects.ts
 function merge(...objects) {
   const result = {};
@@ -69,6 +74,6 @@ function merge(...objects) {
   return result;
 }
 
-export { add, debounce, divide, isNumber, merge, mod, multiply, round, subtract, thousands, toFixed, toPercent, zerofill };
+export { add, capitalize, debounce, divide, isNumber, merge, mod, multiply, round, subtract, thousands, toFixed, toPercent, zerofill };
 //# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map

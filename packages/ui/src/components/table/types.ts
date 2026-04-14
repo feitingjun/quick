@@ -1,5 +1,4 @@
 import type { TableColumnType, TableProps as AntdTableProps } from 'antd'
-import type { StyledComponentProps, SxProps } from '@quick/cssinjs'
 import type { DictCode, TableStatus } from '@/dicts'
 import type { ButtonProps } from '@/components/button'
 
@@ -28,8 +27,9 @@ export type ColumnStatus<RecordType extends AnyObject = AnyObject> =
   | TableStatus
   | ((value: any, record: RecordType, index: number) => TableStatus | false | null)
 
-export interface ColumnType<RecordType extends AnyObject = AnyObject>
-  extends TableColumnType<RecordType> {
+export interface ColumnType<
+  RecordType extends AnyObject = AnyObject
+> extends TableColumnType<RecordType> {
   /**颜色状态，为 false | null 时不显示任何颜色*/
   status?: ColumnStatus<RecordType>
   /**是否加粗字体 */
@@ -58,8 +58,10 @@ export interface ColumnType<RecordType extends AnyObject = AnyObject>
   dictCode?: DictCode
 }
 
-export interface ColumnGroupType<RecordType extends AnyObject = AnyObject>
-  extends Omit<ColumnType<RecordType>, 'dataIndex'> {
+export interface ColumnGroupType<RecordType extends AnyObject = AnyObject> extends Omit<
+  ColumnType<RecordType>,
+  'dataIndex'
+> {
   children?: ColumnType<RecordType>[]
 }
 
@@ -67,17 +69,20 @@ export type ColumnProps<RecordType extends AnyObject = AnyObject> =
   | ColumnType<RecordType>
   | ColumnGroupType<RecordType>
 
-export interface Action<RecordType extends AnyObject = AnyObject>
-  extends Omit<ButtonProps, keyof SxProps | 'className' | 'title' | 'onClick'> {
+export interface Action<RecordType extends AnyObject = AnyObject> extends Omit<
+  ButtonProps,
+  'className' | 'title' | 'onClick'
+> {
   title?: React.ReactNode
-  onClick?: (e: React.MouseEvent, record: RecordType, index: number) => void
+  onClick?: (event: React.MouseEvent<HTMLElement>, record: RecordType, index: number) => void
   visible?: boolean | ((record: RecordType, index: number) => boolean)
   render?: (record: RecordType, index: number) => React.ReactNode
   className?: string | ((record: RecordType, index: number) => string)
 }
 
-export interface TableProps<RecordType extends AnyObject = AnyObject>
-  extends StyledComponentProps<AntdTableProps<RecordType>> {
+export interface TableProps<
+  RecordType extends AnyObject = AnyObject
+> extends AntdTableProps<RecordType> {
   columns?: ColumnProps<RecordType>[]
   /**操作栏内容 */
   actions?: Action<RecordType>[]

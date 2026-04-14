@@ -1,5 +1,4 @@
 import { defineConfig } from 'tsup'
-import { cpSync } from 'fs'
 
 export default defineConfig([
   // esm
@@ -8,11 +7,8 @@ export default defineConfig([
     format: ['esm'],
     dts: true,
     outDir: 'dist',
-    sourcemap: false,
+    sourcemap: true,
     clean: true,
-    splitting: false,
-    onSuccess: async () => {
-      cpSync('src/template', 'dist/template', { recursive: true })
-    }
+    splitting: false
   }
 ])

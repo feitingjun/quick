@@ -1,101 +1,45 @@
-import { styled, ThemeProvider, useTheme, useClassName } from '@quick/cssinjs';
-export { useTheme } from '@quick/cssinjs';
-import { createContext, useContext, useMemo, useCallback, useEffect, useState, useActionState, startTransition, cloneElement, isValidElement } from 'react';
-import { Button as Button$1, Space as Space$1, Tooltip as Tooltip$1, Form, Input as Input$1, InputNumber as InputNumber$1, DatePicker as DatePicker$1, Table, Dropdown as Dropdown$1, Popover as Popover$1, Checkbox as Checkbox$1, ConfigProvider as ConfigProvider$1, App } from 'antd';
+import { createContext, useContext, useMemo, useCallback, useEffect, useState, useActionState, startTransition, isValidElement, cloneElement } from 'react';
+import { DatePicker, Table, Checkbox, Button, ConfigProvider as ConfigProvider$1, App, Form, Space, Tooltip, Dropdown, Popover } from 'antd';
+export { Checkbox, Dropdown, Form, Input, InputNumber, Popover, Space, Tooltip } from 'antd';
 import { StyleProvider } from '@ant-design/cssinjs';
 import zhCN from 'antd/locale/zh_CN';
 import Bignumber from 'bignumber.js';
 import 'dayjs/locale/zh-cn';
-import { jsx, jsxs, Fragment } from '@quick/cssinjs/jsx-runtime';
-import dayjs2, { isDayjs } from 'dayjs';
+import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
+import { createStyles } from 'antd-style';
+import dayjs, { isDayjs } from 'dayjs';
 import { RedoOutlined, SearchOutlined, ColumnHeightOutlined, SettingOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { useSearchParams, useNavigate } from 'react-router';
-import 'antd/es/date-picker';
 import copy from 'copy-to-clipboard';
 import axios from 'axios';
 
-// src/theme/default.ts
+// src/theme/index.ts
 var defaultTheme = {
-  colors: {
-    bg: "#fff",
-    bgLayout: "#f5f5f5",
-    primary: "#1DA57A",
-    success: "#52c41a",
-    warning: "#faad14",
-    error: "#ff4d4f",
-    info: "#1677ff",
-    link: "#1677ff",
-    text: "#000",
-    secondary: "#616161",
-    border: "#e1e1e1",
-    borderSecondary: "#f0f0f0",
-    disabled: "#c0c0c0"
-  },
-  breakpoints: {
-    sm: "480px",
-    md: "768px",
-    lg: "1024px",
-    xl: "1280px",
-    "2xl": "1440px"
-  },
-  space: 4,
-  sizes: {
-    controlHeight: 32,
-    controlHeightLg: 40,
-    controlHeightSm: 24,
-    controlHeightXs: 16
-  },
-  lineHeights: {
-    body: 1.5,
-    heading: 1.125
-  },
-  fontWeights: {
-    body: 400,
-    bold: 700
-  },
-  fontSizes: {
-    caption: 12,
-    body: 14,
-    subtitle: 16,
-    title: 18,
-    heading: 20,
-    display: 24
-  },
-  borders: {
-    none: "none",
-    normal: "1px solid {colors.border}",
-    thick: "2px solid {colors.border}",
-    dotted: "1px dotted {colors.border}",
-    thickDotted: "2px dotted {colors.border}"
-  },
-  radii: {
-    none: 0,
-    xs: 2,
-    sm: 4,
-    md: 6
-  },
-  shadows: {
-    none: "none",
-    box: "0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05)",
-    secondary: "0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05)",
-    tertiary: "0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px 0 rgba(0, 0, 0, 0.02)"
-  },
-  zIndices: {
-    hide: -1,
-    base: 0,
-    docked: 10,
-    dropdown: 1e3,
-    sticky: 1100,
-    banner: 1200,
-    overlay: 1300,
-    modal: 1400,
-    popover: 1500,
-    tooltip: 1600,
-    toast: 1700,
-    max: 2147483647
-  }
+  colorPrimary: "#1DA57A",
+  colorError: "#ff4d4f",
+  colorInfo: "#1677ff",
+  colorLink: "#1677ff",
+  colorSuccess: "#52c41a",
+  colorWarning: "#faad14",
+  colorTextBase: "#000",
+  colorText: "#000",
+  colorTextSecondary: "#616161",
+  colorBorder: "#e1e1e1",
+  colorBgBase: "#fff",
+  colorBgLayout: "#f5f5f5",
+  fontSize: 14,
+  fontSizeSM: 12,
+  fontSizeLG: "16px",
+  fontSizeXL: "20px",
+  borderRadius: 4,
+  borderRadiusXS: 2,
+  borderRadiusSM: 4,
+  borderRadiusLG: 8,
+  controlHeight: 32,
+  controlHeightLG: 40,
+  controlHeightSM: 24,
+  controlHeightXS: 16
 };
-var defineTheme = (theme) => theme;
 var ConfigContext = createContext({
   dicts: {}
 });
@@ -170,93 +114,137 @@ var useRegisterMessage = () => {
   message = messageInstance;
   return null;
 };
-var useToken = (theme) => {
-  return useMemo(
-    () => ({
-      colorPrimary: theme?.colors?.primary,
-      colorError: theme?.colors?.error,
-      colorInfo: theme?.colors?.info,
-      colorLink: theme?.colors?.link,
-      colorSuccess: theme?.colors?.success,
-      colorWarning: theme?.colors?.warning,
-      colorTextBase: theme?.colors?.text,
-      colorText: theme?.colors?.text,
-      colorTextSecondary: theme?.colors?.secondary,
-      colorBorder: theme?.colors?.border,
-      colorBgBase: theme?.colors?.bg,
-      colorBgLayout: theme?.colors?.bgLayout,
-      fontSize: theme?.fontSizes?.body,
-      fontSizeSM: theme?.fontSizes?.caption,
-      fontSizeLG: theme?.fontSizes?.subtitle,
-      fontSizeXL: theme?.fontSizes?.heading,
-      borderRadius: theme?.radii?.sm,
-      borderRadiusXS: theme?.radii?.xs,
-      borderRadiusSM: theme?.radii?.sm,
-      borderRadiusLG: theme?.radii?.md,
-      controlHeight: theme?.sizes?.controlHeight,
-      controlHeightLG: theme?.sizes?.controlHeightLg,
-      controlHeightSM: theme?.sizes?.controlHeightSm,
-      controlHeightXS: theme?.sizes?.controlHeightXs
-    }),
-    [theme]
-  );
-};
 function Register({ children }) {
   useRegisterMessage();
   return children;
 }
 function ConfigProvider({ theme = {}, dicts = {}, children }) {
-  const margedtheme = useMemo(() => merge(defaultTheme, theme), [theme]);
-  const token = useToken(margedtheme);
-  return /* @__PURE__ */ jsx(ThemeProvider, { theme: margedtheme, children: /* @__PURE__ */ jsx(StyleProvider, { layer: true, children: /* @__PURE__ */ jsx(ConfigProvider$1, { theme: { token }, locale: zhCN, children: /* @__PURE__ */ jsx(ConfigContext.Provider, { value: { dicts }, children: /* @__PURE__ */ jsx(App, { children: /* @__PURE__ */ jsx(Register, { children }) }) }) }) }) });
+  const mergedToken = useMemo(() => merge(defaultTheme, theme), [theme]);
+  return /* @__PURE__ */ jsx(StyleProvider, { layer: true, children: /* @__PURE__ */ jsx(ConfigProvider$1, { theme: { token: mergedToken }, locale: zhCN, children: /* @__PURE__ */ jsx(ConfigContext.Provider, { value: { dicts }, children: /* @__PURE__ */ jsx(App, { children: /* @__PURE__ */ jsx(Register, { children }) }) }) }) });
 }
-var Button = styled(Button$1);
 var button_default = Button;
-var StyledBox = styled("div");
-var Box = (props) => /* @__PURE__ */ jsx(StyledBox, { as: props.as, ...props });
-var box_default = Box;
-var Space = styled(Space$1);
-var space_default = Space;
-var Tooltip = styled(Tooltip$1);
-var tooltip_default = Tooltip;
-var StyledItem = styled(Form.Item);
-var Item = StyledItem;
-Item.useStatus = Form.Item.useStatus;
-var item_default = Item;
-var ErrorList = styled(Form.ErrorList);
-var error_list_default = ErrorList;
-var Provider = styled(Form.Provider);
-var provider_default = Provider;
+var { RangePicker: AntdRangePicker } = DatePicker;
+var usePresets = (showTime, allowEmpty) => {
+  const presets = useMemo(() => {
+    const arr = showTime ? [
+      { label: "\u4ECA\u65E5", value: [dayjs().startOf("day"), dayjs().add(1, "day").startOf("day")] },
+      {
+        label: "\u6628\u65E5",
+        value: [dayjs().subtract(1, "day").startOf("day"), dayjs().startOf("day")]
+      },
+      {
+        label: "\u672C\u5468",
+        value: [dayjs().startOf("week"), dayjs().add(1, "week").startOf("week")]
+      },
+      {
+        label: "\u4E0A\u5468",
+        value: [dayjs().subtract(1, "week").startOf("week"), dayjs().startOf("week")]
+      },
+      {
+        label: "\u672C\u6708",
+        value: [dayjs().startOf("month"), dayjs().add(1, "month").startOf("month")]
+      },
+      {
+        label: "\u4E0A\u6708",
+        value: [dayjs().subtract(1, "month").startOf("month"), dayjs().startOf("month")]
+      },
+      {
+        label: "\u8FD145\u5929",
+        value: [dayjs().subtract(45, "day"), dayjs().add(1, "day").startOf("day")]
+      },
+      {
+        label: "\u4ECA\u5E74",
+        value: [dayjs().startOf("year"), dayjs().add(1, "year").startOf("year")]
+      },
+      {
+        label: "\u8FD15\u5E74",
+        value: [dayjs().subtract(5, "year"), dayjs().add(1, "year").startOf("year")]
+      }
+    ] : [
+      { label: "\u4ECA\u65E5", value: [dayjs(), dayjs()] },
+      { label: "\u6628\u65E5", value: [dayjs().subtract(1, "day"), dayjs().subtract(1, "day")] },
+      { label: "\u672C\u5468", value: [dayjs().startOf("week"), dayjs().endOf("week")] },
+      {
+        label: "\u4E0A\u5468",
+        value: [
+          dayjs().subtract(1, "week").startOf("week"),
+          dayjs().subtract(1, "week").endOf("week")
+        ]
+      },
+      { label: "\u672C\u6708", value: [dayjs().startOf("month"), dayjs().endOf("month")] },
+      {
+        label: "\u4E0A\u6708",
+        value: [
+          dayjs().subtract(1, "month").startOf("month"),
+          dayjs().subtract(1, "month").endOf("month")
+        ]
+      },
+      { label: "\u8FD145\u5929", value: [dayjs().subtract(45, "day"), dayjs()] },
+      { label: "\u4ECA\u5E74", value: [dayjs().startOf("year"), dayjs().endOf("year")] },
+      { label: "\u8FD15\u5E74", value: [dayjs().subtract(5, "year"), dayjs()] }
+    ];
+    if (allowEmpty === true || Array.isArray(allowEmpty) && allowEmpty[0]) {
+      arr.push({
+        label: "\u622A\u6B62\u6628\u65E5",
+        value: [null, showTime ? dayjs().startOf("day") : dayjs().subtract(1, "day")]
+      });
+    }
+    return arr;
+  }, [showTime, allowEmpty]);
+  return presets;
+};
+var useStyles = createStyles({
+  container: {
+    [`& .ant-picker-presets`]: {
+      minHeight: "330px"
+    }
+  }
+});
+function RangePicker({
+  showTime,
+  allowEmpty = [true, true],
+  ...props
+}) {
+  const presets = usePresets(showTime, allowEmpty);
+  const { styles } = useStyles();
+  return /* @__PURE__ */ jsx(
+    AntdRangePicker,
+    {
+      presets,
+      showTime,
+      allowEmpty,
+      classNames: {
+        popup: {
+          container: styles.container
+        }
+      },
+      ...props
+    }
+  );
+}
 
-// src/components/form/index.tsx
-var { useForm, useFormInstance, useWatch } = Form;
-var StyledForm = styled(Form);
-var Form4 = StyledForm;
-Form4.Item = item_default;
-Form4.List = Form.List;
-Form4.ErrorList = error_list_default;
-Form4.Provider = provider_default;
-Form4.useForm = useForm;
-Form4.useFormInstance = useFormInstance;
-Form4.useWatch = useWatch;
-var form_default = Form4;
+// src/components/date-picker/index.tsx
+var date_picker_default = DatePicker;
 function useQuery() {
   const [query] = useSearchParams();
   return useMemo(
-    () => query.entries().reduce((acc, [key, value]) => {
-      if (value === "undefined") {
-        acc[key] = void 0;
-      } else if (value === "null") {
-        acc[key] = null;
-      } else if (value.length <= 16 && isNumber(value)) {
-        acc[key] = Number(value);
-      } else if (value.includes(",")) {
-        acc[key] = value.split(",").map((item) => isNumber(item) ? Number(item) : item);
-      } else {
-        acc[key] = value;
-      }
-      return acc;
-    }, {}),
+    () => Array.from(query.entries()).reduce(
+      (acc, [key, value]) => {
+        if (value === "undefined") {
+          acc[key] = void 0;
+        } else if (value === "null") {
+          acc[key] = null;
+        } else if (value.length <= 16 && isNumber(value)) {
+          acc[key] = Number(value);
+        } else if (value.includes(",")) {
+          acc[key] = value.split(",").map((item) => isNumber(item) ? Number(item) : item);
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {}
+    ),
     [query]
   );
 }
@@ -267,6 +255,55 @@ function useAsyncAction(dispatch) {
   );
   return [(values) => startTransition(() => action(values)), loading];
 }
+var useStyles2 = createStyles(
+  ({ token }, { colWidth, size }) => {
+    let controlHeight = token.controlHeight;
+    if (size === "small") controlHeight = token.controlHeightSM;
+    if (size === "large") controlHeight = token.controlHeightLG;
+    return {
+      btns: {
+        position: "absolute",
+        right: token.sizeUnit * 4,
+        bottom: token.sizeUnit * 4,
+        display: "flex",
+        justifyContent: "space-between",
+        "& .ant-btn": {
+          paddingInline: token.sizeUnit * 2,
+          gap: token.sizeUnit,
+          "&:first-of-type": {
+            marginRight: token.sizeUnit * 2
+          }
+        }
+      },
+      form: {
+        backgroundColor: token.colorBgContainer,
+        marginBottom: token.sizeUnit * 2,
+        padding: token.sizeUnit * 4,
+        display: "grid",
+        gridTemplateColumns: `repeat(auto-fill, minmax(${colWidth}px, 1fr))`,
+        gap: token.sizeUnit * 2.5,
+        position: "relative",
+        "&:after": {
+          width: colWidth,
+          content: '""',
+          height: controlHeight
+        },
+        "&>*": {
+          marginRight: 0
+        },
+        "& .ant-row": {
+          flexWrap: "nowrap"
+        },
+        "& .ant-form-item-label": {
+          flexShrink: 0
+        },
+        "& .ant-input-number, & .ant-input-select, & .ant-picker": {
+          width: "100%"
+        }
+      }
+    };
+  }
+);
 function Search({
   children,
   okText = "\u67E5\u8BE2",
@@ -274,7 +311,7 @@ function Search({
   initLoad,
   onSearch,
   onReset,
-  colWidth = 280,
+  colWidth = 240,
   size = "middle",
   form: externalForm,
   initialValues,
@@ -285,18 +322,9 @@ function Search({
   )) {
     throw new Error("Search \u4E0D\u63A5\u6536 dayjs \u7C7B\u578B\u7684\u521D\u59CB\u503C\uFF0C\u8BF7\u4F7F\u7528\u5B57\u7B26\u4E32\u683C\u5F0F\u5316\u65E5\u671F");
   }
-  const [form] = form_default.useForm(externalForm);
+  const { styles } = useStyles2({ colWidth, size });
+  const [form] = Form.useForm(externalForm);
   const query = useQuery();
-  const theme = useTheme();
-  const height = useMemo(() => {
-    if (size === "small") {
-      return theme.sizes.controlHeightSm;
-    }
-    if (size === "large") {
-      return theme.sizes.controlHeightLg;
-    }
-    return theme.sizes.controlHeight;
-  }, [theme, size]);
   const [onFinish, loading] = useAsyncAction(async (values) => {
     if (typeof onSearch === "function") {
       onSearch(values);
@@ -316,30 +344,13 @@ function Search({
     }
   }, [query, form, initLoad]);
   const btns = useMemo(() => {
-    return /* @__PURE__ */ jsxs(
-      box_default,
-      {
-        sx: {
-          position: "absolute",
-          right: 4 * theme.space,
-          bottom: 4 * theme.space,
-          w: colWidth / 2,
-          display: "flex",
-          justifyContent: "space-between",
-          ".ant-btn": {
-            px: 2.5,
-            gap: 1
-          }
-        },
-        children: [
-          /* @__PURE__ */ jsx(button_default, { mr: 2, onClick: onClear, icon: /* @__PURE__ */ jsx(RedoOutlined, {}), children: resetText }),
-          /* @__PURE__ */ jsx(button_default, { type: "primary", htmlType: "submit", loading, icon: /* @__PURE__ */ jsx(SearchOutlined, {}), children: okText })
-        ]
-      }
-    );
-  }, [loading, onClear, okText, resetText, theme, colWidth]);
+    return /* @__PURE__ */ jsxs("div", { className: styles.btns, children: [
+      /* @__PURE__ */ jsx(button_default, { onClick: onClear, icon: /* @__PURE__ */ jsx(RedoOutlined, {}), children: resetText }),
+      /* @__PURE__ */ jsx(button_default, { type: "primary", htmlType: "submit", loading, icon: /* @__PURE__ */ jsx(SearchOutlined, {}), children: okText })
+    ] });
+  }, [loading, onClear, okText, resetText, colWidth]);
   return /* @__PURE__ */ jsx(
-    form_default,
+    Form,
     {
       layout: "inline",
       size,
@@ -347,37 +358,9 @@ function Search({
       onFinish,
       initialValues,
       preserve: true,
-      sx: {
-        bg: "bg",
-        mb: 2,
-        display: "grid",
-        gridTemplateColumns: `repeat(auto-fill, minmax(${colWidth / 2}px, 1fr))`,
-        p: 4,
-        gap: 2.5,
-        position: "relative",
-        _after: {
-          content: '""',
-          height,
-          gridColumn: "span 1"
-        },
-        "& > *": {
-          gridColumn: "span 2",
-          mr: 0
-        },
-        ".ant-row": {
-          flexWrap: "nowrap"
-        },
-        ".ant-input-number, .ant-input-select, .ant-picker": {
-          w: 1
-        }
-      },
+      className: styles.form,
       ...props,
-      children: typeof children === "function" ? ((values, form2) => {
-        return /* @__PURE__ */ jsxs(Fragment, { children: [
-          children(values, form2),
-          btns
-        ] });
-      }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+      children: /* @__PURE__ */ jsxs(Fragment, { children: [
         children,
         btns
       ] })
@@ -387,16 +370,16 @@ function Search({
 var isDate = (value, format) => {
   if (!value) return false;
   if (isNumber(value)) {
-    return dayjs2(value, format).isValid();
+    return dayjs(value, format).isValid();
   }
-  return dayjs2(value).isValid();
+  return dayjs(value).isValid();
 };
 var parseDate = (value, format) => {
   if (!value) return value;
   if (Array.isArray(value)) {
-    return value.map((v) => v && isDate(v, format) ? dayjs2(v) : v);
+    return value.map((v) => v && isDate(v, format) ? dayjs(v) : v);
   }
-  return isDate(value, format) ? dayjs2(value) : value;
+  return isDate(value, format) ? dayjs(value) : value;
 };
 var formatDate = (value, format) => {
   if (!value) return value;
@@ -410,7 +393,7 @@ var getFormat = (format, child) => {
   if (child?.props?.showTime) return "YYYY-MM-DD HH:mm:ss";
   return "YYYY-MM-DD";
 };
-function Item2({
+function Item({
   span = 1,
   name,
   names,
@@ -423,10 +406,10 @@ function Item2({
     throw new Error("Search.Item \u4E0D\u63A5\u6536 dayjs \u7C7B\u578B\u7684\u521D\u59CB\u503C\uFF0C\u8BF7\u4F7F\u7528\u5B57\u7B26\u4E32\u683C\u5F0F\u5316\u65E5\u671F");
   }
   if (names) {
-    return /* @__PURE__ */ jsxs(form_default.Item, { style: { gridColumn: `span ${span * 2}` }, ...props, children: [
-      names.map((v, i) => /* @__PURE__ */ jsx(form_default.Item, { name: v, hidden: true, noStyle: true, initialValue: initialValue?.[i] }, v)),
+    return /* @__PURE__ */ jsxs(Form.Item, { style: { gridColumn: `span ${span * 2}` }, ...props, children: [
+      names.map((v, i) => /* @__PURE__ */ jsx(Form.Item, { name: v, hidden: true, noStyle: true, initialValue: initialValue?.[i] }, v)),
       /* @__PURE__ */ jsx(
-        form_default.Item,
+        Form.Item,
         {
           noStyle: true,
           shouldUpdate: (preVal, nextVal) => {
@@ -450,10 +433,11 @@ function Item2({
     ] });
   }
   return /* @__PURE__ */ jsx(
-    form_default.Item,
+    Form.Item,
     {
       name,
       initialValue,
+      style: { gridColumn: `span ${span}` },
       ...props,
       getValueFromEvent: (e) => {
         const value = e?.currentTarget?.value ?? e?.target?.value ?? e;
@@ -469,113 +453,38 @@ function Item2({
 
 // src/components/search/index.tsx
 var Search2 = Search;
-Search2.Item = Item2;
+Search2.Item = Item;
 var search_default = Search2;
-var Input = styled(Input$1);
-var input_default = Input;
-var InputNumber = styled(InputNumber$1);
-var input_number_default = InputNumber;
-var { RangePicker: AntdRangePicker } = DatePicker$1;
-var StyledRangePicker = styled(AntdRangePicker);
-var usePresets = (showTime, allowEmpty) => {
-  const presets = useMemo(() => {
-    const arr = showTime ? [
-      { label: "\u4ECA\u65E5", value: [dayjs2().startOf("day"), dayjs2().add(1, "day").startOf("day")] },
-      {
-        label: "\u6628\u65E5",
-        value: [dayjs2().subtract(1, "day").startOf("day"), dayjs2().startOf("day")]
-      },
-      {
-        label: "\u672C\u5468",
-        value: [dayjs2().startOf("week"), dayjs2().add(1, "week").startOf("week")]
-      },
-      {
-        label: "\u4E0A\u5468",
-        value: [dayjs2().subtract(1, "week").startOf("week"), dayjs2().startOf("week")]
-      },
-      {
-        label: "\u672C\u6708",
-        value: [dayjs2().startOf("month"), dayjs2().add(1, "month").startOf("month")]
-      },
-      {
-        label: "\u4E0A\u6708",
-        value: [dayjs2().subtract(1, "month").startOf("month"), dayjs2().startOf("month")]
-      },
-      {
-        label: "\u8FD145\u5929",
-        value: [dayjs2().subtract(45, "day"), dayjs2().add(1, "day").startOf("day")]
-      },
-      {
-        label: "\u4ECA\u5E74",
-        value: [dayjs2().startOf("year"), dayjs2().add(1, "year").startOf("year")]
-      },
-      {
-        label: "\u8FD15\u5E74",
-        value: [dayjs2().subtract(5, "year"), dayjs2().add(1, "year").startOf("year")]
-      }
-    ] : [
-      { label: "\u4ECA\u65E5", value: [dayjs2(), dayjs2()] },
-      { label: "\u6628\u65E5", value: [dayjs2().subtract(1, "day"), dayjs2().subtract(1, "day")] },
-      { label: "\u672C\u5468", value: [dayjs2().startOf("week"), dayjs2().endOf("week")] },
-      {
-        label: "\u4E0A\u5468",
-        value: [
-          dayjs2().subtract(1, "week").startOf("week"),
-          dayjs2().subtract(1, "week").endOf("week")
-        ]
-      },
-      { label: "\u672C\u6708", value: [dayjs2().startOf("month"), dayjs2().endOf("month")] },
-      {
-        label: "\u4E0A\u6708",
-        value: [
-          dayjs2().subtract(1, "month").startOf("month"),
-          dayjs2().subtract(1, "month").endOf("month")
-        ]
-      },
-      { label: "\u8FD145\u5929", value: [dayjs2().subtract(45, "day"), dayjs2()] },
-      { label: "\u4ECA\u5E74", value: [dayjs2().startOf("year"), dayjs2().endOf("year")] },
-      { label: "\u8FD15\u5E74", value: [dayjs2().subtract(5, "year"), dayjs2()] }
-    ];
-    if (allowEmpty === true || Array.isArray(allowEmpty) && allowEmpty[0]) {
-      arr.push({
-        label: "\u622A\u6B62\u6628\u65E5",
-        value: [null, showTime ? dayjs2().startOf("day") : dayjs2().subtract(1, "day")]
-      });
-    }
-    return arr;
-  }, [showTime, allowEmpty]);
-  return presets;
-};
-function RangePicker({
-  showTime,
-  allowEmpty = [true, true],
-  ...props
-}) {
-  const presets = usePresets(showTime, allowEmpty);
-  const popupRootCls = useClassName({
-    ".ant-picker-panel-layout": {
-      minHeight: 330
-    }
-  });
-  return /* @__PURE__ */ jsx(
-    StyledRangePicker,
-    {
-      presets,
-      showTime,
-      allowEmpty,
-      classNames: {
-        popup: {
-          root: popupRootCls
-        }
-      },
-      ...props
-    }
-  );
-}
-
-// src/components/date-picker/index.tsx
-var DatePicker = styled(DatePicker$1);
-var date_picker_default = DatePicker;
+var useStyles3 = createStyles(({ token }) => ({
+  link: {
+    color: token.colorLink
+  },
+  pointer: {
+    cursor: "pointer"
+  },
+  bold: {
+    fontWeight: "bold"
+  },
+  question: {
+    marginLeft: token.sizeUnit,
+    cursor: "pointer"
+  },
+  actionBtn: {
+    padding: 0
+  },
+  success: {
+    color: token.colorSuccess
+  },
+  error: {
+    color: token.colorError
+  },
+  warning: {
+    color: token.colorWarning
+  },
+  disabled: {
+    color: token.colorTextDisabled
+  }
+}));
 var copyText = (e) => {
   const selection = window.getSelection();
   selection?.removeAllRanges();
@@ -602,7 +511,7 @@ var handleStatus = (status, value, record, index) => {
       return statusStr || null;
   }
 };
-var handleColumn = (col, dicts, navigate) => {
+var handleColumn = (col, dicts, navigate, styles) => {
   let {
     status,
     bold,
@@ -620,7 +529,7 @@ var handleColumn = (col, dicts, navigate) => {
     ...args
   } = col;
   const render = (value, record, index) => {
-    const sx = {};
+    const classNames = [];
     value = renderFunc?.(value, record, index) ?? value;
     if (dictCode) {
       const dict = dicts[dictCode];
@@ -633,12 +542,13 @@ var handleColumn = (col, dicts, navigate) => {
     if (link) {
       link = typeof link === "function" ? link(value, record, index) : link;
       if (link) {
-        sx.color = "link";
-        sx.cursor = "pointer";
+        classNames.push(styles.link);
+        classNames.push(styles.pointer);
       }
     }
-    if (status) sx.color = handleStatus(status, value, record, index);
-    if (bold) sx.fontWeight = "bold";
+    const statusStr = handleStatus(status, value, record, index);
+    if (statusStr) classNames.push(styles[statusStr]);
+    if (bold) classNames.push(styles.bold);
     if (isNumber(value)) {
       if (percent) value = multiply(value, 100);
       if (precision === true) precision = 2;
@@ -650,18 +560,25 @@ var handleColumn = (col, dicts, navigate) => {
       }
       if (percent) value = `${value}%`;
     }
-    return /* @__PURE__ */ jsxs("span", { sx, onClick: link ? () => navigate(link) : void 0, children: [
-      value,
-      suffix ?? null
-    ] });
+    return /* @__PURE__ */ jsxs(
+      "span",
+      {
+        className: classNames.join(" "),
+        onClick: link ? () => navigate(link) : void 0,
+        children: [
+          value,
+          suffix ?? null
+        ]
+      }
+    );
   };
   const children = col.children;
   return {
     ...args,
-    children: children?.map((col2) => handleColumn(col2, dicts, navigate)) ?? void 0,
+    children: children?.map((col2) => handleColumn(col2, dicts, navigate, styles)) ?? void 0,
     title: tooltip ? (...arrs) => /* @__PURE__ */ jsxs("span", { children: [
       typeof title === "function" ? title(...arrs) : title,
-      /* @__PURE__ */ jsx(tooltip_default, { title: tooltip, children: /* @__PURE__ */ jsx(QuestionCircleOutlined, { sx: { ml: 1, cursor: "pointer" } }) })
+      /* @__PURE__ */ jsx(Tooltip, { title: tooltip, children: /* @__PURE__ */ jsx(QuestionCircleOutlined, { className: styles.question }) })
     ] }) : title,
     render,
     onCell: (record, index) => ({
@@ -670,14 +587,14 @@ var handleColumn = (col, dicts, navigate) => {
     })
   };
 };
-var handleActions = (actions, actionFixed, actionTitle, actionWidth) => {
+var handleActions = (actions, actionFixed, actionTitle, actionWidth, styles) => {
   if (!actions || actions.length === 0) return null;
   return {
     title: actionTitle || "\u64CD\u4F5C",
     dataIndex: "__actions",
     width: actionWidth,
     fixed: actionFixed ?? "right",
-    render: (_, record, index) => /* @__PURE__ */ jsx(space_default, { children: actions.map((action, i) => {
+    render: (_, record, index) => /* @__PURE__ */ jsx(Space, { children: actions.map((action, i) => {
       let { title, visible = true, render, className, type, onClick, ...args } = action;
       const show = typeof visible === "function" ? visible(record, index) : visible;
       if (!show) return null;
@@ -686,7 +603,9 @@ var handleActions = (actions, actionFixed, actionTitle, actionWidth) => {
       return /* @__PURE__ */ jsx(
         button_default,
         {
-          p: 0,
+          classNames: {
+            root: styles.actionBtn
+          },
           type: type ?? "link",
           className,
           onClick: (e) => onClick?.(e, record, index),
@@ -701,8 +620,9 @@ var handleActions = (actions, actionFixed, actionTitle, actionWidth) => {
 var useColumns = (columns, actions, actionFixed, actionTitle, actionWidth) => {
   const navigate = useNavigate();
   const dicts = useDicts();
+  const { styles } = useStyles3();
   return useMemo(
-    () => columns.map((col) => handleColumn(col, dicts, navigate)).concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth) ?? []),
+    () => columns.map((col) => handleColumn(col, dicts, navigate, styles)).concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth, styles) ?? []),
     [columns, actions, dicts, navigate, actionFixed, actionTitle, actionWidth]
   );
 };
@@ -723,7 +643,7 @@ var useSummary = (columns, summaryMap, rowSelection) => {
       rowSelection && /* @__PURE__ */ jsx(Summary.Cell, { index: 0 }),
       /* @__PURE__ */ jsx(Summary.Cell, { index: rowSelection ? 1 : 0, children: "\u5408\u8BA1" }),
       summaryList.slice(1).map((item, index) => {
-        let sx = {};
+        const cls = [];
         let defaultSummary = { thousand: true };
         let value = summaryMap?.[item.totalField ?? item.dataIndex];
         if (typeof item.total === "object") {
@@ -750,17 +670,18 @@ var useSummary = (columns, summaryMap, rowSelection) => {
           if (thousandNum) value = value ? thousands(value) : value;
           if (percent) value = `${value}%`;
         }
-        className = typeof className === "function" ? className(value) : className;
+        if (className) {
+          cls.push(typeof className === "function" ? className(value) : className);
+        }
         if (status) {
           const statusColor = typeof status === "function" ? status(value) : status;
-          sx.color = statusColor === "default" ? null : statusColor;
+          if (statusColor !== "default") cls.push(`text-${statusColor}`);
         }
         return /* @__PURE__ */ jsx(
           Summary.Cell,
           {
-            className: className ?? void 0,
+            className: cls?.length ? cls.join(" ") : void 0,
             index: index + 1,
-            sx,
             children: value ?? null
           },
           index + 1
@@ -769,7 +690,6 @@ var useSummary = (columns, summaryMap, rowSelection) => {
     ] }) }) : void 0;
   }, [columns, summaryMap]);
 };
-var StyledTable = styled(Table);
 function Table2({
   columns = [],
   actionFixed,
@@ -784,7 +704,7 @@ function Table2({
   const cols = useColumns(columns, actions, actionFixed, actionTitle, actionWidth);
   const summary = useSummary(cols, summaryMap, rowSelection);
   return /* @__PURE__ */ jsx(
-    StyledTable,
+    Table,
     {
       rowKey,
       columns: cols,
@@ -869,106 +789,90 @@ var request = {
 };
 var request_default = request;
 function Actions({ actions, size }) {
-  return /* @__PURE__ */ jsx(box_default, { children: actions?.map(({ title, ...props }, i) => {
+  return /* @__PURE__ */ jsx("div", { children: actions?.map(({ title, ...props }, i) => {
     return /* @__PURE__ */ jsx(button_default, { size, ...props, children: title }, i);
   }) });
 }
-var Dropdown = styled(Dropdown$1);
-var dropdown_default = Dropdown;
-var Popover = styled(Popover$1);
-var popover_default = Popover;
-var { Group: AntdCheckboxGroup } = Checkbox$1;
-var StyledCheckbox = styled(Checkbox$1);
-var StyledGroup = styled(AntdCheckboxGroup);
-var Checkbox = StyledCheckbox;
-Checkbox.Group = StyledGroup;
-var checkbox_default = Checkbox;
-var CheckboxGroup = checkbox_default.Group;
+var CheckboxGroup = Checkbox.Group;
 var sizeItem = [
   { key: "large", label: "\u5BBD\u677E" },
-  { key: "middle", label: "\u4E2D\u7B49" },
+  { key: "medium", label: "\u4E2D\u7B49" },
   { key: "small", label: "\u7D27\u51D1" }
 ];
+var useStyles4 = createStyles(({ token }) => ({
+  all: {
+    paddingBottom: token.sizeUnit * 2,
+    marginBottom: token.sizeUnit * 2,
+    minWidth: 100,
+    display: "flex",
+    justifyContent: "space-between"
+  },
+  reset: {
+    color: token.colorPrimary,
+    cursor: "pointer"
+  },
+  checkboxGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: token.sizeUnit
+  }
+}));
 var Content = ({
   columns,
-  visibleKeys,
-  defaultVisibleKeys,
-  setVisibleKeys
+  hiddenKeys,
+  defaultHiddenKeys,
+  setHiddenKeys
 }) => {
+  const { styles } = useStyles4();
   const options = useMemo(() => {
     return columns?.map((col) => col.title) ?? [];
   }, [columns]);
   const checkAll = useCallback(
     (e) => {
       if (e.target.checked) {
-        setVisibleKeys(options);
+        setHiddenKeys([]);
       } else {
-        setVisibleKeys([]);
+        setHiddenKeys(options);
       }
     },
     [options]
   );
-  return /* @__PURE__ */ jsxs(box_default, { children: [
-    /* @__PURE__ */ jsxs(
-      box_default,
-      {
-        sx: {
-          pb: 2,
-          mb: 2,
-          minW: 120,
-          display: "flex",
-          justifyContent: "space-between"
-        },
-        children: [
-          /* @__PURE__ */ jsx(
-            checkbox_default,
-            {
-              onChange: checkAll,
-              checked: visibleKeys.length === options.length,
-              indeterminate: visibleKeys.length > 0 && visibleKeys.length < options.length,
-              children: "\u5168\u9009"
-            }
-          ),
-          /* @__PURE__ */ jsx(
-            box_default,
-            {
-              as: "span",
-              color: "primary",
-              cursor: "pointer",
-              onClick: () => setVisibleKeys(defaultVisibleKeys),
-              children: "\u91CD\u7F6E"
-            }
-          )
-        ]
-      }
-    ),
+  return /* @__PURE__ */ jsxs("div", { children: [
+    /* @__PURE__ */ jsxs("div", { className: styles.all, children: [
+      /* @__PURE__ */ jsx(
+        Checkbox,
+        {
+          onChange: checkAll,
+          checked: hiddenKeys.length === 0,
+          indeterminate: hiddenKeys.length > 0 && hiddenKeys.length < options.length,
+          children: "\u5168\u9009"
+        }
+      ),
+      /* @__PURE__ */ jsx("span", { className: styles.reset, onClick: () => setHiddenKeys(defaultHiddenKeys), children: "\u91CD\u7F6E" })
+    ] }),
     /* @__PURE__ */ jsx(
       CheckboxGroup,
       {
         options,
-        value: visibleKeys,
-        onChange: (e) => setVisibleKeys(e),
-        sx: {
-          display: "flex",
-          flexDirection: "column",
-          gap: 1
-        }
+        value: options.filter((option) => !hiddenKeys.includes(option)),
+        onChange: (e) => setHiddenKeys(options.filter((option) => !e.includes(option))),
+        className: styles.checkboxGroup
       }
     )
   ] });
 };
 function Tool({
-  size = "middle",
-  visibleKeys,
-  defaultVisibleKeys,
-  setVisibleKeys,
+  size = "medium",
+  hiddenKeys,
+  defaultHiddenKeys,
+  setHiddenKeys,
   setSize,
   columns,
   ...props
 }) {
-  return /* @__PURE__ */ jsxs(space_default, { size, ...props, children: [
-    /* @__PURE__ */ jsx(tooltip_default, { title: "\u5BC6\u5EA6", children: /* @__PURE__ */ jsx(
-      dropdown_default,
+  return /* @__PURE__ */ jsxs(Space, { size, ...props, children: [
+    /* @__PURE__ */ jsx(Tooltip, { title: "\u5BC6\u5EA6", children: /* @__PURE__ */ jsx(
+      Dropdown,
       {
         trigger: ["click"],
         placement: "bottomRight",
@@ -980,8 +884,8 @@ function Tool({
         children: /* @__PURE__ */ jsx(ColumnHeightOutlined, {})
       }
     ) }),
-    /* @__PURE__ */ jsx(tooltip_default, { title: "\u5C55\u793A\u5217", children: /* @__PURE__ */ jsx(
-      popover_default,
+    /* @__PURE__ */ jsx(Tooltip, { title: "\u5C55\u793A\u5217", children: /* @__PURE__ */ jsx(
+      Popover,
       {
         arrow: false,
         trigger: "click",
@@ -990,9 +894,9 @@ function Tool({
           Content,
           {
             columns,
-            visibleKeys,
-            defaultVisibleKeys,
-            setVisibleKeys
+            hiddenKeys,
+            defaultHiddenKeys,
+            setHiddenKeys
           }
         ),
         children: /* @__PURE__ */ jsx(SettingOutlined, {})
@@ -1000,6 +904,20 @@ function Tool({
     ) })
   ] });
 }
+var useStyles5 = createStyles(({ token }) => ({
+  root: {
+    width: "100%"
+  },
+  btns: {
+    display: "flex",
+    justifyContent: "space-between",
+    padding: token.sizeUnit * 2,
+    fontSize: token.fontSizeLG
+  },
+  tool: {
+    backgroundColor: token.colorBgContainer
+  }
+}));
 function Page({
   okText,
   resetText,
@@ -1022,13 +940,14 @@ function Page({
   columns,
   ...props
 }) {
+  const { styles } = useStyles5();
   paramsLocation = paramsLocation ?? (method === "get" ? "query" : "body");
   const [dataSource, setDataSource] = useState([]);
-  const defaultVisibleKeys = useMemo(() => {
-    return columns?.filter((col) => !col.hidden).map((col) => col.title) ?? [];
+  const defaultHiddenKeys = useMemo(() => {
+    return columns?.filter((col) => !!col.hidden).map((col) => col.title) ?? [];
   }, [columns]);
   const [size, setSize] = useState(defaultSize);
-  const [visibleKeys, setVisibleKeys] = useState(defaultVisibleKeys);
+  const [hiddenKeys, setHiddenKeys] = useState(defaultHiddenKeys);
   const [onSearch, loading] = useAsyncAction(async (values) => {
     const vals = await onSearchPage?.(values);
     if (!url) return;
@@ -1058,8 +977,8 @@ function Page({
     await onResetPage?.();
   }, [onResetPage]);
   const tableColumns = useMemo(() => {
-    return columns?.filter((col) => visibleKeys.includes(col.title))?.map((col) => ({ ...col, hidden: false }));
-  }, [columns, visibleKeys]);
+    return columns?.filter((col) => !hiddenKeys.includes(col.title))?.map((col) => ({ ...col, hidden: false }));
+  }, [columns, hiddenKeys]);
   const [pageActions, tableActions] = useMemo(() => {
     return actions?.reduce(
       (acc, action) => {
@@ -1073,60 +992,52 @@ function Page({
       [[], []]
     ) ?? [[], []];
   }, [actions]);
-  return /* @__PURE__ */ jsxs(
-    box_default,
-    {
-      sx: {
-        w: 1
-      },
-      children: [
-        children && /* @__PURE__ */ jsx(
-          search_default,
+  return /* @__PURE__ */ jsxs("div", { className: styles.root, children: [
+    children && /* @__PURE__ */ jsx(
+      search_default,
+      {
+        form,
+        initLoad,
+        initialValues,
+        okText,
+        resetText,
+        colWidth,
+        size,
+        onSearch,
+        onReset,
+        children
+      }
+    ),
+    /* @__PURE__ */ jsxs("div", { className: styles.tool, children: [
+      (showTool || pageActions.length > 0) && /* @__PURE__ */ jsxs("div", { className: styles.btns, children: [
+        /* @__PURE__ */ jsx(Actions, { actions: pageActions, size }),
+        showTool && /* @__PURE__ */ jsx(
+          Tool,
           {
-            form,
-            initLoad,
-            initialValues,
-            okText,
-            resetText,
-            colWidth,
             size,
-            onSearch,
-            onReset,
-            children
+            columns,
+            setSize,
+            hiddenKeys,
+            defaultHiddenKeys,
+            setHiddenKeys
           }
-        ),
-        /* @__PURE__ */ jsxs(box_default, { bg: "bg", children: [
-          (showTool || pageActions.length > 0) && /* @__PURE__ */ jsxs(box_default, { px: 2, py: 2, fontSize: "subtitle", display: "flex", justifyContent: "space-between", children: [
-            /* @__PURE__ */ jsx(Actions, { actions: pageActions, size }),
-            showTool && /* @__PURE__ */ jsx(
-              Tool,
-              {
-                size,
-                columns,
-                setSize,
-                visibleKeys,
-                defaultVisibleKeys,
-                setVisibleKeys
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsx(
-            table_default,
-            {
-              dataSource: propsDataSource || dataSource,
-              columns: tableColumns,
-              actions: tableActions,
-              loading,
-              size,
-              ...props
-            }
-          )
-        ] })
-      ]
-    }
-  );
+        )
+      ] }),
+      /* @__PURE__ */ jsx(
+        table_default,
+        {
+          dataSource: propsDataSource || dataSource,
+          columns: tableColumns,
+          actions: tableActions,
+          loading,
+          size,
+          ...props
+        }
+      )
+    ] })
+  ] });
 }
 
-export { box_default as Box, button_default as Button, checkbox_default as Checkbox, ConfigProvider, date_picker_default as DatePicker, dropdown_default as Dropdown, form_default as Form, input_default as Input, input_number_default as InputNumber, Page, popover_default as Popover, RangePicker, Register, search_default as Search, space_default as Space, table_default as Table, tooltip_default as Tooltip, defaultTheme, defineColumns, defineDicts, defineTheme, message, request_default as request, useDict, useDictItem, useDictLabel, useDictStatus, useDicts };
+export { button_default as Button, ConfigProvider, date_picker_default as DatePicker, Page, RangePicker, Register, search_default as Search, table_default as Table, defaultTheme, defineColumns, defineDicts, message, request_default as request, useDict, useDictItem, useDictLabel, useDictStatus, useDicts };
 //# sourceMappingURL=index.js.map
 //# sourceMappingURL=index.js.map

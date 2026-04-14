@@ -1,171 +1,39 @@
-import * as _quick_cssinjs from '@quick/cssinjs';
-import { SxProps, StyledComponent, StyledComponentProps, ComponentCssStyles } from '@quick/cssinjs';
-export { useTheme } from '@quick/cssinjs';
+import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as react from 'react';
-import { ComponentProps } from 'react';
-import * as antd from 'antd';
-import { Space as Space$1, TooltipProps as TooltipProps$1, FormItemProps as FormItemProps$2, Form as Form$1, FormProps as FormProps$1, Input as Input$1, InputNumberProps as InputNumberProps$1, DatePickerProps as DatePickerProps$1, TableProps as TableProps$1, TableColumnType, Dropdown as Dropdown$1, Popover as Popover$1, Checkbox as Checkbox$1 } from 'antd';
-export { FormInstance } from 'antd';
+import { ThemeConfig, FormProps, Form, TableColumnType, TableProps as TableProps$1, ButtonProps } from 'antd';
+export { Button, ButtonProps, Checkbox, CheckboxProps, DatePicker, DatePickerProps, Dropdown, DropdownProps, Form, FormProps, Input, InputNumber, InputNumberProps, InputProps, Popover, PopoverProps, Space, SpaceProps, Tooltip, TooltipProps } from 'antd';
+import { RangePickerProps } from 'antd/es/date-picker';
+export { RangePickerProps } from 'antd/es/date-picker';
 import { MessageInstance } from 'antd/es/message/interface';
-import * as antd_es_form_hooks_useFormInstance from 'antd/es/form/hooks/useFormInstance';
-import * as antd_es_form_Form from 'antd/es/form/Form';
-import * as antd_es_form from 'antd/es/form';
-import * as antd_es_form_context from 'antd/es/form/context';
-import * as antd_es_tooltip from 'antd/es/tooltip';
-import * as antd_es_checkbox from 'antd/es/checkbox';
 import * as axios from 'axios';
 import { ResponseType, AxiosRequestConfig } from 'axios';
-import { RangePickerProps as RangePickerProps$1 } from 'antd/es/date-picker';
 
-type DeepRequired<T> = {
-    [K in keyof T]-?: DeepRequired<T[K]>;
+declare const defaultTheme: {
+    colorPrimary: string;
+    colorError: string;
+    colorInfo: string;
+    colorLink: string;
+    colorSuccess: string;
+    colorWarning: string;
+    colorTextBase: string;
+    colorText: string;
+    colorTextSecondary: string;
+    colorBorder: string;
+    colorBgBase: string;
+    colorBgLayout: string;
+    fontSize: number;
+    fontSizeSM: number;
+    fontSizeLG: string;
+    fontSizeXL: string;
+    borderRadius: number;
+    borderRadiusXS: number;
+    borderRadiusSM: number;
+    borderRadiusLG: number;
+    controlHeight: number;
+    controlHeightLG: number;
+    controlHeightSM: number;
+    controlHeightXS: number;
 };
-
-interface Theme {
-    /**颜色配置 */
-    colors?: {
-        /**基础组件背景 */
-        bg?: string;
-        /**layout背景,浅灰 */
-        bgLayout?: string;
-        /**主题颜色 */
-        primary?: string;
-        /**成功颜色 */
-        success?: string;
-        /**警告颜色 */
-        warning?: string;
-        /**错误颜色 */
-        error?: string;
-        /**信息颜色 */
-        info?: string;
-        /**link颜色 */
-        link?: string;
-        /**主文本颜色 */
-        text?: string;
-        /**次文本颜色 */
-        secondary?: string;
-        /**边框颜色 */
-        border?: string;
-        /**次级边框颜色 */
-        borderSecondary?: string;
-        /**禁用文字颜色 */
-        disabled?: string;
-    };
-    /**媒体查询配置 */
-    breakpoints?: {
-        /**默认480px */
-        sm?: string;
-        /**默认768px */
-        md?: string;
-        /**默认1024px */
-        lg?: string;
-        /**默认1280px */
-        xl?: string;
-        /**默认1440px */
-        '2xl'?: string;
-    };
-    /**基础间距，默认4px
-     ** margin，padding，gap相关属性值为number类型时，会转换为 n * space
-     **/
-    space?: number;
-    sizes?: {
-        /**基础控件高度 */
-        controlHeight?: number;
-        /**较高组件高度 */
-        controlHeightLg?: number;
-        /**较小组件高度 */
-        controlHeightSm?: number;
-        /**更小的组件高度 */
-        controlHeightXs?: number;
-    };
-    fontSizes?: {
-        /**小文字，默认12px */
-        caption?: number;
-        /**正文，默认14px */
-        body?: number;
-        /**小标题，默认16px */
-        subtitle?: number;
-        /**标题，默认18px */
-        title?: number;
-        /**大标题，默认20px */
-        heading?: number;
-        /**超大字体，默认24px */
-        display?: number;
-    };
-    /**字重 */
-    fontWeights?: {
-        /**默认400 */
-        body?: number;
-        /**默认700 */
-        bold?: number;
-    };
-    /**行高 */
-    lineHeights?: {
-        /**默认1.5 */
-        body?: number;
-        /**默认1.125 */
-        heading?: number;
-    };
-    /**边框 */
-    borders?: {
-        none?: 'none';
-        /**默认边框，默认1px */
-        normal?: string;
-        /**宽边框，默认2px */
-        thick?: string;
-        /**虚线边框 */
-        dotted?: string;
-        /**宽虚线边框，默认2px */
-        thickDotted?: string;
-    };
-    /**圆角 */
-    radii?: {
-        none?: number;
-        /**默认2px */
-        xs?: number;
-        /**默认4px */
-        sm?: number;
-        /**默认6px */
-        md?: number;
-    };
-    /**阴影 */
-    shadows?: {
-        none?: 'none';
-        /**默认阴影 */
-        box?: string;
-        /**二级阴影 */
-        secondary?: string;
-        /**三级阴影 */
-        tertiary?: string;
-    };
-    /**z-index */
-    zIndices?: {
-        hide?: number;
-        base?: number;
-        docked?: number;
-        dropdown?: number;
-        sticky?: number;
-        banner?: number;
-        overlay?: number;
-        modal?: number;
-        popover?: number;
-        tooltip?: number;
-        toast?: number;
-        max?: number;
-    };
-    presets?: {
-        [key: string]: SxProps;
-    };
-}
-type UITheme = DeepRequired<Omit<Theme, 'presets'>>;
-declare module '@quick/cssinjs' {
-    interface Theme extends UITheme {
-    }
-}
-
-declare const defaultTheme: Omit<DeepRequired<Theme>, 'presets'>;
-
-declare const defineTheme: <T extends Theme>(theme: T) => T;
 
 type TableStatus = 'success' | 'error' | 'waiting' | 'invalid' | 'default' | 'completed';
 interface DictItem {
@@ -192,7 +60,7 @@ declare function useDictStatus<T extends DictCode>(code: T, value: Dicts[T][numb
 declare const defineDicts: <T extends Dicts>(dicts: T) => T;
 
 interface ConfigProviderProps {
-    theme?: Theme;
+    theme?: ThemeConfig['token'];
     dicts?: Dicts;
     children?: React.ReactNode;
 }
@@ -200,54 +68,11 @@ interface ConfigProviderProps {
 declare function Register({ children }: {
     children: React.ReactNode;
 }): react.ReactNode;
-declare function ConfigProvider({ theme, dicts, children }: ConfigProviderProps): _quick_cssinjs.JSX.Element;
+declare function ConfigProvider({ theme, dicts, children }: ConfigProviderProps): react_jsx_runtime.JSX.Element;
 
-declare const Button: _quick_cssinjs.StyledComponent<antd.ButtonProps & react.RefAttributes<HTMLAnchorElement | HTMLButtonElement>, {}>;
-type ButtonProps = ComponentProps<typeof Button>;
-
-declare const StyledBox: _quick_cssinjs.StyledComponent<react.DetailedHTMLProps<react.HTMLAttributes<HTMLDivElement>, HTMLDivElement>, {}>;
-type BoxProps = ComponentProps<typeof StyledBox> & {
-    as?: keyof React.JSX.IntrinsicElements;
-};
-declare const Box: (props: BoxProps) => _quick_cssinjs.JSX.Element;
-
-declare const Space: _quick_cssinjs.StyledComponent<antd.SpaceProps & react.RefAttributes<HTMLDivElement>, {}>;
-type SpaceProps = typeof Space$1;
-
-declare const Tooltip: StyledComponent<TooltipProps$1>;
-type TooltipProps = React.ComponentProps<typeof Tooltip>;
+declare function RangePicker({ showTime, allowEmpty, ...props }: RangePickerProps): react_jsx_runtime.JSX.Element;
 
 declare let message: MessageInstance;
-
-declare const StyledItem: StyledComponent<FormItemProps$2>;
-type CompoundedComponent$3 = typeof StyledItem & {
-    useStatus: typeof Form$1.Item.useStatus;
-};
-declare const Item$1: CompoundedComponent$3;
-
-declare const ErrorList: _quick_cssinjs.StyledComponent<antd_es_form.ErrorListProps, {}>;
-
-declare const Provider: _quick_cssinjs.StyledComponent<antd_es_form_context.FormProviderProps, {}>;
-
-declare const useForm: typeof antd_es_form_Form.useForm;
-declare const useFormInstance: typeof antd_es_form_hooks_useFormInstance.default;
-declare const useWatch: typeof antd_es_form_Form.useWatch;
-declare const StyledForm: StyledComponent<FormProps$1>;
-type CompoundedComponent$2 = typeof StyledForm & {
-    Item: typeof Item$1;
-    List: typeof Form$1.List;
-    ErrorList: typeof ErrorList;
-    Provider: typeof Provider;
-    useForm: typeof useForm;
-    useFormInstance: typeof useFormInstance;
-    useWatch: typeof useWatch;
-};
-declare const Form: CompoundedComponent$2;
-type FormProps = React.ComponentProps<typeof StyledForm>;
-type FormItemProps$1 = React.ComponentProps<typeof Item$1>;
-type FormListProps = React.ComponentProps<typeof Form$1.List>;
-type FormErrorListProps = React.ComponentProps<typeof ErrorList>;
-type FormProviderProps = React.ComponentProps<typeof Provider>;
 
 interface SearchProps extends FormProps {
     okText?: React.ReactNode;
@@ -257,7 +82,7 @@ interface SearchProps extends FormProps {
     onReset?: () => Promise<void> | void;
     colWidth?: number;
 }
-declare function Search$1({ children, okText, resetText, initLoad, onSearch, onReset, colWidth, size, form: externalForm, initialValues, ...props }: SearchProps): _quick_cssinjs.JSX.Element;
+declare function Search$1({ children, okText, resetText, initLoad, onSearch, onReset, colWidth, size, form: externalForm, initialValues, ...props }: SearchProps): react_jsx_runtime.JSX.Element;
 
 type FormItemProps = React.ComponentProps<typeof Form.Item>;
 interface SearchItemProps extends FormItemProps {
@@ -268,25 +93,12 @@ interface SearchItemProps extends FormItemProps {
     /**以数组形式接受多个值 */
     names?: string[];
 }
-declare function Item({ span, name, names, format, initialValue, children, ...props }: SearchItemProps): _quick_cssinjs.JSX.Element;
+declare function Item({ span, name, names, format, initialValue, children, ...props }: SearchItemProps): react_jsx_runtime.JSX.Element;
 
-type CompoundedComponent$1 = typeof Search$1 & {
+type CompoundedComponent = typeof Search$1 & {
     Item: typeof Item;
 };
-declare const Search: CompoundedComponent$1;
-
-declare const Input: _quick_cssinjs.StyledComponent<antd.InputProps & react.RefAttributes<antd.InputRef>, {}>;
-type InputProps = React.ComponentProps<typeof Input$1>;
-
-declare const InputNumber: StyledComponent<InputNumberProps$1>;
-type InputNumberProps = React.ComponentProps<typeof InputNumber>;
-
-declare const StyledRangePicker: StyledComponent<RangePickerProps$1>;
-type RangePickerProps = React.ComponentProps<typeof StyledRangePicker>;
-declare function RangePicker({ showTime, allowEmpty, ...props }: RangePickerProps): _quick_cssinjs.JSX.Element;
-
-declare const DatePicker: StyledComponent<DatePickerProps$1>;
-type DatePickerProps = typeof DatePicker;
+declare const Search: CompoundedComponent;
 
 type AnyObject = Record<string, any>;
 type SummaryStatus = 'success' | 'error' | 'default';
@@ -337,14 +149,14 @@ interface ColumnGroupType<RecordType extends AnyObject = AnyObject> extends Omit
     children?: ColumnType<RecordType>[];
 }
 type ColumnProps<RecordType extends AnyObject = AnyObject> = ColumnType<RecordType> | ColumnGroupType<RecordType>;
-interface Action$2<RecordType extends AnyObject = AnyObject> extends Omit<ButtonProps, keyof SxProps | 'className' | 'title' | 'onClick'> {
+interface Action$2<RecordType extends AnyObject = AnyObject> extends Omit<ButtonProps, 'className' | 'title' | 'onClick'> {
     title?: React.ReactNode;
-    onClick?: (e: React.MouseEvent, record: RecordType, index: number) => void;
+    onClick?: (event: React.MouseEvent<HTMLElement>, record: RecordType, index: number) => void;
     visible?: boolean | ((record: RecordType, index: number) => boolean);
     render?: (record: RecordType, index: number) => React.ReactNode;
     className?: string | ((record: RecordType, index: number) => string);
 }
-interface TableProps<RecordType extends AnyObject = AnyObject> extends StyledComponentProps<TableProps$1<RecordType>> {
+interface TableProps<RecordType extends AnyObject = AnyObject> extends TableProps$1<RecordType> {
     columns?: ColumnProps<RecordType>[];
     /**操作栏内容 */
     actions?: Action$2<RecordType>[];
@@ -358,21 +170,24 @@ interface TableProps<RecordType extends AnyObject = AnyObject> extends StyledCom
     summaryMap?: Record<string, number>;
 }
 
-declare function Table<T extends AnyObject = AnyObject>({ columns, actionFixed, actionTitle, actionWidth, actions, summaryMap, rowSelection, rowKey, ...props }: TableProps<T>): _quick_cssinjs.JSX.Element;
+declare function Table<T extends AnyObject = AnyObject>({ columns, actionFixed, actionTitle, actionWidth, actions, summaryMap, rowSelection, rowKey, ...props }: TableProps<T>): react_jsx_runtime.JSX.Element;
 
 /**仅在 dataSource[number] 类型未知时使用，通过columns内容自动推断 dataSource[number] 的类型  */
 declare function defineColumns<const T extends ColumnProps<AnyObject>[]>(columns: T): ColumnProps<{ [K in T[number] extends {
     dataIndex: string;
 } ? T[number]["dataIndex"] : never]: any; } & AnyObject>[];
 
-interface Action$1 extends Omit<ButtonProps, keyof SxProps | 'title'> {
+interface Action$1 extends Omit<ButtonProps, 'title'> {
     title?: React.ReactNode;
 }
 
-type Action<RecordType extends AnyObject = AnyObject> = Action$1 | (Action$2<RecordType> & {
+type Action<RecordType extends AnyObject = AnyObject> = (Action$1 & {
+    display?: 'page';
+}) | (Action$2<RecordType> & {
     display: 'table';
 });
-type PageProps<RecordType extends AnyObject = AnyObject> = ComponentCssStyles & Omit<TableProps<RecordType>, 'actions' | 'summaryMap'> & Omit<SearchProps, 'onSearch'> & {
+type PageProps<RecordType extends AnyObject = AnyObject> = Omit<TableProps<RecordType>, 'actions' | 'summaryMap' | 'size'> & Omit<SearchProps, 'onSearch' | 'size'> & {
+    size?: Exclude<TableProps['size'], 'middle'>;
     /**请求路径 */
     url?: string;
     /**请求方式 */
@@ -390,21 +205,7 @@ type PageProps<RecordType extends AnyObject = AnyObject> = ComponentCssStyles & 
     /**是否显示工具栏 */
     showTool?: boolean;
 };
-declare function Page<RecordType extends AnyObject = AnyObject>({ okText, resetText, initLoad, url, method, paramsLocation, params, onRequestComplete, onSearch: onSearchPage, onReset: onResetPage, dataSource: propsDataSource, colWidth, children, initialValues, form, size: defaultSize, actions, showTool, columns, ...props }: PageProps<RecordType>): _quick_cssinjs.JSX.Element;
-
-declare const Dropdown: _quick_cssinjs.StyledComponent<antd.DropDownProps, {}>;
-type DropdownProps = React.ComponentProps<typeof Dropdown$1>;
-
-declare const Popover: _quick_cssinjs.StyledComponent<antd.PopoverProps & react.RefAttributes<antd_es_tooltip.TooltipRef>, {}>;
-type PopoverProps = React.ComponentProps<typeof Popover$1>;
-
-declare const StyledCheckbox: _quick_cssinjs.StyledComponent<antd.CheckboxProps & react.RefAttributes<antd.CheckboxRef>, {}>;
-declare const StyledGroup: _quick_cssinjs.StyledComponent<antd_es_checkbox.CheckboxGroupProps<any> & react.RefAttributes<HTMLDivElement>, {}>;
-type CompoundedComponent = typeof StyledCheckbox & {
-    Group: typeof StyledGroup;
-};
-declare const Checkbox: CompoundedComponent;
-type CheckboxProps = React.ComponentProps<typeof Checkbox$1>;
+declare function Page<RecordType extends AnyObject = AnyObject>({ okText, resetText, initLoad, url, method, paramsLocation, params, onRequestComplete, onSearch: onSearchPage, onReset: onResetPage, dataSource: propsDataSource, colWidth, children, initialValues, form, size: defaultSize, actions, showTool, columns, ...props }: PageProps<RecordType>): react_jsx_runtime.JSX.Element;
 
 declare module 'axios' {
     interface AxiosRequestConfig {
@@ -448,4 +249,4 @@ declare const request: {
     spread: typeof axios.spread;
 };
 
-export { Box, type BoxProps, Button, type ButtonProps, Checkbox, type CheckboxProps, type ColumnProps, type ColumnStatus, ConfigProvider, type ConfigProviderProps, DatePicker, type DatePickerProps, type DictCode, type DictItem, type Dicts, Dropdown, type DropdownProps, Form, type FormErrorListProps, type FormItemProps$1 as FormItemProps, type FormListProps, type FormProps, type FormProviderProps, Input, InputNumber, type InputNumberProps, type InputProps, Page, type Action as PageAction, type PageProps, Popover, type PopoverProps, RangePicker, type RangePickerProps, Register, Search, type SearchItemProps, type SearchProps, Space, type SpaceProps, type SummaryProps, Table, type Action$2 as TableAction, type TableProps, type TableStatus, type Theme, Tooltip, type TooltipProps, defaultTheme, defineColumns, defineDicts, defineTheme, message, request, useDict, useDictItem, useDictLabel, useDictStatus, useDicts };
+export { type ColumnProps, type ColumnStatus, ConfigProvider, type ConfigProviderProps, type DictCode, type DictItem, type Dicts, Page, type Action as PageAction, type PageProps, RangePicker, Register, Search, type SearchItemProps, type SearchProps, type SummaryProps, Table, type Action$2 as TableAction, type TableProps, type TableStatus, defaultTheme, defineColumns, defineDicts, message, request, useDict, useDictItem, useDictLabel, useDictStatus, useDicts };

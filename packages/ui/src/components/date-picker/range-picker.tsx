@@ -1,14 +1,10 @@
 import { useMemo } from 'react'
-import { DatePicker as AntdDatePicker } from 'antd'
-import { type RangePickerProps as AntdRangePickerProps } from 'antd/es/date-picker'
-import { styled, useClassName, type StyledComponent } from '@quick/cssinjs'
+import { DatePicker } from 'antd'
+import { createStyles } from 'antd-style'
+import type { RangePickerProps } from 'antd/es/date-picker'
 import dayjs, { Dayjs } from 'dayjs'
 
-const { RangePicker: AntdRangePicker } = AntdDatePicker
-
-const StyledRangePicker = styled(AntdRangePicker) as StyledComponent<AntdRangePickerProps>
-
-export type RangePickerProps = React.ComponentProps<typeof StyledRangePicker>
+const { RangePicker: AntdRangePicker } = DatePicker
 
 type Preset = {
   label: React.ReactNode
@@ -91,25 +87,29 @@ const usePresets = (
   return presets as Preset[]
 }
 
+const useStyles = createStyles({
+  container: {
+    [`& .ant-picker-presets`]: {
+      minHeight: '330px'
+    }
+  }
+})
+
 export default function RangePicker({
   showTime,
   allowEmpty = [true, true],
   ...props
 }: RangePickerProps) {
   const presets = usePresets(showTime, allowEmpty)
-  const popupRootCls = useClassName({
-    '.ant-picker-panel-layout': {
-      minHeight: 330
-    }
-  })
+  const { styles } = useStyles()
   return (
-    <StyledRangePicker
+    <AntdRangePicker
       presets={presets}
       showTime={showTime}
       allowEmpty={allowEmpty}
       classNames={{
         popup: {
-          root: popupRootCls
+          container: styles.container
         }
       }}
       {...props}

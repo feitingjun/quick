@@ -1,2 +1,1 @@
-export { chalk } from './chalk.js';
-export { renderHbsTpl } from './hbs.js';
+#!/usr/bin/env node

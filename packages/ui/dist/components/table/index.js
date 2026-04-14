@@ -1,11 +1,13 @@
-import { Tooltip as Tooltip$1, Space as Space$1, Button as Button$1, Table } from 'antd';
-import { styled } from '@quick/cssinjs';
+import { DatePicker, Checkbox, Table, Tooltip, Space, Button } from 'antd';
 import { createContext, useMemo, useContext } from 'react';
+import { createStyles } from 'antd-style';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import copy from 'copy-to-clipboard';
 import Bignumber from 'bignumber.js';
 import { useNavigate } from 'react-router';
-import { jsx, jsxs } from '@quick/cssinjs/jsx-runtime';
+import 'dayjs';
+import { jsx, jsxs } from 'react/jsx-runtime';
+import axios from 'axios';
 
 // src/components/table/table.tsx
 function thousands(num) {
@@ -30,13 +32,138 @@ function isNumber(num) {
 function multiply(a, b) {
   return new Bignumber(a).times(b).toNumber();
 }
-var Tooltip = styled(Tooltip$1);
-var tooltip_default = Tooltip;
-var Space = styled(Space$1);
-var space_default = Space;
-var Button = styled(Button$1);
 var button_default = Button;
+var { RangePicker: AntdRangePicker } = DatePicker;
+createStyles({
+  container: {
+    [`& .ant-picker-presets`]: {
+      minHeight: "330px"
+    }
+  }
+});
 var message;
+createStyles(
+  ({ token }, { colWidth, size }) => {
+    let controlHeight = token.controlHeight;
+    if (size === "small") controlHeight = token.controlHeightSM;
+    if (size === "large") controlHeight = token.controlHeightLG;
+    return {
+      btns: {
+        position: "absolute",
+        right: token.sizeUnit * 4,
+        bottom: token.sizeUnit * 4,
+        display: "flex",
+        justifyContent: "space-between",
+        "& .ant-btn": {
+          paddingInline: token.sizeUnit * 2,
+          gap: token.sizeUnit,
+          "&:first-of-type": {
+            marginRight: token.sizeUnit * 2
+          }
+        }
+      },
+      form: {
+        backgroundColor: token.colorBgContainer,
+        marginBottom: token.sizeUnit * 2,
+        padding: token.sizeUnit * 4,
+        display: "grid",
+        gridTemplateColumns: `repeat(auto-fill, minmax(${colWidth}px, 1fr))`,
+        gap: token.sizeUnit * 2.5,
+        position: "relative",
+        "&:after": {
+          width: colWidth,
+          content: '""',
+          height: controlHeight
+        },
+        "&>*": {
+          marginRight: 0
+        },
+        "& .ant-row": {
+          flexWrap: "nowrap"
+        },
+        "& .ant-form-item-label": {
+          flexShrink: 0
+        },
+        "& .ant-input-number, & .ant-input-select, & .ant-picker": {
+          width: "100%"
+        }
+      }
+    };
+  }
+);
+var CustomError = class {
+  name;
+  message;
+  code = "ERR_CUSTOM";
+  data;
+  config;
+  constructor(message2, data, config) {
+    this.name = "CustomError";
+    this.message = message2;
+    this.data = data;
+    this.config = config;
+  }
+};
+axios.defaults.validateStatus = (status) => {
+  return status >= 200 && status < 300;
+};
+axios.defaults.responseType = "json";
+axios.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    let errorMsg = error.message || "\u672A\u77E5\u9519\u8BEF";
+    let data = null;
+    if (axios.isAxiosError(error)) {
+      errorMsg = error.message;
+      data = error.response?.data;
+    }
+    if (error instanceof CustomError) {
+      errorMsg = error.message;
+      data = error.data;
+    }
+    if (!error?.config?.skipErrorHandler) {
+      message.error(errorMsg);
+    }
+    return data;
+  }
+);
+({
+  all: axios.all,
+  spread: axios.spread
+});
+Checkbox.Group;
+createStyles(({ token }) => ({
+  all: {
+    paddingBottom: token.sizeUnit * 2,
+    marginBottom: token.sizeUnit * 2,
+    minWidth: 100,
+    display: "flex",
+    justifyContent: "space-between"
+  },
+  reset: {
+    color: token.colorPrimary,
+    cursor: "pointer"
+  },
+  checkboxGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: token.sizeUnit
+  }
+}));
+createStyles(({ token }) => ({
+  root: {
+    width: "100%"
+  },
+  btns: {
+    display: "flex",
+    justifyContent: "space-between",
+    padding: token.sizeUnit * 2,
+    fontSize: token.fontSizeLG
+  },
+  tool: {
+    backgroundColor: token.colorBgContainer
+  }
+}));
 var ConfigContext = createContext({
   dicts: {}
 });
@@ -46,6 +173,36 @@ function useDicts() {
   const { dicts } = useContext(ConfigContext);
   return dicts;
 }
+var useStyles5 = createStyles(({ token }) => ({
+  link: {
+    color: token.colorLink
+  },
+  pointer: {
+    cursor: "pointer"
+  },
+  bold: {
+    fontWeight: "bold"
+  },
+  question: {
+    marginLeft: token.sizeUnit,
+    cursor: "pointer"
+  },
+  actionBtn: {
+    padding: 0
+  },
+  success: {
+    color: token.colorSuccess
+  },
+  error: {
+    color: token.colorError
+  },
+  warning: {
+    color: token.colorWarning
+  },
+  disabled: {
+    color: token.colorTextDisabled
+  }
+}));
 var copyText = (e) => {
   const selection = window.getSelection();
   selection?.removeAllRanges();
@@ -72,7 +229,7 @@ var handleStatus = (status, value, record, index) => {
       return statusStr || null;
   }
 };
-var handleColumn = (col, dicts, navigate) => {
+var handleColumn = (col, dicts, navigate, styles) => {
   let {
     status,
     bold,
@@ -90,7 +247,7 @@ var handleColumn = (col, dicts, navigate) => {
     ...args
   } = col;
   const render = (value, record, index) => {
-    const sx = {};
+    const classNames = [];
     value = renderFunc?.(value, record, index) ?? value;
     if (dictCode) {
       const dict = dicts[dictCode];
@@ -103,12 +260,13 @@ var handleColumn = (col, dicts, navigate) => {
     if (link) {
       link = typeof link === "function" ? link(value, record, index) : link;
       if (link) {
-        sx.color = "link";
-        sx.cursor = "pointer";
+        classNames.push(styles.link);
+        classNames.push(styles.pointer);
       }
     }
-    if (status) sx.color = handleStatus(status, value, record, index);
-    if (bold) sx.fontWeight = "bold";
+    const statusStr = handleStatus(status, value, record, index);
+    if (statusStr) classNames.push(styles[statusStr]);
+    if (bold) classNames.push(styles.bold);
     if (isNumber(value)) {
       if (percent) value = multiply(value, 100);
       if (precision === true) precision = 2;
@@ -120,18 +278,25 @@ var handleColumn = (col, dicts, navigate) => {
       }
       if (percent) value = `${value}%`;
     }
-    return /* @__PURE__ */ jsxs("span", { sx, onClick: link ? () => navigate(link) : void 0, children: [
-      value,
-      suffix ?? null
-    ] });
+    return /* @__PURE__ */ jsxs(
+      "span",
+      {
+        className: classNames.join(" "),
+        onClick: link ? () => navigate(link) : void 0,
+        children: [
+          value,
+          suffix ?? null
+        ]
+      }
+    );
   };
   const children = col.children;
   return {
     ...args,
-    children: children?.map((col2) => handleColumn(col2, dicts, navigate)) ?? void 0,
+    children: children?.map((col2) => handleColumn(col2, dicts, navigate, styles)) ?? void 0,
     title: tooltip ? (...arrs) => /* @__PURE__ */ jsxs("span", { children: [
       typeof title === "function" ? title(...arrs) : title,
-      /* @__PURE__ */ jsx(tooltip_default, { title: tooltip, children: /* @__PURE__ */ jsx(QuestionCircleOutlined, { sx: { ml: 1, cursor: "pointer" } }) })
+      /* @__PURE__ */ jsx(Tooltip, { title: tooltip, children: /* @__PURE__ */ jsx(QuestionCircleOutlined, { className: styles.question }) })
     ] }) : title,
     render,
     onCell: (record, index) => ({
@@ -140,14 +305,14 @@ var handleColumn = (col, dicts, navigate) => {
     })
   };
 };
-var handleActions = (actions, actionFixed, actionTitle, actionWidth) => {
+var handleActions = (actions, actionFixed, actionTitle, actionWidth, styles) => {
   if (!actions || actions.length === 0) return null;
   return {
     title: actionTitle || "\u64CD\u4F5C",
     dataIndex: "__actions",
     width: actionWidth,
     fixed: actionFixed ?? "right",
-    render: (_, record, index) => /* @__PURE__ */ jsx(space_default, { children: actions.map((action, i) => {
+    render: (_, record, index) => /* @__PURE__ */ jsx(Space, { children: actions.map((action, i) => {
       let { title, visible = true, render, className, type, onClick, ...args } = action;
       const show = typeof visible === "function" ? visible(record, index) : visible;
       if (!show) return null;
@@ -156,7 +321,9 @@ var handleActions = (actions, actionFixed, actionTitle, actionWidth) => {
       return /* @__PURE__ */ jsx(
         button_default,
         {
-          p: 0,
+          classNames: {
+            root: styles.actionBtn
+          },
           type: type ?? "link",
           className,
           onClick: (e) => onClick?.(e, record, index),
@@ -171,8 +338,9 @@ var handleActions = (actions, actionFixed, actionTitle, actionWidth) => {
 var useColumns = (columns, actions, actionFixed, actionTitle, actionWidth) => {
   const navigate = useNavigate();
   const dicts = useDicts();
+  const { styles } = useStyles5();
   return useMemo(
-    () => columns.map((col) => handleColumn(col, dicts, navigate)).concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth) ?? []),
+    () => columns.map((col) => handleColumn(col, dicts, navigate, styles)).concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth, styles) ?? []),
     [columns, actions, dicts, navigate, actionFixed, actionTitle, actionWidth]
   );
 };
@@ -193,7 +361,7 @@ var useSummary = (columns, summaryMap, rowSelection) => {
       rowSelection && /* @__PURE__ */ jsx(Summary.Cell, { index: 0 }),
       /* @__PURE__ */ jsx(Summary.Cell, { index: rowSelection ? 1 : 0, children: "\u5408\u8BA1" }),
       summaryList.slice(1).map((item, index) => {
-        let sx = {};
+        const cls = [];
         let defaultSummary = { thousand: true };
         let value = summaryMap?.[item.totalField ?? item.dataIndex];
         if (typeof item.total === "object") {
@@ -220,17 +388,18 @@ var useSummary = (columns, summaryMap, rowSelection) => {
           if (thousandNum) value = value ? thousands(value) : value;
           if (percent) value = `${value}%`;
         }
-        className = typeof className === "function" ? className(value) : className;
+        if (className) {
+          cls.push(typeof className === "function" ? className(value) : className);
+        }
         if (status) {
           const statusColor = typeof status === "function" ? status(value) : status;
-          sx.color = statusColor === "default" ? null : statusColor;
+          if (statusColor !== "default") cls.push(`text-${statusColor}`);
         }
         return /* @__PURE__ */ jsx(
           Summary.Cell,
           {
-            className: className ?? void 0,
+            className: cls?.length ? cls.join(" ") : void 0,
             index: index + 1,
-            sx,
             children: value ?? null
           },
           index + 1
@@ -239,7 +408,6 @@ var useSummary = (columns, summaryMap, rowSelection) => {
     ] }) }) : void 0;
   }, [columns, summaryMap]);
 };
-var StyledTable = styled(Table);
 function Table2({
   columns = [],
   actionFixed,
@@ -254,7 +422,7 @@ function Table2({
   const cols = useColumns(columns, actions, actionFixed, actionTitle, actionWidth);
   const summary = useSummary(cols, summaryMap, rowSelection);
   return /* @__PURE__ */ jsx(
-    StyledTable,
+    Table,
     {
       rowKey,
       columns: cols,

@@ -1,7 +1,26 @@
-import type { Theme } from './types'
-import { defaultTheme } from './default'
-export { useTheme } from '@quick/cssinjs'
-
-export { type Theme, defaultTheme }
-
-export const defineTheme = <T extends Theme>(theme: T) => theme
+export const defaultTheme = {
+  colorPrimary: '#1DA57A',
+  colorError: '#ff4d4f',
+  colorInfo: '#1677ff',
+  colorLink: '#1677ff',
+  colorSuccess: '#52c41a',
+  colorWarning: '#faad14',
+  colorTextBase: '#000',
+  colorText: '#000',
+  colorTextSecondary: '#616161',
+  colorBorder: '#e1e1e1',
+  colorBgBase: '#fff',
+  colorBgLayout: '#f5f5f5',
+  fontSize: 14,
+  fontSizeSM: 12,
+  fontSizeLG: '16px',
+  fontSizeXL: '20px',
+  borderRadius: 4,
+  borderRadiusXS: 2,
+  borderRadiusSM: 4,
+  borderRadiusLG: 8,
+  controlHeight: 32,
+  controlHeightLG: 40,
+  controlHeightSM: 24,
+  controlHeightXS: 16
+}

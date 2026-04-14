@@ -1,39 +1,35 @@
 {
-  "private": true,
   "name": "my-app",
+  "private": true,
+  "version": "0.0.0",
   "type": "module",
-  "description": "",
   "scripts": {
-    "start": "vite dev",
+    "start": "vite",
     "build": "vite build",
+    "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ant-design/cssinjs": "^1.24.0",
-    "@chakra-ui/react": "^3.27.1",
-    "@chakra-ui/styled-system": "^2.12.0",
-    "@emotion/cache": "^11.14.0",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
-    "@emotion/utils": "^1.4.2",
-    "@quick/app": "workspace:*",
-    "@quick/core": "workspace:*",
-    "@quick/cssinjs": "workspace:*",
-    "@quick/ui": "workspace:*",
-    "antd": "^6.1.2",
-    "dayjs": "^1.11.18",
-    "import": "^0.0.6",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "@ant-design/cssinjs": "^2.1.2",
+    "@quick/keep-alive": "workspace:*",
+    "@tailwindcss/vite": "^4.2.2",
+    "antd": "^6.3.5",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "react-router": "^7.3.0",
-    "styled-system": "^5.1.5"
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
-    "@types/react": "^19.0.10",
-    "@types/react-dom": "^19.0.4",
-    "@types/styled-system": "^5.1.24",
+    "@eslint/js": "^9.39.4",
+    "@quick/vite-plugin-file-router": "workspace:*",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.4",
-    "typescript": "^5.8.3",
-    "vite": "^7.1.7"
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.58.0",
+    "vite": "^8.0.3"
   }
 }

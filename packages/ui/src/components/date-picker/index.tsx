@@ -1,9 +1,7 @@
-import { DatePicker as AntdDatePicker, type DatePickerProps as AntdDatePickerProps } from 'antd'
-import { styled, type StyledComponent } from '@quick/cssinjs'
-export { default as RangePicker, type RangePickerProps } from './range-picker'
+import { DatePicker } from 'antd'
+export { default as RangePicker } from './range-picker'
 
-const DatePicker = styled(AntdDatePicker) as StyledComponent<AntdDatePickerProps>
-
-export type DatePickerProps = typeof DatePicker
+export type { DatePickerProps } from 'antd'
+export type { RangePickerProps } from 'antd/es/date-picker'
 
 export default DatePicker

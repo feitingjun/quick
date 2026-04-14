@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Table } from 'antd';
 import Bignumber from 'bignumber.js';
-import { jsx, jsxs } from '@quick/cssinjs/jsx-runtime';
+import { jsx, jsxs } from 'react/jsx-runtime';
 
 // src/components/table/summary.tsx
 function thousands(num) {
@@ -43,7 +43,7 @@ var useSummary = (columns, summaryMap, rowSelection) => {
       rowSelection && /* @__PURE__ */ jsx(Summary.Cell, { index: 0 }),
       /* @__PURE__ */ jsx(Summary.Cell, { index: rowSelection ? 1 : 0, children: "\u5408\u8BA1" }),
       summaryList.slice(1).map((item, index) => {
-        let sx = {};
+        const cls = [];
         let defaultSummary = { thousand: true };
         let value = summaryMap?.[item.totalField ?? item.dataIndex];
         if (typeof item.total === "object") {
@@ -70,17 +70,18 @@ var useSummary = (columns, summaryMap, rowSelection) => {
           if (thousandNum) value = value ? thousands(value) : value;
           if (percent) value = `${value}%`;
         }
-        className = typeof className === "function" ? className(value) : className;
+        if (className) {
+          cls.push(typeof className === "function" ? className(value) : className);
+        }
         if (status) {
           const statusColor = typeof status === "function" ? status(value) : status;
-          sx.color = statusColor === "default" ? null : statusColor;
+          if (statusColor !== "default") cls.push(`text-${statusColor}`);
         }
         return /* @__PURE__ */ jsx(
           Summary.Cell,
           {
-            className: className ?? void 0,
+            className: cls?.length ? cls.join(" ") : void 0,
             index: index + 1,
-            sx,
             children: value ?? null
           },
           index + 1

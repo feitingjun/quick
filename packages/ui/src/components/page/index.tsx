@@ -1,24 +1,26 @@
 import { useCallback, useState, useMemo } from 'react'
-import type { ComponentCssStyles } from '@quick/cssinjs'
+import { createStyles } from 'antd-style'
 import Table, {
   type TableProps,
   type AnyObject,
   type Action as TableActions
 } from '@/components/table'
 import Search, { type SearchProps } from '@/components/search'
-import Box from '@/components/box'
 import useAsyncAction from '@/hooks/use-async-action'
 import request from '@/request'
 import Actions, { type Action as PageAction } from './actions'
 import Tool from './tool'
 
 export type Action<RecordType extends AnyObject = AnyObject> =
-  | PageAction
+  | (PageAction & { display?: 'page' })
   | (TableActions<RecordType> & { display: 'table' })
 
-export type PageProps<RecordType extends AnyObject = AnyObject> = ComponentCssStyles &
-  Omit<TableProps<RecordType>, 'actions' | 'summaryMap'> &
-  Omit<SearchProps, 'onSearch'> & {
+export type PageProps<RecordType extends AnyObject = AnyObject> = Omit<
+  TableProps<RecordType>,
+  'actions' | 'summaryMap' | 'size'
+> &
+  Omit<SearchProps, 'onSearch' | 'size'> & {
+    size?: Exclude<TableProps['size'], 'middle'>
     /**请求路径 */
     url?: string
     /**请求方式 */
@@ -36,6 +38,21 @@ export type PageProps<RecordType extends AnyObject = AnyObject> = ComponentCssSt
     /**是否显示工具栏 */
     showTool?: boolean
   }
+
+const useStyles = createStyles(({ token }) => ({
+  root: {
+    width: '100%'
+  },
+  btns: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: token.sizeUnit * 2,
+    fontSize: token.fontSizeLG
+  },
+  tool: {
+    backgroundColor: token.colorBgContainer
+  }
+}))
 
 export default function Page<RecordType extends AnyObject = AnyObject>({
   okText,
@@ -59,13 +76,14 @@ export default function Page<RecordType extends AnyObject = AnyObject>({
   columns,
   ...props
 }: PageProps<RecordType>) {
+  const { styles } = useStyles()
   paramsLocation = paramsLocation ?? (method === 'get' ? 'query' : 'body')
   const [dataSource, setDataSource] = useState<RecordType[]>([])
-  const defaultVisibleKeys = useMemo(() => {
-    return columns?.filter(col => !col.hidden).map(col => col.title as string) ?? []
+  const defaultHiddenKeys = useMemo(() => {
+    return columns?.filter(col => !!col.hidden).map(col => col.title as string) ?? []
   }, [columns])
   const [size, setSize] = useState(defaultSize)
-  const [visibleKeys, setVisibleKeys] = useState<string[]>(defaultVisibleKeys)
+  const [hiddenKeys, setHiddenKeys] = useState<string[]>(defaultHiddenKeys)
 
   const [onSearch, loading] = useAsyncAction<Record<string, any>>(async values => {
     const vals = await onSearchPage?.(values)
@@ -99,9 +117,9 @@ export default function Page<RecordType extends AnyObject = AnyObject>({
 
   const tableColumns = useMemo(() => {
     return columns
-      ?.filter(col => visibleKeys.includes(col.title as string))
+      ?.filter(col => !hiddenKeys.includes(col.title as string))
       ?.map(col => ({ ...col, hidden: false }))
-  }, [columns, visibleKeys])
+  }, [columns, hiddenKeys])
 
   const [pageActions, tableActions] = useMemo(() => {
     return (
@@ -120,11 +138,7 @@ export default function Page<RecordType extends AnyObject = AnyObject>({
   }, [actions])
 
   return (
-    <Box
-      sx={{
-        w: 1
-      }}
-    >
+    <div className={styles.root}>
       {children && (
         <Search
           form={form}
@@ -140,21 +154,21 @@ export default function Page<RecordType extends AnyObject = AnyObject>({
           {children}
         </Search>
       )}
-      <Box bg='bg'>
+      <div className={styles.tool}>
         {(showTool || pageActions.length > 0) && (
-          <Box px={2} py={2} fontSize='subtitle' display='flex' justifyContent='space-between'>
+          <div className={styles.btns}>
             <Actions actions={pageActions} size={size} />
             {showTool && (
               <Tool
                 size={size}
                 columns={columns}
                 setSize={setSize}
-                visibleKeys={visibleKeys}
-                defaultVisibleKeys={defaultVisibleKeys}
-                setVisibleKeys={setVisibleKeys}
+                hiddenKeys={hiddenKeys}
+                defaultHiddenKeys={defaultHiddenKeys}
+                setHiddenKeys={setHiddenKeys}
               />
             )}
-          </Box>
+          </div>
         )}
         <Table
           dataSource={propsDataSource || dataSource}
@@ -164,7 +178,7 @@ export default function Page<RecordType extends AnyObject = AnyObject>({
           size={size}
           {...props}
         />
-      </Box>
-    </Box>
+      </div>
+    </div>
   )
 }

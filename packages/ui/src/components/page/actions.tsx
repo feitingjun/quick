@@ -1,19 +1,17 @@
-import type { SxProps } from '@quick/cssinjs'
-import Box from '@/components/box'
-import Button, { type ButtonProps } from '@/components/button'
+import { Button, type ButtonProps } from '@/components'
 
-export interface Action extends Omit<ButtonProps, keyof SxProps | 'title'> {
+export interface Action extends Omit<ButtonProps, 'title'> {
   title?: React.ReactNode
 }
 
 interface ActionsProps {
   actions?: Action[]
-  size?: 'small' | 'middle' | 'large'
+  size?: 'small' | 'medium' | 'large'
 }
 
 export default function Actions({ actions, size }: ActionsProps) {
   return (
-    <Box>
+    <div>
       {actions?.map(({ title, ...props }, i) => {
         return (
           <Button key={i} size={size} {...props}>
@@ -21,6 +19,6 @@ export default function Actions({ actions, size }: ActionsProps) {
           </Button>
         )
       })}
-    </Box>
+    </div>
   )
 }

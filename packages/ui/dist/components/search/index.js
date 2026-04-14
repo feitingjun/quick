@@ -1,62 +1,49 @@
-import dayjs, { isDayjs } from 'dayjs';
-import { useMemo, useCallback, useEffect, useActionState, startTransition, cloneElement, isValidElement } from 'react';
+import dayjs2, { isDayjs } from 'dayjs';
+import { createContext, useCallback, useEffect, useMemo, useActionState, startTransition, isValidElement, cloneElement } from 'react';
+import { createStyles } from 'antd-style';
 import { RedoOutlined, SearchOutlined } from '@ant-design/icons';
-import { Form, Button as Button$1 } from 'antd';
-import { styled, useTheme } from '@quick/cssinjs';
-import { jsxs, jsx, Fragment } from '@quick/cssinjs/jsx-runtime';
-import { useSearchParams } from 'react-router';
+import { DatePicker, Table, Checkbox, Form, Button } from 'antd';
+import { jsxs, jsx, Fragment } from 'react/jsx-runtime';
+import 'copy-to-clipboard';
 import Bignumber from 'bignumber.js';
+import { useSearchParams } from 'react-router';
+import axios from 'axios';
 
 // src/components/search/search.tsx
-var StyledItem = styled(Form.Item);
-var Item = StyledItem;
-Item.useStatus = Form.Item.useStatus;
-var item_default = Item;
-var ErrorList = styled(Form.ErrorList);
-var error_list_default = ErrorList;
-var Provider = styled(Form.Provider);
-var provider_default = Provider;
-
-// src/components/form/index.tsx
-var { useForm, useFormInstance, useWatch } = Form;
-var StyledForm = styled(Form);
-var Form4 = StyledForm;
-Form4.Item = item_default;
-Form4.List = Form.List;
-Form4.ErrorList = error_list_default;
-Form4.Provider = provider_default;
-Form4.useForm = useForm;
-Form4.useFormInstance = useFormInstance;
-Form4.useWatch = useWatch;
-var form_default = Form4;
-var Button = styled(Button$1);
 var button_default = Button;
-var StyledBox = styled("div");
-var Box = (props) => /* @__PURE__ */ jsx(StyledBox, { as: props.as, ...props });
-var box_default = Box;
+var { RangePicker: AntdRangePicker } = DatePicker;
+createStyles({
+  container: {
+    [`& .ant-picker-presets`]: {
+      minHeight: "330px"
+    }
+  }
+});
+var message;
 function isNumber(num) {
   const n = new Bignumber(num);
   return n.isFinite() && !n.isNaN();
 }
-
-// src/hooks/use-query.ts
 function useQuery() {
   const [query] = useSearchParams();
   return useMemo(
-    () => query.entries().reduce((acc, [key, value]) => {
-      if (value === "undefined") {
-        acc[key] = void 0;
-      } else if (value === "null") {
-        acc[key] = null;
-      } else if (value.length <= 16 && isNumber(value)) {
-        acc[key] = Number(value);
-      } else if (value.includes(",")) {
-        acc[key] = value.split(",").map((item) => isNumber(item) ? Number(item) : item);
-      } else {
-        acc[key] = value;
-      }
-      return acc;
-    }, {}),
+    () => Array.from(query.entries()).reduce(
+      (acc, [key, value]) => {
+        if (value === "undefined") {
+          acc[key] = void 0;
+        } else if (value === "null") {
+          acc[key] = null;
+        } else if (value.length <= 16 && isNumber(value)) {
+          acc[key] = Number(value);
+        } else if (value.includes(",")) {
+          acc[key] = value.split(",").map((item) => isNumber(item) ? Number(item) : item);
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {}
+    ),
     [query]
   );
 }
@@ -67,6 +54,162 @@ function useAsyncAction(dispatch) {
   );
   return [(values) => startTransition(() => action(values)), loading];
 }
+createContext({
+  dicts: {}
+});
+createStyles(({ token }) => ({
+  link: {
+    color: token.colorLink
+  },
+  pointer: {
+    cursor: "pointer"
+  },
+  bold: {
+    fontWeight: "bold"
+  },
+  question: {
+    marginLeft: token.sizeUnit,
+    cursor: "pointer"
+  },
+  actionBtn: {
+    padding: 0
+  },
+  success: {
+    color: token.colorSuccess
+  },
+  error: {
+    color: token.colorError
+  },
+  warning: {
+    color: token.colorWarning
+  },
+  disabled: {
+    color: token.colorTextDisabled
+  }
+}));
+var { Summary } = Table;
+var CustomError = class {
+  name;
+  message;
+  code = "ERR_CUSTOM";
+  data;
+  config;
+  constructor(message2, data, config) {
+    this.name = "CustomError";
+    this.message = message2;
+    this.data = data;
+    this.config = config;
+  }
+};
+axios.defaults.validateStatus = (status) => {
+  return status >= 200 && status < 300;
+};
+axios.defaults.responseType = "json";
+axios.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    let errorMsg = error.message || "\u672A\u77E5\u9519\u8BEF";
+    let data = null;
+    if (axios.isAxiosError(error)) {
+      errorMsg = error.message;
+      data = error.response?.data;
+    }
+    if (error instanceof CustomError) {
+      errorMsg = error.message;
+      data = error.data;
+    }
+    if (!error?.config?.skipErrorHandler) {
+      message.error(errorMsg);
+    }
+    return data;
+  }
+);
+({
+  all: axios.all,
+  spread: axios.spread
+});
+Checkbox.Group;
+createStyles(({ token }) => ({
+  all: {
+    paddingBottom: token.sizeUnit * 2,
+    marginBottom: token.sizeUnit * 2,
+    minWidth: 100,
+    display: "flex",
+    justifyContent: "space-between"
+  },
+  reset: {
+    color: token.colorPrimary,
+    cursor: "pointer"
+  },
+  checkboxGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: token.sizeUnit
+  }
+}));
+createStyles(({ token }) => ({
+  root: {
+    width: "100%"
+  },
+  btns: {
+    display: "flex",
+    justifyContent: "space-between",
+    padding: token.sizeUnit * 2,
+    fontSize: token.fontSizeLG
+  },
+  tool: {
+    backgroundColor: token.colorBgContainer
+  }
+}));
+var useStyles5 = createStyles(
+  ({ token }, { colWidth, size }) => {
+    let controlHeight = token.controlHeight;
+    if (size === "small") controlHeight = token.controlHeightSM;
+    if (size === "large") controlHeight = token.controlHeightLG;
+    return {
+      btns: {
+        position: "absolute",
+        right: token.sizeUnit * 4,
+        bottom: token.sizeUnit * 4,
+        display: "flex",
+        justifyContent: "space-between",
+        "& .ant-btn": {
+          paddingInline: token.sizeUnit * 2,
+          gap: token.sizeUnit,
+          "&:first-of-type": {
+            marginRight: token.sizeUnit * 2
+          }
+        }
+      },
+      form: {
+        backgroundColor: token.colorBgContainer,
+        marginBottom: token.sizeUnit * 2,
+        padding: token.sizeUnit * 4,
+        display: "grid",
+        gridTemplateColumns: `repeat(auto-fill, minmax(${colWidth}px, 1fr))`,
+        gap: token.sizeUnit * 2.5,
+        position: "relative",
+        "&:after": {
+          width: colWidth,
+          content: '""',
+          height: controlHeight
+        },
+        "&>*": {
+          marginRight: 0
+        },
+        "& .ant-row": {
+          flexWrap: "nowrap"
+        },
+        "& .ant-form-item-label": {
+          flexShrink: 0
+        },
+        "& .ant-input-number, & .ant-input-select, & .ant-picker": {
+          width: "100%"
+        }
+      }
+    };
+  }
+);
 function Search({
   children,
   okText = "\u67E5\u8BE2",
@@ -74,7 +217,7 @@ function Search({
   initLoad,
   onSearch,
   onReset,
-  colWidth = 280,
+  colWidth = 240,
   size = "middle",
   form: externalForm,
   initialValues,
@@ -85,18 +228,9 @@ function Search({
   )) {
     throw new Error("Search \u4E0D\u63A5\u6536 dayjs \u7C7B\u578B\u7684\u521D\u59CB\u503C\uFF0C\u8BF7\u4F7F\u7528\u5B57\u7B26\u4E32\u683C\u5F0F\u5316\u65E5\u671F");
   }
-  const [form] = form_default.useForm(externalForm);
+  const { styles } = useStyles5({ colWidth, size });
+  const [form] = Form.useForm(externalForm);
   const query = useQuery();
-  const theme = useTheme();
-  const height = useMemo(() => {
-    if (size === "small") {
-      return theme.sizes.controlHeightSm;
-    }
-    if (size === "large") {
-      return theme.sizes.controlHeightLg;
-    }
-    return theme.sizes.controlHeight;
-  }, [theme, size]);
   const [onFinish, loading] = useAsyncAction(async (values) => {
     if (typeof onSearch === "function") {
       onSearch(values);
@@ -116,30 +250,13 @@ function Search({
     }
   }, [query, form, initLoad]);
   const btns = useMemo(() => {
-    return /* @__PURE__ */ jsxs(
-      box_default,
-      {
-        sx: {
-          position: "absolute",
-          right: 4 * theme.space,
-          bottom: 4 * theme.space,
-          w: colWidth / 2,
-          display: "flex",
-          justifyContent: "space-between",
-          ".ant-btn": {
-            px: 2.5,
-            gap: 1
-          }
-        },
-        children: [
-          /* @__PURE__ */ jsx(button_default, { mr: 2, onClick: onClear, icon: /* @__PURE__ */ jsx(RedoOutlined, {}), children: resetText }),
-          /* @__PURE__ */ jsx(button_default, { type: "primary", htmlType: "submit", loading, icon: /* @__PURE__ */ jsx(SearchOutlined, {}), children: okText })
-        ]
-      }
-    );
-  }, [loading, onClear, okText, resetText, theme, colWidth]);
+    return /* @__PURE__ */ jsxs("div", { className: styles.btns, children: [
+      /* @__PURE__ */ jsx(button_default, { onClick: onClear, icon: /* @__PURE__ */ jsx(RedoOutlined, {}), children: resetText }),
+      /* @__PURE__ */ jsx(button_default, { type: "primary", htmlType: "submit", loading, icon: /* @__PURE__ */ jsx(SearchOutlined, {}), children: okText })
+    ] });
+  }, [loading, onClear, okText, resetText, colWidth]);
   return /* @__PURE__ */ jsx(
-    form_default,
+    Form,
     {
       layout: "inline",
       size,
@@ -147,37 +264,9 @@ function Search({
       onFinish,
       initialValues,
       preserve: true,
-      sx: {
-        bg: "bg",
-        mb: 2,
-        display: "grid",
-        gridTemplateColumns: `repeat(auto-fill, minmax(${colWidth / 2}px, 1fr))`,
-        p: 4,
-        gap: 2.5,
-        position: "relative",
-        _after: {
-          content: '""',
-          height,
-          gridColumn: "span 1"
-        },
-        "& > *": {
-          gridColumn: "span 2",
-          mr: 0
-        },
-        ".ant-row": {
-          flexWrap: "nowrap"
-        },
-        ".ant-input-number, .ant-input-select, .ant-picker": {
-          w: 1
-        }
-      },
+      className: styles.form,
       ...props,
-      children: typeof children === "function" ? ((values, form2) => {
-        return /* @__PURE__ */ jsxs(Fragment, { children: [
-          children(values, form2),
-          btns
-        ] });
-      }) : /* @__PURE__ */ jsxs(Fragment, { children: [
+      children: /* @__PURE__ */ jsxs(Fragment, { children: [
         children,
         btns
       ] })
@@ -187,16 +276,16 @@ function Search({
 var isDate = (value, format) => {
   if (!value) return false;
   if (isNumber(value)) {
-    return dayjs(value, format).isValid();
+    return dayjs2(value, format).isValid();
   }
-  return dayjs(value).isValid();
+  return dayjs2(value).isValid();
 };
 var parseDate = (value, format) => {
   if (!value) return value;
   if (Array.isArray(value)) {
-    return value.map((v) => v && isDate(v, format) ? dayjs(v) : v);
+    return value.map((v) => v && isDate(v, format) ? dayjs2(v) : v);
   }
-  return isDate(value, format) ? dayjs(value) : value;
+  return isDate(value, format) ? dayjs2(value) : value;
 };
 var formatDate = (value, format) => {
   if (!value) return value;
@@ -210,7 +299,7 @@ var getFormat = (format, child) => {
   if (child?.props?.showTime) return "YYYY-MM-DD HH:mm:ss";
   return "YYYY-MM-DD";
 };
-function Item2({
+function Item({
   span = 1,
   name,
   names,
@@ -223,10 +312,10 @@ function Item2({
     throw new Error("Search.Item \u4E0D\u63A5\u6536 dayjs \u7C7B\u578B\u7684\u521D\u59CB\u503C\uFF0C\u8BF7\u4F7F\u7528\u5B57\u7B26\u4E32\u683C\u5F0F\u5316\u65E5\u671F");
   }
   if (names) {
-    return /* @__PURE__ */ jsxs(form_default.Item, { style: { gridColumn: `span ${span * 2}` }, ...props, children: [
-      names.map((v, i) => /* @__PURE__ */ jsx(form_default.Item, { name: v, hidden: true, noStyle: true, initialValue: initialValue?.[i] }, v)),
+    return /* @__PURE__ */ jsxs(Form.Item, { style: { gridColumn: `span ${span * 2}` }, ...props, children: [
+      names.map((v, i) => /* @__PURE__ */ jsx(Form.Item, { name: v, hidden: true, noStyle: true, initialValue: initialValue?.[i] }, v)),
       /* @__PURE__ */ jsx(
-        form_default.Item,
+        Form.Item,
         {
           noStyle: true,
           shouldUpdate: (preVal, nextVal) => {
@@ -250,10 +339,11 @@ function Item2({
     ] });
   }
   return /* @__PURE__ */ jsx(
-    form_default.Item,
+    Form.Item,
     {
       name,
       initialValue,
+      style: { gridColumn: `span ${span}` },
       ...props,
       getValueFromEvent: (e) => {
         const value = e?.currentTarget?.value ?? e?.target?.value ?? e;
@@ -269,7 +359,7 @@ function Item2({
 
 // src/components/search/index.tsx
 var Search2 = Search;
-Search2.Item = Item2;
+Search2.Item = Item;
 var search_default = Search2;
 
 export { search_default as default };

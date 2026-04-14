@@ -12,20 +12,23 @@ function isNumber(num) {
 function useQuery() {
   const [query] = useSearchParams();
   return useMemo(
-    () => query.entries().reduce((acc, [key, value]) => {
-      if (value === "undefined") {
-        acc[key] = void 0;
-      } else if (value === "null") {
-        acc[key] = null;
-      } else if (value.length <= 16 && isNumber(value)) {
-        acc[key] = Number(value);
-      } else if (value.includes(",")) {
-        acc[key] = value.split(",").map((item) => isNumber(item) ? Number(item) : item);
-      } else {
-        acc[key] = value;
-      }
-      return acc;
-    }, {}),
+    () => Array.from(query.entries()).reduce(
+      (acc, [key, value]) => {
+        if (value === "undefined") {
+          acc[key] = void 0;
+        } else if (value === "null") {
+          acc[key] = null;
+        } else if (value.length <= 16 && isNumber(value)) {
+          acc[key] = Number(value);
+        } else if (value.includes(",")) {
+          acc[key] = value.split(",").map((item) => isNumber(item) ? Number(item) : item);
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {}
+    ),
     [query]
   );
 }

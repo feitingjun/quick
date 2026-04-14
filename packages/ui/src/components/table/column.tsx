@@ -1,15 +1,43 @@
 import { type MouseEvent, useMemo } from 'react'
-import type { SxProps } from '@quick/cssinjs'
+import { createStyles } from 'antd-style'
 import { QuestionCircleOutlined } from '@ant-design/icons'
 import copy from 'copy-to-clipboard'
 import { zerofill, round, isNumber, thousands, multiply } from '@/utils'
 import { useNavigate } from '@/hooks'
-import Tooltip from '@/components/tooltip'
-import Space from '@/components/space'
-import Button from '@/components/button'
-import { message } from '@/components/message'
+import { Tooltip, Space, Button, message } from '@/components'
 import { useDicts, type DictItem } from '@/dicts'
 import type { AnyObject, ColumnProps, ColumnGroupType, Action, TableProps } from './types'
+
+const useStyles = createStyles(({ token }) => ({
+  link: {
+    color: token.colorLink
+  },
+  pointer: {
+    cursor: 'pointer'
+  },
+  bold: {
+    fontWeight: 'bold'
+  },
+  question: {
+    marginLeft: token.sizeUnit,
+    cursor: 'pointer'
+  },
+  actionBtn: {
+    padding: 0
+  },
+  success: {
+    color: token.colorSuccess
+  },
+  error: {
+    color: token.colorError
+  },
+  warning: {
+    color: token.colorWarning
+  },
+  disabled: {
+    color: token.colorTextDisabled
+  }
+}))
 
 /**复制文本 */
 const copyText = (e: MouseEvent<HTMLTableCellElement>) => {
@@ -50,7 +78,8 @@ const handleStatus = (
 const handleColumn = <T extends AnyObject = AnyObject>(
   col: ColumnProps<T>,
   dicts: ReturnType<typeof useDicts>,
-  navigate: ReturnType<typeof useNavigate>
+  navigate: ReturnType<typeof useNavigate>,
+  styles: ReturnType<typeof useStyles>['styles']
 ): ColumnProps<T> => {
   let {
     status,
@@ -69,7 +98,7 @@ const handleColumn = <T extends AnyObject = AnyObject>(
     ...args
   } = col
   const render = (value: any, record: T, index: number) => {
-    const sx: SxProps = {}
+    const classNames = []
     value = renderFunc?.(value, record, index) ?? value
     // 处理字典
     if (dictCode) {
@@ -84,14 +113,15 @@ const handleColumn = <T extends AnyObject = AnyObject>(
     if (link) {
       link = typeof link === 'function' ? link(value, record, index) : link
       if (link) {
-        sx.color = 'link'
-        sx.cursor = 'pointer'
+        classNames.push(styles.link)
+        classNames.push(styles.pointer)
       }
     }
+    const statusStr = handleStatus(status, value, record, index)
     // 处理状态
-    if (status) sx.color = handleStatus(status, value, record, index)
+    if (statusStr) classNames.push(styles[statusStr])
     // 处理粗体
-    if (bold) sx.fontWeight = 'bold'
+    if (bold) classNames.push(styles.bold)
     if (isNumber(value)) {
       // 处理百分比(先*100,处理完千分位和四舍五入等在添加%号)
       if (percent) value = multiply(value, 100)
@@ -109,7 +139,10 @@ const handleColumn = <T extends AnyObject = AnyObject>(
       if (percent) value = `${value}%`
     }
     return (
-      <span sx={sx} onClick={link ? () => navigate(link as string) : undefined}>
+      <span
+        className={classNames.join(' ')}
+        onClick={link ? () => navigate(link as string) : undefined}
+      >
         {value}
         {suffix ?? null}
       </span>
@@ -118,13 +151,13 @@ const handleColumn = <T extends AnyObject = AnyObject>(
   const children = (col as ColumnGroupType<T>).children
   return {
     ...args,
-    children: children?.map(col => handleColumn(col, dicts, navigate)) ?? undefined,
+    children: children?.map(col => handleColumn(col, dicts, navigate, styles)) ?? undefined,
     title: tooltip
       ? (...arrs) => (
           <span>
             {typeof title === 'function' ? title(...arrs) : title}
             <Tooltip title={tooltip}>
-              <QuestionCircleOutlined sx={{ ml: 1, cursor: 'pointer' }} />
+              <QuestionCircleOutlined className={styles.question} />
             </Tooltip>
           </span>
         )
@@ -141,7 +174,8 @@ const handleActions = <T extends AnyObject = AnyObject>(
   actions: Action<T>[],
   actionFixed: TableProps['actionFixed'],
   actionTitle: TableProps['actionTitle'],
-  actionWidth: TableProps['actionWidth']
+  actionWidth: TableProps['actionWidth'],
+  styles: ReturnType<typeof useStyles>['styles']
 ): ColumnProps<T> | null => {
   if (!actions || actions.length === 0) return null
   return {
@@ -159,8 +193,10 @@ const handleActions = <T extends AnyObject = AnyObject>(
           if (typeof className === 'function') className = className(record, index)
           return (
             <Button
+              classNames={{
+                root: styles.actionBtn
+              }}
               key={i}
-              p={0}
               type={type ?? 'link'}
               className={className}
               onClick={e => onClick?.(e, record, index)}
@@ -183,11 +219,12 @@ export const useColumns = <T extends AnyObject = AnyObject>(
 ): ColumnProps<T>[] => {
   const navigate = useNavigate()
   const dicts = useDicts()
+  const { styles } = useStyles()
   return useMemo(
     () =>
       columns
-        .map(col => handleColumn(col, dicts, navigate))
-        .concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth) ?? []),
+        .map(col => handleColumn(col, dicts, navigate, styles))
+        .concat(handleActions(actions || [], actionFixed, actionTitle, actionWidth, styles) ?? []),
     [columns, actions, dicts, navigate, actionFixed, actionTitle, actionWidth]
   )
 }

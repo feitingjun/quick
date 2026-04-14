@@ -1,0 +1,143 @@
+import * as React from 'react'
+import {
+  createBrowserRouter,
+  createHashRouter,
+  createMemoryRouter,
+  RouterProvider as ReactRouterProvider,
+  useMatches
+} from 'react-router'
+
+const FILE_ROUTER_METADATA_KEY = '__fileRouterMetadata'
+const BASE_ROUTES = __ROUTES__
+
+/** 读取当前路由挂在 handle 上的 metadata。 */
+const getRouteMetadata = handle => handle?.[FILE_ROUTER_METADATA_KEY]
+
+/** 合并路由模块自己的 handle 和 metadata。 */
+const createRouteHandle = (handle, metadata) => {
+  if (handle === undefined && metadata === undefined) {
+    return undefined
+  }
+  return metadata === undefined
+    ? handle
+    : {
+        ...(handle ?? {}),
+        [FILE_ROUTER_METADATA_KEY]: metadata
+      }
+}
+
+/** 统一整理 lazy 路由模块的导出结构。 */
+const normalizeRouteModule = mod => {
+  const {
+    default: defaultComponent,
+    Component: moduleComponent,
+    handle: moduleHandle,
+    metadata,
+    ...routeModule
+  } = mod
+  const Component = moduleComponent ?? defaultComponent
+  const handle = createRouteHandle(moduleHandle, metadata)
+  return {
+    ...routeModule,
+    ...(Component ? { Component } : {}),
+    ...(handle ? { handle } : {})
+  }
+}
+
+/** 依次为页面或 layout 组件套上 wrappers。 */
+const applyWrappers = (children, wrappers, routeInfo) => {
+  if (!wrappers?.length) {
+    return children
+  }
+  return wrappers.reduceRight(
+    (currentChildren, wrapper) =>
+      wrapper({
+        ...routeInfo,
+        children: currentChildren
+      }),
+    children
+  )
+}
+
+/** 计算当前路由的完整 pathname。 */
+const resolvePathname = (parentPathname, route) => {
+  if (route.index || !route.path) {
+    return parentPathname
+  }
+  if (route.path === '/') {
+    return '/'
+  }
+  const base = parentPathname === '/' ? '' : parentPathname
+  return `${base}/${route.path}`.replace(/\/+/g, '/')
+}
+
+/** 增强单个 lazy 路由的运行时行为。 */
+const enhanceLazyRoute = (lazy, wrappers, routeInfo) => async () => {
+  const loaded = normalizeRouteModule(await lazy())
+  if (!loaded.Component || !wrappers?.length) {
+    return loaded
+  }
+  const metadata = getRouteMetadata(loaded.handle)
+  const Component = loaded.Component
+  return {
+    ...loaded,
+    Component: props =>
+      applyWrappers(React.createElement(Component, props), wrappers, { ...routeInfo, metadata })
+  }
+}
+
+/** 增强单个路由对象。 */
+const enhanceRoute = (route, wrappers, hydrateFallback, parentPathname) => {
+  const pathname = resolvePathname(parentPathname, route)
+  const { __fileRouter, children, lazy, ...nextRoute } = route
+  if (children) {
+    nextRoute.children = enhanceRoutes(children, wrappers, hydrateFallback, pathname)
+  }
+  if (lazy) {
+    const routeInfo = {
+      pathname,
+      isLayout: __fileRouter?.isLayout ?? false
+    }
+    nextRoute.hydrateFallbackElement = hydrateFallback
+      ? React.createElement(hydrateFallback)
+      : React.createElement('div',{children: 'loading...'})
+    nextRoute.lazy = enhanceLazyRoute(lazy, wrappers, routeInfo)
+  }
+  return nextRoute
+}
+
+/** 递归增强整棵路由树。 */
+const enhanceRoutes = (routes, wrappers, hydrateFallback, parentPathname = '/') =>
+  routes.map(route => enhanceRoute(route, wrappers, hydrateFallback, parentPathname))
+
+/** 按 history 类型创建 React Router 实例。 */
+const createRouterByHistory = (history, routes) => {
+  if (history === 'hash') {
+    return createHashRouter(routes)
+  }
+  if (history === 'memory') {
+    return createMemoryRouter(routes)
+  }
+  return createBrowserRouter(routes)
+}
+
+/** 获取当前匹配路由的 metadata。 */
+export function useMetadata() {
+  const matches = useMatches()
+  return getRouteMetadata(matches.at(-1)?.handle)
+}
+
+/** 文件路由的统一 RouterProvider 封装。 */
+export function RouterProvider({ history = 'browser', wrappers, hydrateFallback, ...props }) {
+  const enhancedRoutes = React.useMemo(
+    () => enhanceRoutes(BASE_ROUTES, wrappers, hydrateFallback),
+    [wrappers, hydrateFallback]
+  )
+  const router = React.useMemo(
+    () => createRouterByHistory(history, enhancedRoutes),
+    [history, enhancedRoutes]
+  )
+  return React.createElement(ReactRouterProvider, { ...props, router })
+}
+
+export default RouterProvider
