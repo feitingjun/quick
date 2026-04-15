@@ -17,5 +17,3 @@ function merge(...objects) {
 }
 
 export { merge };
-//# sourceMappingURL=objects.js.map
-//# sourceMappingURL=objects.js.map

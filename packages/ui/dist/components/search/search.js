@@ -362,5 +362,3 @@ function Search({
 }
 
 export { Search as default };
-//# sourceMappingURL=search.js.map
-//# sourceMappingURL=search.js.map

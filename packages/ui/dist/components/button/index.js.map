@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../../src/components/button/index.tsx"],"names":[],"mappings":";;;AAIA,IAAO,cAAA,GAAQ","file":"index.js","sourcesContent":["import { Button } from 'antd'\n\nexport type { ButtonProps } from 'antd'\n\nexport default Button\n"]}

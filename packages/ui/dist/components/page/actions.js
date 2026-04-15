@@ -183,5 +183,3 @@ function Actions({ actions, size }) {
 }
 
 export { Actions as default };
-//# sourceMappingURL=actions.js.map
-//# sourceMappingURL=actions.js.map

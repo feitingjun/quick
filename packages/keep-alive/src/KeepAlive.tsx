@@ -1,9 +1,57 @@
-import { useContext, useEffect, useLayoutEffect, useRef } from 'react'
+import { type ReactNode, use, useContext, useLayoutEffect, useRef, useState } from 'react'
 import { ScopeContext, KeepAliveContext } from './context'
 import { collectBridgeProviders } from './fiberBridge'
-import type { KeepAliveProps } from './types'
+import type { CacheEntry } from './cacheStore'
+import type { BridgeProvider, KeepAliveProps } from './types'
 
-const useSafeLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
+function equalBridgeContexts(left: readonly BridgeProvider[], right: readonly BridgeProvider[]) {
+  if (left.length !== right.length) {
+    return false
+  }
+
+  return left.every((bridge, index) => bridge.context === right[index]?.context)
+}
+
+function equalBridgeValues(left: readonly BridgeProvider[], right: readonly BridgeProvider[]) {
+  if (left.length !== right.length) {
+    return false
+  }
+
+  return left.every((bridge, index) => {
+    const next = right[index]
+    return bridge.context === next?.context && Object.is(bridge.value, next.value)
+  })
+}
+
+function BridgeTracker({
+  entry,
+  bridges
+}: {
+  entry: CacheEntry
+  bridges: readonly BridgeProvider[]
+}) {
+  const lastReconciledBridgesRef = useRef<BridgeProvider[]>([])
+  const lastEntryRef = useRef<CacheEntry | null>(null)
+  const liveBridges = bridges.map(bridge => ({
+    context: bridge.context,
+    value: use(bridge.context)
+  }))
+
+  useLayoutEffect(() => {
+    if (
+      lastEntryRef.current === entry &&
+      equalBridgeValues(lastReconciledBridgesRef.current, liveBridges)
+    ) {
+      return
+    }
+
+    lastEntryRef.current = entry
+    lastReconciledBridgesRef.current = liveBridges
+    entry.reconcile({ bridge: liveBridges })
+  }, [entry, liveBridges])
+
+  return null
+}
 
 /**
  * KeepAlive：将其 children 缓存起来
@@ -16,12 +64,14 @@ const useSafeLayoutEffect = typeof window === 'undefined' ? useEffect : useLayou
  * 通过 useAliveController().cachingNodes 可获取所有缓存节点信息，
  * 包括 name、active、props（含 title 等自定义属性）。
  */
-export function KeepAlive({ name, children, ...restProps }: KeepAliveProps) {
+export function KeepAlive({ name, children, ...restProps }: KeepAliveProps): ReactNode {
   const anchorRef = useRef<HTMLDivElement>(null)
   const store = useContext(ScopeContext)
   const parentKeepAlive = useContext(KeepAliveContext)
+  const [trackedBridges, setTrackedBridges] = useState<BridgeProvider[]>([])
+  const entry = store?.get(name) ?? null
   // 首次注册
-  useSafeLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (!store) {
       return
     }
@@ -30,13 +80,8 @@ export function KeepAlive({ name, children, ...restProps }: KeepAliveProps) {
       return
     }
     const entry = store.getOrCreate(name)
-    // 首次注册时记录占位点和当前 provider 链，后面只增量同步内容。
     entry.reconcile({
-      target: anchor,
-      parentActive: parentKeepAlive?.getActive() ?? true,
-      children,
-      props: restProps,
-      bridge: collectBridgeProviders(anchor)
+      target: anchor
     })
     return () => {
       entry.reconcile({ target: null })
@@ -44,7 +89,7 @@ export function KeepAlive({ name, children, ...restProps }: KeepAliveProps) {
   }, [store, name])
 
   // 依赖更新
-  useSafeLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (!store) {
       return
     }
@@ -53,15 +98,18 @@ export function KeepAlive({ name, children, ...restProps }: KeepAliveProps) {
     if (!anchor || !entry) {
       return
     }
+    const nextBridge = collectBridgeProviders(anchor)
     entry.reconcile({
+      parentActive: parentKeepAlive?.getActive() ?? true,
       children,
       props: restProps,
-      bridge: collectBridgeProviders(anchor)
+      bridge: nextBridge
     })
-  }, [store, name, children, restProps])
+    setTrackedBridges(current => (equalBridgeContexts(current, nextBridge) ? current : nextBridge))
+  }, [store, name, parentKeepAlive, children, restProps])
 
   // 嵌套缓存
-  useSafeLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (!store) {
       return
     }
@@ -85,5 +133,12 @@ export function KeepAlive({ name, children, ...restProps }: KeepAliveProps) {
     return children
   }
 
-  return <div ref={anchorRef} data-keep-alive-anchor={name} />
+  return (
+    <>
+      <div ref={anchorRef} data-keep-alive-anchor={name} />
+      {entry && trackedBridges.length > 0 ? (
+        <BridgeTracker entry={entry} bridges={trackedBridges} />
+      ) : null}
+    </>
+  )
 }

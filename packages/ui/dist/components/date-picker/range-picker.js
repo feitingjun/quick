@@ -106,5 +106,3 @@ function RangePicker({
 }
 
 export { RangePicker as default };
-//# sourceMappingURL=range-picker.js.map
-//# sourceMappingURL=range-picker.js.map

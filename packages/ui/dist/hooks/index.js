@@ -42,5 +42,3 @@ function useAsyncAction(dispatch) {
 }
 
 export { useAsyncAction, useQuery };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

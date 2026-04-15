@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { BridgeProvider, CacheNode, KeepAliveLifecycleContextValue } from './types'
 
 type StoreListener = () => void
+type LifecycleEvent = 'activate' | 'unactivate'
 
 export interface CacheEntrySnapshot {
   name: string
@@ -162,6 +163,8 @@ export class CacheEntry {
   private props: Record<string, unknown> = {}
   private bridge: BridgeProvider[] = []
   private scrollPositions: ScrollPosition[] = []
+  private pendingDestroy = false
+  private pendingLifecycleEvents: LifecycleEvent[] = []
   private snapshot: CacheEntrySnapshot
   private readonly listeners = new Set<StoreListener>()
   private readonly activeListeners = new Set<(active: boolean) => void>()
@@ -206,12 +209,21 @@ export class CacheEntry {
   }
 
   /**将内部状态转换成公开的缓存列表项。 */
-  getCacheNode(): CacheNode {
+  getCacheNode(): CacheNode | null {
+    if (this.pendingDestroy) {
+      return null
+    }
+
     return {
       name: this.name,
       active: this.active,
       props: { ...this.props }
     }
+  }
+
+  /**标记当前缓存是否已进入销毁流程。 */
+  isPendingDestroy(): boolean {
+    return this.pendingDestroy
   }
 
   /**更新停车场根节点，失活时会把 portal 容器移动到这里。 */
@@ -237,9 +249,13 @@ export class CacheEntry {
 
   /**合并来自 KeepAlive 的最新输入，并在必要时派发生命周期与快照更新。 */
   reconcile(update: CacheEntryUpdate): void {
+    if (this.pendingDestroy) {
+      return
+    }
+
     const previousTarget = this.getUsableTarget()
     const wasActive = this.active
-    let changed = false
+    let shouldEmit = false
 
     if ('target' in update) {
       const nextTarget = update.target ?? null
@@ -250,35 +266,67 @@ export class CacheEntry {
       }
       if (this.target !== nextTarget) {
         this.target = nextTarget
-        changed = true
+        shouldEmit = true
       }
     }
     if ('parentActive' in update) {
       const nextParentActive = update.parentActive ?? true
       if (this.parentActive !== nextParentActive) {
         this.parentActive = nextParentActive
-        changed = true
+        shouldEmit = true
       }
     }
     if ('children' in update && !Object.is(this.children, update.children)) {
       this.children = update.children ?? null
-      changed = true
+      shouldEmit = true
     }
     if ('props' in update) {
       const nextProps = { ...(update.props ?? {}) }
       if (!shallowEqualRecord(this.props, nextProps)) {
         this.props = nextProps
-        changed = true
+        shouldEmit = true
       }
     }
     if ('bridge' in update) {
       const nextBridge = [...(update.bridge ?? [])]
       if (!equalBridges(this.bridge, nextBridge)) {
         this.bridge = nextBridge
-        changed = true
+        shouldEmit = true
       }
     }
 
+    const activeChanged = this.syncActive()
+    shouldEmit = shouldEmit || activeChanged
+
+    if (wasActive && !this.active) {
+      this.captureScrollPositions(previousTarget)
+      this.enqueueLifecycle('unactivate')
+      shouldEmit = true
+    }
+
+    this.syncHost()
+
+    if (!wasActive && this.active) {
+      this.restoreScrollPositions()
+      this.enqueueLifecycle('activate')
+      shouldEmit = true
+    }
+
+    if (shouldEmit) {
+      this.emit()
+    }
+  }
+
+  /**销毁缓存实体，等待生命周期在 effect 阶段派发后再做最终清理。 */
+  destroy(): void {
+    if (this.pendingDestroy) {
+      return
+    }
+
+    const previousTarget = this.getUsableTarget()
+    const wasActive = this.active
+    this.target = null
+    this.parentActive = false
     const activeChanged = this.syncActive()
 
     if (wasActive && !this.active) {
@@ -286,33 +334,47 @@ export class CacheEntry {
     }
 
     this.syncHost()
-
-    if (!wasActive && this.active) {
-      this.restoreScrollPositions()
-    }
-
-    if (changed || activeChanged) {
+    this.pendingDestroy = true
+    this.enqueueLifecycle('unactivate')
+    if (!activeChanged && !wasActive) {
       this.emit()
+      return
     }
+
+    this.emit()
   }
 
-  /**销毁缓存实体，清空监听器并把容器从 DOM 中摘除。 */
-  destroy(): void {
-    const wasActive = this.active
-    this.target = null
-    this.parentActive = false
-    this.active = false
-    if (wasActive) {
-      this.activeListeners.forEach(listener => listener(false))
-      this.fireUnactivate()
+  /**在 effect 阶段派发累计的激活/失活事件。 */
+  flushPendingLifecycleEffects(): void {
+    if (this.pendingLifecycleEvents.length === 0) {
+      return
     }
+
+    const events = [...this.pendingLifecycleEvents]
+    this.pendingLifecycleEvents = []
+
+    events.forEach(event => {
+      if (event === 'activate') {
+        this.fireActivate()
+        return
+      }
+
+      this.fireUnactivate()
+    })
+  }
+
+  /**完成销毁流程，清空监听器并把容器从 DOM 中摘除。 */
+  finalizeDestroy(): void {
     if (this.portalContainer?.parentNode) {
       this.portalContainer.parentNode.removeChild(this.portalContainer)
     }
+
     this.listeners.clear()
     this.activeListeners.clear()
     this.activateHooks.clear()
     this.unactivateHooks.clear()
+    this.pendingLifecycleEvents = []
+    this.scrollPositions = []
   }
 
   /**触发当前缓存实体内注册的激活回调。 */
@@ -365,6 +427,24 @@ export class CacheEntry {
     return true
   }
 
+  /**把激活/失活事件排队到 passive effect 阶段统一派发。 */
+  private enqueueLifecycle(event: LifecycleEvent): void {
+    const lastEvent = this.pendingLifecycleEvents[this.pendingLifecycleEvents.length - 1]
+    if (lastEvent === event) {
+      return
+    }
+
+    if (
+      (lastEvent === 'activate' && event === 'unactivate') ||
+      (lastEvent === 'unactivate' && event === 'activate')
+    ) {
+      this.pendingLifecycleEvents.pop()
+      return
+    }
+
+    this.pendingLifecycleEvents.push(event)
+  }
+
   /**返回当前仍可安全挂载的占位点，过滤掉已脱离文档或形成环引用的 target。 */
   private getUsableTarget(): HTMLDivElement | null {
     if (!this.target || !this.target.isConnected) {
@@ -379,7 +459,7 @@ export class CacheEntry {
 
   /**记录当前占位点外层滚动容器的位置，供下次激活时恢复。 */
   private captureScrollPositions(target: HTMLDivElement | null): void {
-    if (!target || typeof window === 'undefined' || typeof document === 'undefined') {
+    if (!target) {
       this.scrollPositions = []
       return
     }
@@ -446,8 +526,11 @@ export class CacheStore {
   /**按需创建缓存实体，并让新实体继承当前停车场节点。 */
   getOrCreate(name: string): CacheEntry {
     const existing = this.entries.get(name)
-    if (existing) {
+    if (existing && !existing.isPendingDestroy()) {
       return existing
+    }
+    if (existing) {
+      this.disposeEntry(existing)
     }
     const entry = new CacheEntry(name)
     entry.setParkingRoot(this.parkingRoot)
@@ -469,11 +552,10 @@ export class CacheStore {
     names.forEach(cacheName => {
       const entry = this.entries.get(cacheName)
       // 只有非活跃缓存才能销毁，避免页面显示的DOM节点被移除。
-      if (!entry || entry?.getActive()) {
+      if (!entry || entry.getActive() || entry.isPendingDestroy()) {
         return
       }
       entry.destroy()
-      this.entries.delete(cacheName)
       changed = true
     })
     if (changed) {
@@ -486,17 +568,28 @@ export class CacheStore {
     if (this.entries.size === 0) {
       return
     }
-    // 先收集所有非活跃缓存的 name
-    const names: string[] = []
+
+    let changed = false
     this.entries.forEach(entry => {
-      if (!entry.getActive()) {
-        names.push(entry.name)
+      if (!entry.getActive() && !entry.isPendingDestroy()) {
+        entry.destroy()
+        changed = true
       }
     })
-    names.forEach(name => {
-      this.entries.delete(name)
-      this.entries.get(name)?.destroy()
-    })
+
+    if (changed) {
+      this.emit()
+    }
+  }
+
+  /**在销毁回调跑完后，把实体真正从 store 中摘掉。 */
+  finalizeDestroy(entry: CacheEntry): void {
+    const current = this.entries.get(entry.name)
+    if (current !== entry || !entry.isPendingDestroy()) {
+      return
+    }
+
+    this.disposeEntry(entry)
     this.emit()
   }
 
@@ -504,5 +597,11 @@ export class CacheStore {
   private emit(): void {
     this.entriesSnapshot = Array.from(this.entries.values())
     this.listeners.forEach(listener => listener())
+  }
+
+  /**无副作用地释放某个缓存实体。 */
+  private disposeEntry(entry: CacheEntry): void {
+    entry.finalizeDestroy()
+    this.entries.delete(entry.name)
   }
 }

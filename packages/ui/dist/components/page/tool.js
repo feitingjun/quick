@@ -269,5 +269,3 @@ function Tool({
 }
 
 export { Tool as default };
-//# sourceMappingURL=tool.js.map
-//# sourceMappingURL=tool.js.map

@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../src/utils/strings.ts"],"names":[],"mappings":";AACO,IAAM,UAAA,GAAa,CAAC,GAAA,KAAgB;AACzC,EAAA,OAAO,GAAA,CAAI,OAAO,CAAC,CAAA,CAAE,aAAY,GAAI,GAAA,CAAI,MAAM,CAAC,CAAA;AAClD","file":"strings.js","sourcesContent":["/**首字母大写 */\nexport const capitalize = (str: string) => {\n  return str.charAt(0).toUpperCase() + str.slice(1)\n}\n"]}

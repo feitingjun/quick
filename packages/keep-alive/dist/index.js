@@ -103,6 +103,8 @@ var CacheEntry = class {
   props = {};
   bridge = [];
   scrollPositions = [];
+  pendingDestroy = false;
+  pendingLifecycleEvents = [];
   snapshot;
   listeners = /* @__PURE__ */ new Set();
   activeListeners = /* @__PURE__ */ new Set();
@@ -143,11 +145,18 @@ var CacheEntry = class {
   }
   /**将内部状态转换成公开的缓存列表项。 */
   getCacheNode() {
+    if (this.pendingDestroy) {
+      return null;
+    }
     return {
       name: this.name,
       active: this.active,
       props: { ...this.props }
     };
+  }
+  /**标记当前缓存是否已进入销毁流程。 */
+  isPendingDestroy() {
+    return this.pendingDestroy;
   }
   /**更新停车场根节点，失活时会把 portal 容器移动到这里。 */
   setParkingRoot(node) {
@@ -170,9 +179,12 @@ var CacheEntry = class {
   }
   /**合并来自 KeepAlive 的最新输入，并在必要时派发生命周期与快照更新。 */
   reconcile(update) {
+    if (this.pendingDestroy) {
+      return;
+    }
     const previousTarget = this.getUsableTarget();
     const wasActive = this.active;
-    let changed = false;
+    let shouldEmit = false;
     if ("target" in update) {
       const nextTarget = update.target ?? null;
       if (this.target && nextTarget && this.target !== nextTarget) {
@@ -182,56 +194,90 @@ var CacheEntry = class {
       }
       if (this.target !== nextTarget) {
         this.target = nextTarget;
-        changed = true;
+        shouldEmit = true;
       }
     }
     if ("parentActive" in update) {
       const nextParentActive = update.parentActive ?? true;
       if (this.parentActive !== nextParentActive) {
         this.parentActive = nextParentActive;
-        changed = true;
+        shouldEmit = true;
       }
     }
     if ("children" in update && !Object.is(this.children, update.children)) {
       this.children = update.children ?? null;
-      changed = true;
+      shouldEmit = true;
     }
     if ("props" in update) {
       const nextProps = { ...update.props ?? {} };
       if (!shallowEqualRecord(this.props, nextProps)) {
         this.props = nextProps;
-        changed = true;
+        shouldEmit = true;
       }
     }
     if ("bridge" in update) {
       const nextBridge = [...update.bridge ?? []];
       if (!equalBridges(this.bridge, nextBridge)) {
         this.bridge = nextBridge;
-        changed = true;
+        shouldEmit = true;
       }
     }
+    const activeChanged = this.syncActive();
+    shouldEmit = shouldEmit || activeChanged;
+    if (wasActive && !this.active) {
+      this.captureScrollPositions(previousTarget);
+      this.enqueueLifecycle("unactivate");
+      shouldEmit = true;
+    }
+    this.syncHost();
+    if (!wasActive && this.active) {
+      this.restoreScrollPositions();
+      this.enqueueLifecycle("activate");
+      shouldEmit = true;
+    }
+    if (shouldEmit) {
+      this.emit();
+    }
+  }
+  /**销毁缓存实体，等待生命周期在 effect 阶段派发后再做最终清理。 */
+  destroy() {
+    if (this.pendingDestroy) {
+      return;
+    }
+    const previousTarget = this.getUsableTarget();
+    const wasActive = this.active;
+    this.target = null;
+    this.parentActive = false;
     const activeChanged = this.syncActive();
     if (wasActive && !this.active) {
       this.captureScrollPositions(previousTarget);
     }
     this.syncHost();
-    if (!wasActive && this.active) {
-      this.restoreScrollPositions();
-    }
-    if (changed || activeChanged) {
+    this.pendingDestroy = true;
+    this.enqueueLifecycle("unactivate");
+    if (!activeChanged && !wasActive) {
       this.emit();
+      return;
     }
+    this.emit();
   }
-  /**销毁缓存实体，清空监听器并把容器从 DOM 中摘除。 */
-  destroy() {
-    const wasActive = this.active;
-    this.target = null;
-    this.parentActive = false;
-    this.active = false;
-    if (wasActive) {
-      this.activeListeners.forEach((listener) => listener(false));
-      this.fireUnactivate();
+  /**在 effect 阶段派发累计的激活/失活事件。 */
+  flushPendingLifecycleEffects() {
+    if (this.pendingLifecycleEvents.length === 0) {
+      return;
     }
+    const events = [...this.pendingLifecycleEvents];
+    this.pendingLifecycleEvents = [];
+    events.forEach((event) => {
+      if (event === "activate") {
+        this.fireActivate();
+        return;
+      }
+      this.fireUnactivate();
+    });
+  }
+  /**完成销毁流程，清空监听器并把容器从 DOM 中摘除。 */
+  finalizeDestroy() {
     if (this.portalContainer?.parentNode) {
       this.portalContainer.parentNode.removeChild(this.portalContainer);
     }
@@ -239,6 +285,8 @@ var CacheEntry = class {
     this.activeListeners.clear();
     this.activateHooks.clear();
     this.unactivateHooks.clear();
+    this.pendingLifecycleEvents = [];
+    this.scrollPositions = [];
   }
   /**触发当前缓存实体内注册的激活回调。 */
   fireActivate() {
@@ -283,6 +331,18 @@ var CacheEntry = class {
     this.activeListeners.forEach((listener) => listener(nextActive));
     return true;
   }
+  /**把激活/失活事件排队到 passive effect 阶段统一派发。 */
+  enqueueLifecycle(event) {
+    const lastEvent = this.pendingLifecycleEvents[this.pendingLifecycleEvents.length - 1];
+    if (lastEvent === event) {
+      return;
+    }
+    if (lastEvent === "activate" && event === "unactivate" || lastEvent === "unactivate" && event === "activate") {
+      this.pendingLifecycleEvents.pop();
+      return;
+    }
+    this.pendingLifecycleEvents.push(event);
+  }
   /**返回当前仍可安全挂载的占位点，过滤掉已脱离文档或形成环引用的 target。 */
   getUsableTarget() {
     if (!this.target || !this.target.isConnected) {
@@ -295,7 +355,7 @@ var CacheEntry = class {
   }
   /**记录当前占位点外层滚动容器的位置，供下次激活时恢复。 */
   captureScrollPositions(target) {
-    if (!target || typeof window === "undefined" || typeof document === "undefined") {
+    if (!target) {
       this.scrollPositions = [];
       return;
     }
@@ -352,8 +412,11 @@ var CacheStore = class {
   /**按需创建缓存实体，并让新实体继承当前停车场节点。 */
   getOrCreate(name) {
     const existing = this.entries.get(name);
-    if (existing) {
+    if (existing && !existing.isPendingDestroy()) {
       return existing;
+    }
+    if (existing) {
+      this.disposeEntry(existing);
     }
     const entry = new CacheEntry(name);
     entry.setParkingRoot(this.parkingRoot);
@@ -372,11 +435,10 @@ var CacheStore = class {
     let changed = false;
     names.forEach((cacheName) => {
       const entry = this.entries.get(cacheName);
-      if (!entry || entry?.getActive()) {
+      if (!entry || entry.getActive() || entry.isPendingDestroy()) {
         return;
       }
       entry.destroy();
-      this.entries.delete(cacheName);
       changed = true;
     });
     if (changed) {
@@ -388,22 +450,35 @@ var CacheStore = class {
     if (this.entries.size === 0) {
       return;
     }
-    const names = [];
+    let changed = false;
     this.entries.forEach((entry) => {
-      if (!entry.getActive()) {
-        names.push(entry.name);
+      if (!entry.getActive() && !entry.isPendingDestroy()) {
+        entry.destroy();
+        changed = true;
       }
     });
-    names.forEach((name) => {
-      this.entries.delete(name);
-      this.entries.get(name)?.destroy();
-    });
+    if (changed) {
+      this.emit();
+    }
+  }
+  /**在销毁回调跑完后，把实体真正从 store 中摘掉。 */
+  finalizeDestroy(entry) {
+    const current = this.entries.get(entry.name);
+    if (current !== entry || !entry.isPendingDestroy()) {
+      return;
+    }
+    this.disposeEntry(entry);
     this.emit();
   }
   /**刷新缓存集合快照，并通知依赖整个 store 的订阅方。 */
   emit() {
     this.entriesSnapshot = Array.from(this.entries.values());
     this.listeners.forEach((listener) => listener());
+  }
+  /**无副作用地释放某个缓存实体。 */
+  disposeEntry(entry) {
+    entry.finalizeDestroy();
+    this.entries.delete(entry.name);
   }
 };
 
@@ -416,7 +491,6 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
-var useSafeLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 function BridgeProviders({
   bridges,
   children
@@ -426,41 +500,25 @@ function BridgeProviders({
     return /* @__PURE__ */ jsx(Provider, { value: bridge.value, children: accumulator });
   }, children);
 }
-function CacheItem({ entry }) {
+function CacheItem({ entry, store }) {
   const snapshot = useSyncExternalStore(
     (listener) => entry.subscribe(listener),
     () => entry.getSnapshot(),
     () => entry.getSnapshot()
   );
-  const portalContainerRef = useRef(null);
-  const lastActiveRef = useRef(null);
-  if (portalContainerRef.current === null && typeof document !== "undefined") {
-    portalContainerRef.current = document.createElement("div");
-  }
-  useSafeLayoutEffect(() => {
+  const portalContainerRef = useRef(document.createElement("div"));
+  useLayoutEffect(() => {
     entry.setPortalContainer(portalContainerRef.current);
     return () => {
       entry.setPortalContainer(null);
     };
   }, [entry]);
-  useSafeLayoutEffect(() => {
-    const previous = lastActiveRef.current;
-    if (previous === null) {
-      if (snapshot.active) {
-        entry.fireActivate();
-      }
-    } else if (previous !== snapshot.active) {
-      if (snapshot.active) {
-        entry.fireActivate();
-      } else {
-        entry.fireUnactivate();
-      }
+  useEffect(() => {
+    entry.flushPendingLifecycleEffects();
+    if (entry.isPendingDestroy()) {
+      store.finalizeDestroy(entry);
     }
-    lastActiveRef.current = snapshot.active;
-  }, [entry, snapshot.active]);
-  if (!portalContainerRef.current) {
-    return null;
-  }
+  }, [entry, store, snapshot]);
   return createPortal(
     /* @__PURE__ */ jsx(BridgeProviders, { bridges: snapshot.bridge, children: /* @__PURE__ */ jsx(KeepAliveContext.Provider, { value: entry.getLifecycleContextValue(), children: snapshot.children }) }),
     portalContainerRef.current
@@ -485,7 +543,7 @@ function CacheRenderer({
         "data-keep-alive-root": "parking"
       }
     ),
-    entries.map((entry) => /* @__PURE__ */ jsx(CacheItem, { entry }, entry.name))
+    entries.map((entry) => /* @__PURE__ */ jsx(CacheItem, { entry, store }, entry.name))
   ] });
 }
 
@@ -510,7 +568,7 @@ function ScopeProvider({ children }) {
 }
 
 // src/KeepAlive.tsx
-import { useContext, useEffect as useEffect2, useLayoutEffect as useLayoutEffect2, useRef as useRef3 } from "react";
+import { use, useContext, useLayoutEffect as useLayoutEffect2, useRef as useRef3, useState } from "react";
 
 // src/fiberBridge.ts
 var CONTEXT_PROVIDER_TAG = 10;
@@ -560,13 +618,49 @@ function collectBridgeProviders(anchor) {
 }
 
 // src/KeepAlive.tsx
-import { jsx as jsx3 } from "react/jsx-runtime";
-var useSafeLayoutEffect2 = typeof window === "undefined" ? useEffect2 : useLayoutEffect2;
+import { Fragment as Fragment2, jsx as jsx3, jsxs as jsxs3 } from "react/jsx-runtime";
+function equalBridgeContexts(left, right) {
+  if (left.length !== right.length) {
+    return false;
+  }
+  return left.every((bridge, index) => bridge.context === right[index]?.context);
+}
+function equalBridgeValues(left, right) {
+  if (left.length !== right.length) {
+    return false;
+  }
+  return left.every((bridge, index) => {
+    const next = right[index];
+    return bridge.context === next?.context && Object.is(bridge.value, next.value);
+  });
+}
+function BridgeTracker({
+  entry,
+  bridges
+}) {
+  const lastReconciledBridgesRef = useRef3([]);
+  const lastEntryRef = useRef3(null);
+  const liveBridges = bridges.map((bridge) => ({
+    context: bridge.context,
+    value: use(bridge.context)
+  }));
+  useLayoutEffect2(() => {
+    if (lastEntryRef.current === entry && equalBridgeValues(lastReconciledBridgesRef.current, liveBridges)) {
+      return;
+    }
+    lastEntryRef.current = entry;
+    lastReconciledBridgesRef.current = liveBridges;
+    entry.reconcile({ bridge: liveBridges });
+  }, [entry, liveBridges]);
+  return null;
+}
 function KeepAlive({ name, children, ...restProps }) {
   const anchorRef = useRef3(null);
   const store = useContext(ScopeContext);
   const parentKeepAlive = useContext(KeepAliveContext);
-  useSafeLayoutEffect2(() => {
+  const [trackedBridges, setTrackedBridges] = useState([]);
+  const entry = store?.get(name) ?? null;
+  useLayoutEffect2(() => {
     if (!store) {
       return;
     }
@@ -574,60 +668,61 @@ function KeepAlive({ name, children, ...restProps }) {
     if (!anchor) {
       return;
     }
-    const entry = store.getOrCreate(name);
-    entry.reconcile({
-      target: anchor,
-      parentActive: parentKeepAlive?.getActive() ?? true,
-      children,
-      props: restProps,
-      bridge: collectBridgeProviders(anchor)
+    const entry2 = store.getOrCreate(name);
+    entry2.reconcile({
+      target: anchor
     });
     return () => {
-      entry.reconcile({ target: null });
+      entry2.reconcile({ target: null });
     };
   }, [store, name]);
-  useSafeLayoutEffect2(() => {
+  useLayoutEffect2(() => {
     if (!store) {
       return;
     }
     const anchor = anchorRef.current;
-    const entry = store.get(name);
-    if (!anchor || !entry) {
+    const entry2 = store.get(name);
+    if (!anchor || !entry2) {
       return;
     }
-    entry.reconcile({
+    const nextBridge = collectBridgeProviders(anchor);
+    entry2.reconcile({
+      parentActive: parentKeepAlive?.getActive() ?? true,
       children,
       props: restProps,
-      bridge: collectBridgeProviders(anchor)
+      bridge: nextBridge
     });
-  }, [store, name, children, restProps]);
-  useSafeLayoutEffect2(() => {
+    setTrackedBridges((current) => equalBridgeContexts(current, nextBridge) ? current : nextBridge);
+  }, [store, name, parentKeepAlive, children, restProps]);
+  useLayoutEffect2(() => {
     if (!store) {
       return;
     }
-    const entry = store.get(name);
-    if (!entry) {
+    const entry2 = store.get(name);
+    if (!entry2) {
       return;
     }
-    entry.reconcile({
+    entry2.reconcile({
       parentActive: parentKeepAlive?.getActive() ?? true
     });
     if (!parentKeepAlive) {
       return;
     }
     return parentKeepAlive.addActiveListener((active) => {
-      entry.reconcile({ parentActive: active });
+      entry2.reconcile({ parentActive: active });
     });
   }, [store, name, parentKeepAlive]);
   if (!store) {
     return children;
   }
-  return /* @__PURE__ */ jsx3("div", { ref: anchorRef, "data-keep-alive-anchor": name });
+  return /* @__PURE__ */ jsxs3(Fragment2, { children: [
+    /* @__PURE__ */ jsx3("div", { ref: anchorRef, "data-keep-alive-anchor": name }),
+    entry && trackedBridges.length > 0 ? /* @__PURE__ */ jsx3(BridgeTracker, { entry, bridges: trackedBridges }) : null
+  ] });
 }
 
 // src/hooks.ts
-import { useEffect as useEffect3, useLayoutEffect as useLayoutEffect3, useContext as useContext2, useRef as useRef4, useSyncExternalStore as useSyncExternalStore2 } from "react";
-var useSafeLayoutEffect3 = typeof window === "undefined" ? useEffect3 : useLayoutEffect3;
+import { useEffect as useEffect2, useLayoutEffect as useLayoutEffect3, useContext as useContext2, useRef as useRef4, useSyncExternalStore as useSyncExternalStore2 } from "react";
 function useAliveController() {
   const store = useContext2(ScopeContext);
   const snapshots = useSyncExternalStore2(
@@ -641,12 +736,18 @@ function useAliveController() {
   return {
     destroy,
     destroyAll,
-    cachingNodes: snapshots.map((entry) => entry.getCacheNode())
+    cachingNodes: snapshots.reduce((cacheNodes, entry) => {
+      const cacheNode = entry.getCacheNode();
+      if (cacheNode) {
+        cacheNodes.push(cacheNode);
+      }
+      return cacheNodes;
+    }, [])
   };
 }
 function useActivate(fn) {
   const ctx = useContext2(KeepAliveContext);
-  useSafeLayoutEffect3(() => {
+  useLayoutEffect3(() => {
     if (!ctx) {
       return;
     }
@@ -655,7 +756,7 @@ function useActivate(fn) {
 }
 function useUnactivate(fn) {
   const ctx = useContext2(KeepAliveContext);
-  useSafeLayoutEffect3(() => {
+  useLayoutEffect3(() => {
     if (!ctx) {
       return;
     }

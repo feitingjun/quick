@@ -43,5 +43,3 @@ function mod(a, b) {
 }
 
 export { add, divide, isNumber, mod, multiply, round, subtract, thousands, toFixed, toPercent, zerofill };
-//# sourceMappingURL=numbers.js.map
-//# sourceMappingURL=numbers.js.map

@@ -440,5 +440,3 @@ function defineColumns(columns) {
 var table_default = Table2;
 
 export { table_default as default, defineColumns };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

@@ -28,5 +28,3 @@ function useDictStatus(code, value) {
 }
 
 export { useDict, useDictItem, useDictLabel, useDictStatus, useDicts };
-//# sourceMappingURL=hooks.js.map
-//# sourceMappingURL=hooks.js.map

@@ -9,5 +9,3 @@ var useRegisterMessage = () => {
 };
 
 export { message, useRegisterMessage };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

@@ -31,5 +31,3 @@ function useDictStatus(code, value) {
 var defineDicts = (dicts) => dicts;
 
 export { defineDicts, useDict, useDictItem, useDictLabel, useDictStatus, useDicts };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

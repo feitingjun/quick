@@ -10,5 +10,3 @@ var debounce = (fn, delay) => {
 };
 
 export { debounce };
-//# sourceMappingURL=debounce.js.map
-//# sourceMappingURL=debounce.js.map

@@ -1039,5 +1039,3 @@ function Page({
 }
 
 export { button_default as Button, ConfigProvider, date_picker_default as DatePicker, Page, RangePicker, Register, search_default as Search, table_default as Table, defaultTheme, defineColumns, defineDicts, message, request_default as request, useDict, useDictItem, useDictLabel, useDictStatus, useDicts };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

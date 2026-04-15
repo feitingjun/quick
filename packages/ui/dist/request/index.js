@@ -75,5 +75,3 @@ var request = {
 var request_default = request;
 
 export { request_default as default };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

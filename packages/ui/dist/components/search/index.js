@@ -363,5 +363,3 @@ Search2.Item = Item;
 var search_default = Search2;
 
 export { search_default as default };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

@@ -1,5 +1,4 @@
 import * as react_jsx_runtime from 'react/jsx-runtime';
-import * as react from 'react';
 import { ReactNode } from 'react';
 
 /**
@@ -37,7 +36,7 @@ type KeepAliveProps = {
  * 通过 useAliveController().cachingNodes 可获取所有缓存节点信息，
  * 包括 name、active、props（含 title 等自定义属性）。
  */
-declare function KeepAlive({ name, children, ...restProps }: KeepAliveProps): string | number | bigint | boolean | Iterable<react.ReactNode> | Promise<string | number | bigint | boolean | react.ReactPortal | react.ReactElement<unknown, string | react.JSXElementConstructor<any>> | Iterable<react.ReactNode> | null | undefined> | react_jsx_runtime.JSX.Element | null | undefined;
+declare function KeepAlive({ name, children, ...restProps }: KeepAliveProps): ReactNode;
 
 /**
  * 获取缓存控制器

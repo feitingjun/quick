@@ -70,5 +70,3 @@ function ConfigProvider({ theme = {}, dicts = {}, children }) {
 }
 
 export { ConfigProvider, Register };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

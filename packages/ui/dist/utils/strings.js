@@ -4,5 +4,3 @@ var capitalize = (str) => {
 };
 
 export { capitalize };
-//# sourceMappingURL=strings.js.map
-//# sourceMappingURL=strings.js.map

@@ -347,5 +347,3 @@ var useColumns = (columns, actions, actionFixed, actionTitle, actionWidth) => {
 };
 
 export { useColumns };
-//# sourceMappingURL=column.js.map
-//# sourceMappingURL=column.js.map

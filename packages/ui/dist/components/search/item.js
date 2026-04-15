@@ -264,5 +264,3 @@ function Item({
 }
 
 export { Item as default };
-//# sourceMappingURL=item.js.map
-//# sourceMappingURL=item.js.map

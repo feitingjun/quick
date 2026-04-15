@@ -856,5 +856,3 @@ function Page({
 }
 
 export { Page as default };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

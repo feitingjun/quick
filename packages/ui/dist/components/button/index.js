@@ -4,5 +4,3 @@ import { Button } from 'antd';
 var button_default = Button;
 
 export { button_default as default };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

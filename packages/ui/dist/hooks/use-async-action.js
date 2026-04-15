@@ -10,5 +10,3 @@ function useAsyncAction(dispatch) {
 }
 
 export { useAsyncAction as default };
-//# sourceMappingURL=use-async-action.js.map
-//# sourceMappingURL=use-async-action.js.map

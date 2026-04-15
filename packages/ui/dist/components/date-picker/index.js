@@ -109,5 +109,3 @@ function RangePicker({
 var date_picker_default = DatePicker;
 
 export { RangePicker, date_picker_default as default };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

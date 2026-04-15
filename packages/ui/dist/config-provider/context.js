@@ -6,5 +6,3 @@ var ConfigContext = createContext({
 });
 
 export { ConfigContext };
-//# sourceMappingURL=context.js.map
-//# sourceMappingURL=context.js.map

@@ -34,5 +34,3 @@ function useQuery() {
 }
 
 export { useQuery as default };
-//# sourceMappingURL=use-query.js.map
-//# sourceMappingURL=use-query.js.map

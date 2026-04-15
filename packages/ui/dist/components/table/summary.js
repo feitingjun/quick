@@ -92,5 +92,3 @@ var useSummary = (columns, summaryMap, rowSelection) => {
 };
 
 export { useSummary };
-//# sourceMappingURL=summary.js.map
-//# sourceMappingURL=summary.js.map

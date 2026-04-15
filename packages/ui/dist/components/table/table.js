@@ -434,5 +434,3 @@ function Table({
 }
 
 export { Table as default };
-//# sourceMappingURL=table.js.map
-//# sourceMappingURL=table.js.map

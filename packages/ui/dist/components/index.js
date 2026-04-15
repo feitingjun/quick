@@ -956,5 +956,3 @@ function Page({
 }
 
 export { button_default as Button, date_picker_default as DatePicker, Page, RangePicker, search_default as Search, table_default as Table, defineColumns, message };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

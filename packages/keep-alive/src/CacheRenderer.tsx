@@ -11,8 +11,6 @@ import { KeepAliveContext } from './context'
 import type { CacheEntry, CacheStore } from './cacheStore'
 import type { BridgeProvider } from './types'
 
-const useSafeLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
-
 function BridgeProviders({
   bridges,
   children
@@ -30,43 +28,28 @@ function BridgeProviders({
   }, children)
 }
 
-function CacheItem({ entry }: { entry: CacheEntry }) {
+function CacheItem({ entry, store }: { entry: CacheEntry; store: CacheStore }) {
   const snapshot = useSyncExternalStore(
     listener => entry.subscribe(listener),
     () => entry.getSnapshot(),
     () => entry.getSnapshot()
   )
-  const portalContainerRef = useRef<HTMLDivElement | null>(null)
-  const lastActiveRef = useRef<boolean | null>(null)
-  if (portalContainerRef.current === null && typeof document !== 'undefined') {
-    portalContainerRef.current = document.createElement('div')
-  }
-  useSafeLayoutEffect(() => {
+  const portalContainerRef = useRef<HTMLDivElement>(document.createElement('div'))
+
+  useLayoutEffect(() => {
     entry.setPortalContainer(portalContainerRef.current)
     return () => {
       entry.setPortalContainer(null)
     }
   }, [entry])
 
-  useSafeLayoutEffect(() => {
-    const previous = lastActiveRef.current
-    // 首次挂载和后续 active 变化都在这里统一触发生命周期。
-    if (previous === null) {
-      if (snapshot.active) {
-        entry.fireActivate()
-      }
-    } else if (previous !== snapshot.active) {
-      if (snapshot.active) {
-        entry.fireActivate()
-      } else {
-        entry.fireUnactivate()
-      }
+  useEffect(() => {
+    entry.flushPendingLifecycleEffects()
+    if (entry.isPendingDestroy()) {
+      store.finalizeDestroy(entry)
     }
-    lastActiveRef.current = snapshot.active
-  }, [entry, snapshot.active])
-  if (!portalContainerRef.current) {
-    return null
-  }
+  }, [entry, store, snapshot])
+
   return createPortal(
     <BridgeProviders bridges={snapshot.bridge}>
       <KeepAliveContext.Provider value={entry.getLifecycleContextValue()}>
@@ -98,7 +81,7 @@ export function CacheRenderer({
         data-keep-alive-root='parking'
       />
       {entries.map(entry => (
-        <CacheItem key={entry.name} entry={entry} />
+        <CacheItem key={entry.name} entry={entry} store={store} />
       ))}
     </>
   )

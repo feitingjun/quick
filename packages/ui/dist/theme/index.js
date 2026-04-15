@@ -27,5 +27,3 @@ var defaultTheme = {
 };
 
 export { defaultTheme };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

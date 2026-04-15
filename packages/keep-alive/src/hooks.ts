@@ -2,8 +2,6 @@ import { useEffect, useLayoutEffect, useContext, useRef, useSyncExternalStore } 
 import { ScopeContext, KeepAliveContext } from './context'
 import type { CacheNode } from './types'
 
-const useSafeLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect
-
 /**
  * 获取缓存控制器
  *
@@ -25,7 +23,13 @@ export function useAliveController() {
   return {
     destroy,
     destroyAll,
-    cachingNodes: snapshots.map(entry => entry.getCacheNode())
+    cachingNodes: snapshots.reduce<CacheNode[]>((cacheNodes, entry) => {
+      const cacheNode = entry.getCacheNode()
+      if (cacheNode) {
+        cacheNodes.push(cacheNode)
+      }
+      return cacheNodes
+    }, [])
   }
 }
 
@@ -34,7 +38,7 @@ export function useAliveController() {
  */
 export function useActivate(fn: () => void) {
   const ctx = useContext(KeepAliveContext)
-  useSafeLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (!ctx) {
       return
     }
@@ -48,7 +52,7 @@ export function useActivate(fn: () => void) {
  */
 export function useUnactivate(fn: () => void) {
   const ctx = useContext(KeepAliveContext)
-  useSafeLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (!ctx) {
       return
     }
@@ -75,7 +79,7 @@ export function useSkipFirstEffect(fn: () => void | (() => void), deps: unknown[
  */
 export function useSkipFirstLayoutEffect(fn: () => void | (() => void), deps: unknown[]) {
   const mounted = useRef(false)
-  useSafeLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (!mounted.current) {
       mounted.current = true
       return

@@ -75,5 +75,3 @@ function merge(...objects) {
 }
 
 export { add, capitalize, debounce, divide, isNumber, merge, mod, multiply, round, subtract, thousands, toFixed, toPercent, zerofill };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map
