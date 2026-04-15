@@ -1,1 +1,0 @@
-import{a as e,r as t,t as n}from"./jsx-runtime-BrKaiqKr.js";import{t as r}from"./button-Dj4jhz_J.js";import{a as i,r as a}from"./index-k-s3kFKc.js";var o=e(t()),s=n();function c(){let[e,t]=(0,o.useState)(0);return a(()=>{}),i(()=>{}),(0,s.jsxs)(r,{type:`primary`,onClick:()=>t(e+1),children:[`首页 `,e]})}export{c as default};

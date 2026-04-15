@@ -1,7 +1,7 @@
 import { Button } from 'antd'
 import { createContext, useState } from 'react'
-import { Outlet, Link } from 'react-router'
-import { useAliveController } from '@quick/keep-alive'
+import { Link } from 'react-router'
+import { KeepAliveOutlet, useAliveController } from '@quick/keep-alive'
 
 export const Test = createContext<number | null>(null)
 
@@ -33,7 +33,7 @@ export default function Layout() {
       <div className='overflow-auto'>
         <Button onClick={() => setCount(count + 1)}>count: {count}</Button>
         <Test.Provider value={count}>
-          <Outlet />
+          <KeepAliveOutlet />
         </Test.Provider>
       </div>
     </div>
