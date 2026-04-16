@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { Button } from 'antd'
 
+export const metadata = {
+  pagename: '用户'
+}
+
 export default function User() {
   const [count, setCount] = useState(0)
   return (

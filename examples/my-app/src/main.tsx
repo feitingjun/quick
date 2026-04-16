@@ -8,13 +8,13 @@ import RouterProvider from 'virtual:file-router'
 import './styles.css'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <StyleProvider layer>
-      <ConfigProvider locale={zhCn}>
-        <ScopeProvider>
-          <RouterProvider history='hash' />
-        </ScopeProvider>
-      </ConfigProvider>
-    </StyleProvider>
-  </StrictMode>
+  // <StrictMode>
+  <StyleProvider layer>
+    <ConfigProvider locale={zhCn}>
+      <ScopeProvider>
+        <RouterProvider history='hash' />
+      </ScopeProvider>
+    </ConfigProvider>
+  </StyleProvider>
+  // </StrictMode>
 )

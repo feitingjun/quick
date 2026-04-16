@@ -1,6 +1,6 @@
 import { createContext } from 'react'
-import type { CacheStore } from './cacheStore'
-import type { KeepAliveContextValue } from './types'
+import { CacheStore, CacheNode } from './cacheStore'
 
 export const ScopeContext = createContext<CacheStore | null>(null)
-export const KeepAliveContext = createContext<KeepAliveContextValue | null>(null)
+
+export const CacheNodeContext = createContext<CacheNode | null>(null)

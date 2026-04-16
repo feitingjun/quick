@@ -1,18 +1,8 @@
-export interface CacheNode<Props extends Record<string, unknown> = Record<string, unknown>> {
-  name: string
-  active: boolean
-  props: Props
-}
+export interface ScopeProviderContextValue {}
 
-export interface KeepAliveOutletProps<
-  Props extends Record<string, unknown> = Record<string, unknown>
-> {
-  context?: unknown
-  name?: string
-  cacheProps?: Props
-}
+export type CacheProps = Record<string, any> | undefined
 
-export interface KeepAliveContextValue {
-  active: boolean
-  name: string
+export interface KeepAliveOutletProps {
+  cacheId?: string
+  cacheProps?: CacheProps
 }

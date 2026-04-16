@@ -1,6 +1,10 @@
 import { Button } from 'antd'
 import { useState } from 'react'
 
+export const metadata = {
+  pagename: '关于'
+}
+
 export default function About() {
   const [count, setCount] = useState(0)
   return (

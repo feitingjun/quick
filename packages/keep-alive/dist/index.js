@@ -1,401 +1,281 @@
-// src/KeepAliveOutlet.tsx
-import {
-  Activity,
-  useContext,
-  useId,
-  useLayoutEffect,
-  useRef,
-  useSyncExternalStore
-} from "react";
-import { useLocation, useOutlet } from "react-router";
+// src/scope-provider.tsx
+import { useRef } from "react";
+
+// src/context.ts
+import { createContext } from "react";
 
 // src/cacheStore.ts
-function shallowEqualRecord(left, right) {
-  const leftKeys = Object.keys(left);
-  const rightKeys = Object.keys(right);
-  if (leftKeys.length !== rightKeys.length) {
-    return false;
-  }
-  return leftKeys.every((key) => Object.is(left[key], right[key]));
-}
-function isScrollableElement(node) {
-  const style = window.getComputedStyle(node);
-  const canScrollY = /(auto|scroll|overlay)/.test(style.overflowY) && node.scrollHeight > node.clientHeight;
-  const canScrollX = /(auto|scroll|overlay)/.test(style.overflowX) && node.scrollWidth > node.clientWidth;
-  return canScrollY || canScrollX;
-}
-function collectAncestorScrollTargets(target) {
-  const targets = [];
-  let current = target.parentElement;
-  while (current) {
-    if (isScrollableElement(current)) {
-      targets.push(current);
-    }
-    current = current.parentElement;
-  }
-  if (document.scrollingElement && !targets.includes(window)) {
-    targets.push(window);
-  }
-  return targets;
-}
-function collectDescendantScrollTargets(root) {
-  const targets = [];
-  if (isScrollableElement(root)) {
-    targets.push(root);
-  }
-  root.querySelectorAll("*").forEach((node) => {
-    if (isScrollableElement(node)) {
-      targets.push(node);
-    }
-  });
-  return targets;
-}
-function collectScrollTargets(root) {
-  const targets = [...collectAncestorScrollTargets(root)];
-  for (const node of collectDescendantScrollTargets(root)) {
-    if (!targets.includes(node)) {
-      targets.push(node);
-    }
-  }
-  return targets;
-}
-function readScrollPosition(target) {
-  if (target instanceof Window) {
-    return {
-      target,
-      top: window.scrollY,
-      left: window.scrollX
-    };
-  }
-  return {
-    target,
-    top: target.scrollTop,
-    left: target.scrollLeft
-  };
-}
-function writeScrollPosition({ target, top, left }) {
-  if (target instanceof Window) {
-    window.scrollTo(left, top);
-    return;
-  }
-  if (!target.isConnected) {
-    return;
-  }
-  target.scrollTop = top;
-  target.scrollLeft = left;
-}
-function createEntryId(scopeId, name) {
-  return `${scopeId}:${name}`;
-}
-var CacheStore = class {
-  entries = /* @__PURE__ */ new Map();
+var CacheNode = class {
+  cacheId;
+  outlet = null;
+  cacheProps = void 0;
+  active;
+  /** 状态变更监听器 */
   listeners = /* @__PURE__ */ new Set();
-  scrollPositions = /* @__PURE__ */ new Map();
-  entriesSnapshot = [];
+  /**销毁监听器 */
+  destroyListeners = /* @__PURE__ */ new Set();
+  constructor(cacheId) {
+    this.cacheId = cacheId;
+    this.active = false;
+  }
+  // 添加监听器
   subscribe(listener) {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
     };
   }
-  getEntriesSnapshot = () => {
-    return this.entriesSnapshot;
-  };
-  syncScope({ scopeId, name, element, props }) {
-    const activeId = createEntryId(scopeId, name);
-    const nextProps = { ...props ?? {} };
-    let changed = false;
-    const current = this.entries.get(activeId);
-    if (!current) {
-      this.entries.set(activeId, {
-        id: activeId,
-        scopeId,
-        name,
-        active: true,
-        element,
-        props: nextProps
-      });
-      changed = true;
-    } else if (!current.active || !shallowEqualRecord(current.props, nextProps)) {
-      this.entries.set(activeId, {
-        ...current,
-        active: true,
-        props: nextProps
-      });
-      changed = true;
-    }
-    this.entries.forEach((entry, id) => {
-      if (id === activeId || entry.scopeId !== scopeId || !entry.active) {
-        return;
-      }
-      this.entries.set(id, {
-        ...entry,
-        active: false
-      });
-      changed = true;
-    });
-    if (changed) {
-      this.emit();
-    }
+  // 添加销毁监听器
+  subscribeDestroy(listener) {
+    this.destroyListeners.add(listener);
+    return () => {
+      this.destroyListeners.delete(listener);
+    };
   }
-  deactivateScope(scopeId) {
-    let changed = false;
-    this.entries.forEach((entry, id) => {
-      if (entry.scopeId !== scopeId || !entry.active) {
-        return;
-      }
-      this.entries.set(id, {
-        ...entry,
-        active: false
-      });
-      changed = true;
-    });
-    if (changed) {
-      this.emit();
-    }
+  // 触发销毁监听器
+  emitDestroy() {
+    this.destroyListeners.forEach((listener) => listener());
   }
-  destroy(name) {
-    const names = typeof name === "string" ? [name] : name;
-    let changed = false;
-    this.entries.forEach((entry, id) => {
-      if (entry.active || !names.includes(entry.name)) {
-        return;
-      }
-      this.entries.delete(id);
-      this.scrollPositions.delete(id);
-      changed = true;
-    });
-    if (changed) {
-      this.emit();
-    }
+  // 设置激活状态
+  setActive(active) {
+    if (active === this.active) return;
+    this.active = active;
+    this.emit();
   }
-  destroyAll() {
-    let changed = false;
-    this.entries.forEach((entry, id) => {
-      if (entry.active) {
-        return;
-      }
-      this.entries.delete(id);
-      this.scrollPositions.delete(id);
-      changed = true;
-    });
-    if (changed) {
-      this.emit();
-    }
+  // 获取激活状态
+  getActive() {
+    return this.active;
   }
-  clearScope(scopeId) {
-    let changed = false;
-    this.entries.forEach((entry, id) => {
-      if (entry.scopeId !== scopeId) {
-        return;
-      }
-      this.entries.delete(id);
-      this.scrollPositions.delete(id);
-      changed = true;
-    });
-    if (changed) {
-      this.emit();
-    }
+  // 设置缓存节点
+  setOutlet(outlet) {
+    this.outlet = outlet;
   }
-  captureScrollPositions(id, root) {
-    if (!root) {
-      this.scrollPositions.delete(id);
-      return;
-    }
-    this.scrollPositions.set(id, collectScrollTargets(root).map(readScrollPosition));
+  // 获取outlet
+  getOutlet() {
+    return this.outlet;
   }
-  restoreScrollPositions(id) {
-    const positions = this.scrollPositions.get(id);
-    if (!positions?.length) {
-      return;
-    }
-    for (let index = positions.length - 1; index >= 0; index -= 1) {
-      writeScrollPosition(positions[index]);
-    }
+  // 设置cacheProps
+  setCacheProps(cacheProps) {
+    this.cacheProps = cacheProps;
   }
-  getCacheNodes() {
-    return this.entriesSnapshot.map((entry) => ({
-      name: entry.name,
-      active: entry.active,
-      props: { ...entry.props }
-    }));
+  // 获取cacheProps
+  getCacheProps() {
+    return this.cacheProps;
   }
+  // 触发更新，通知所有监听器缓存节点发生了变化。
   emit() {
-    this.entriesSnapshot = Array.from(this.entries.values()).map((entry) => ({
-      ...entry,
-      props: { ...entry.props }
-    }));
+    this.listeners.forEach((listener) => listener());
+  }
+};
+var CacheStore = class {
+  entries = /* @__PURE__ */ new Map();
+  /**列表变更监听器 */
+  listeners = /* @__PURE__ */ new Set();
+  entriesSnapshot = [];
+  // 添加监听器，当缓存节点发生变化时调用。
+  subscribe(listener) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+  // 获取缓存节点
+  getCacheNodes() {
+    return this.entriesSnapshot;
+  }
+  // 创建一个新的缓存节点，返回该节点的引用。
+  getOrCreate(cacheId, outlet, cacheProps) {
+    let cacheNode = this.entries.get(cacheId);
+    let changed = false;
+    if (!cacheNode) {
+      cacheNode = new CacheNode(cacheId);
+      this.entries.set(cacheId, cacheNode);
+      changed = true;
+    }
+    if (!Object.is(outlet, cacheNode.getOutlet())) {
+      cacheNode.setOutlet(outlet);
+    }
+    if (!Object.is(cacheProps, cacheNode.getCacheProps())) {
+      cacheNode.setCacheProps(cacheProps);
+    }
+    if (changed) this.emit();
+    return cacheNode;
+  }
+  // 激活缓存节点，将其他设置为未激活状态
+  activate(cacheId) {
+    const cacheNode = this.entries.get(cacheId);
+    if (cacheNode) {
+      cacheNode.setActive(true);
+      this.entries.forEach((node) => {
+        if (node !== cacheNode) {
+          node.setActive(false);
+        }
+      });
+      this.emit();
+    }
+  }
+  // 销毁缓存节点
+  destroy(cacheId) {
+    const cacheNode = this.entries.get(cacheId);
+    if (cacheNode && !cacheNode.getActive()) {
+      this.entries.delete(cacheId);
+      this.emit();
+    }
+  }
+  // 销毁所有节点
+  destroyAll() {
+    const unActiveCacheIds = [];
+    this.entries.forEach((node) => {
+      if (!node.getActive()) {
+        unActiveCacheIds.push(node.cacheId);
+      }
+    });
+    unActiveCacheIds.forEach((cacheId) => this.entries.delete(cacheId));
+    this.emit();
+  }
+  // 触发更新，通知所有监听器缓存节点发生了变化。
+  emit() {
+    this.entriesSnapshot = Array.from(this.entries.values());
     this.listeners.forEach((listener) => listener());
   }
 };
 
 // src/context.ts
-import { createContext } from "react";
 var ScopeContext = createContext(null);
-var KeepAliveContext = createContext(null);
+var CacheNodeContext = createContext(null);
 
-// src/KeepAliveOutlet.tsx
+// src/scope-provider.tsx
 import { jsx } from "react/jsx-runtime";
-var EMPTY_ENTRIES = [];
-var EMPTY_PROPS = {};
-function CacheItem({ entry, store }) {
-  const rootRef = useRef(null);
-  const lastActiveRef = useRef(entry.active);
-  useLayoutEffect(() => {
-    const wasActive = lastActiveRef.current;
-    if (wasActive && !entry.active) {
-      store.captureScrollPositions(entry.id, rootRef.current);
-    }
-    if (!wasActive && entry.active) {
-      store.restoreScrollPositions(entry.id);
-    }
-    lastActiveRef.current = entry.active;
-  }, [entry.active, entry.id, store]);
-  return /* @__PURE__ */ jsx(Activity, { mode: entry.active ? "visible" : "hidden", name: entry.name, children: /* @__PURE__ */ jsx("div", { ref: rootRef, "data-keep-alive-root": entry.name, style: { display: "contents" }, children: /* @__PURE__ */ jsx(KeepAliveContext.Provider, { value: { active: entry.active, name: entry.name }, children: entry.element }) }) });
-}
-function buildRenderedEntries(entries, scopeId, currentName, currentProps, outlet) {
-  const nextEntries = entries.map((entry) => ({
-    ...entry,
-    active: outlet !== null && entry.name === currentName,
-    props: entry.name === currentName ? currentProps : entry.props
-  }));
-  if (outlet === null || nextEntries.some((entry) => entry.name === currentName)) {
-    return nextEntries;
+function ScopeProvider({ children }) {
+  const storeRef = useRef(null);
+  if (!storeRef.current) {
+    storeRef.current = new CacheStore();
   }
-  return [
-    ...nextEntries,
-    {
-      id: createEntryId(scopeId, currentName),
-      scopeId,
-      name: currentName,
-      active: true,
-      element: outlet,
-      props: currentProps
-    }
-  ];
+  return /* @__PURE__ */ jsx(ScopeContext.Provider, { value: storeRef.current, children });
 }
-function KeepAliveOutlet({
-  context,
-  name,
-  cacheProps
-} = {}) {
+
+// src/keep-alive-outlet.tsx
+import { useContext, useLayoutEffect, useEffect, useSyncExternalStore, Activity } from "react";
+import { useLocation, useOutlet } from "react-router";
+import { jsx as jsx2 } from "react/jsx-runtime";
+var CacheItem = ({ cacheNode }) => {
+  const active = useSyncExternalStore(
+    (listener) => cacheNode.subscribe(listener),
+    () => cacheNode.getActive(),
+    () => cacheNode.getActive()
+  );
+  useEffect(() => {
+    return () => {
+      cacheNode.emitDestroy();
+    };
+  }, []);
+  return /* @__PURE__ */ jsx2(Activity, { mode: active ? "visible" : "hidden", name: cacheNode.cacheId, children: /* @__PURE__ */ jsx2(CacheNodeContext.Provider, { value: cacheNode, children: cacheNode.getOutlet() }) });
+};
+function KeepAliveOutlet({ cacheId, cacheProps }) {
   const store = useContext(ScopeContext);
-  const scopeId = useId();
-  const location = useLocation();
-  const outlet = useOutlet(context);
-  const currentName = name ?? location.pathname;
-  const currentProps = cacheProps ?? EMPTY_PROPS;
-  const entriesSnapshot = useSyncExternalStore(
+  const outlet = useOutlet();
+  const { pathname } = useLocation();
+  const currentId = cacheId ?? pathname;
+  const cacheNodes = useSyncExternalStore(
     (listener) => store?.subscribe(listener) ?? (() => {
     }),
-    () => store?.getEntriesSnapshot() ?? EMPTY_ENTRIES,
-    () => store?.getEntriesSnapshot() ?? EMPTY_ENTRIES
-  );
-  const scopedEntries = entriesSnapshot.filter((entry) => entry.scopeId === scopeId);
-  const renderedEntries = buildRenderedEntries(
-    scopedEntries,
-    scopeId,
-    currentName,
-    currentProps,
-    outlet
+    () => store?.getCacheNodes() ?? [],
+    () => store?.getCacheNodes() ?? []
   );
   useLayoutEffect(() => {
-    if (!store) {
+    if (!store || !outlet) {
       return;
     }
-    return () => {
-      store.clearScope(scopeId);
-    };
-  }, [scopeId, store]);
-  useLayoutEffect(() => {
-    if (!store) {
-      return;
+    const cacheNode = store.getOrCreate(currentId, outlet, cacheProps);
+    if (!cacheNode.getActive()) {
+      store.activate(currentId);
     }
-    if (outlet === null) {
-      store.deactivateScope(scopeId);
-      return;
-    }
-    store.syncScope({
-      scopeId,
-      name: currentName,
-      element: outlet,
-      props: currentProps
-    });
-  }, [currentName, currentProps, outlet, scopeId, store]);
+  }, [currentId, store, outlet, cacheProps]);
   if (!store) {
     return outlet;
   }
-  return renderedEntries.map((entry) => /* @__PURE__ */ jsx(CacheItem, { entry, store }, entry.id));
-}
-
-// src/ScopeProvider.tsx
-import { useRef as useRef2 } from "react";
-import { jsx as jsx2 } from "react/jsx-runtime";
-function ScopeProvider({ children }) {
-  const storeRef = useRef2(null);
-  if (storeRef.current === null) {
-    storeRef.current = new CacheStore();
-  }
-  return /* @__PURE__ */ jsx2(ScopeContext.Provider, { value: storeRef.current, children });
+  return cacheNodes.map((cacheNode) => /* @__PURE__ */ jsx2(CacheItem, { cacheNode, store }, cacheNode.cacheId));
 }
 
 // src/hooks.ts
 import {
   useContext as useContext2,
-  useEffect,
-  useEffectEvent,
+  useEffect as useEffect2,
   useLayoutEffect as useLayoutEffect2,
-  useRef as useRef3,
+  useRef as useRef2,
   useSyncExternalStore as useSyncExternalStore2
 } from "react";
-var EMPTY_ENTRIES2 = [];
-function useAliveController() {
+var useAliveController = () => {
   const store = useContext2(ScopeContext);
-  const snapshots = useSyncExternalStore2(
+  const cachingNodes = useSyncExternalStore2(
     (listener) => store?.subscribe(listener) ?? (() => {
     }),
-    () => store?.getEntriesSnapshot() ?? EMPTY_ENTRIES2,
-    () => store?.getEntriesSnapshot() ?? EMPTY_ENTRIES2
+    () => store?.getCacheNodes() ?? [],
+    () => store?.getCacheNodes() ?? []
   );
-  return {
-    destroy: (name) => store?.destroy(name),
-    destroyAll: () => store?.destroyAll(),
-    cachingNodes: snapshots.reduce((nodes, entry) => {
-      nodes.push({
-        name: entry.name,
-        active: entry.active,
-        props: { ...entry.props }
-      });
-      return nodes;
-    }, [])
+  const destroy = (cacheId) => {
+    store?.destroy(cacheId);
   };
-}
-function useActivate(fn) {
-  const ctx = useContext2(KeepAliveContext);
-  const onActivate = useEffectEvent(fn);
-  useLayoutEffect2(() => {
-    if (!ctx?.active) {
-      return;
+  const destroyAll = () => {
+    store?.destroyAll();
+  };
+  return {
+    cachingNodes: cachingNodes.map((node) => ({
+      cacheId: node.cacheId,
+      active: node.getActive(),
+      cacheProps: node.getCacheProps()
+    })),
+    destroy,
+    destroyAll
+  };
+};
+var useMountEffect = (callback) => {
+  const isMomunt = useRef2(false);
+  const cacheNode = useContext2(CacheNodeContext);
+  useEffect2(() => {
+    if (!isMomunt.current) {
+      isMomunt.current = true;
+      const result = callback();
+      if (result) cacheNode?.subscribeDestroy(result);
     }
-    onActivate();
-  }, [ctx?.active]);
-}
-function useUnactivate(fn) {
-  const ctx = useContext2(KeepAliveContext);
-  const onUnactivate = useEffectEvent(fn);
+  }, []);
+};
+var useDepsEffect = (callback, deps = []) => {
+  const isMomunt = useRef2(false);
+  const isActive = useRef2(false);
+  const isDeactive = useRef2(false);
+  const resultRef = useRef2(null);
+  const cacheNode = useContext2(CacheNodeContext);
   useLayoutEffect2(() => {
-    if (!ctx?.active) {
-      return;
-    }
+    isActive.current = true;
+    isDeactive.current = false;
     return () => {
-      onUnactivate();
+      isDeactive.current = true;
     };
-  }, [ctx?.active]);
-}
+  }, []);
+  useEffect2(() => {
+    if (!isMomunt.current) {
+      cacheNode?.subscribeDestroy(() => {
+        resultRef.current?.();
+      });
+    }
+    if (!isMomunt.current || !isActive.current) {
+      isMomunt.current = true;
+      resultRef.current = callback();
+    }
+    if (isActive.current) isActive.current = false;
+    return () => {
+      if (!isDeactive.current) {
+        resultRef.current?.();
+        resultRef.current = null;
+      }
+    };
+  }, deps);
+};
 export {
   KeepAliveOutlet,
   ScopeProvider,
-  useActivate,
   useAliveController,
-  useUnactivate
+  useDepsEffect,
+  useMountEffect
 };

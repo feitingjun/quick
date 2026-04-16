@@ -2,12 +2,15 @@ import { Button } from 'antd'
 import { createContext, useState } from 'react'
 import { Link } from 'react-router'
 import { KeepAliveOutlet, useAliveController } from '@quick/keep-alive'
+import { useMetadata } from 'virtual:file-router'
 
 export const Test = createContext<number | null>(null)
 
 export default function Layout() {
   const [count, setCount] = useState(0)
   const { cachingNodes, destroy, destroyAll } = useAliveController()
+  const metadata = useMetadata()
+
   return (
     <div className='flex flex-col h-full'>
       <ul className='flex gap-1 mb-4 underline text-blue-500 '>
@@ -22,19 +25,23 @@ export default function Layout() {
         </li>
       </ul>
       <div className='flex items-center gap-2'>
-        {cachingNodes.map(node => (
-          <div key={node.name}>
-            <span>{node.name}</span>
-            <button onClick={() => destroy(node.name)}>销毁</button>
+        {Object.values(cachingNodes).map(node => (
+          <div key={node.cacheId}>
+            <span>{node.cacheProps?.['pagename']}</span>{' '}
+            <span className='underline text-blue-500' onClick={() => destroy(node.cacheId)}>
+              销毁
+            </span>
           </div>
         ))}
-        <button onClick={destroyAll}>销毁全部</button>
+        <button onClick={destroyAll}>全部销毁</button>
       </div>
       <div className='overflow-auto'>
         <Button onClick={() => setCount(count + 1)}>count: {count}</Button>
-        <Test.Provider value={count}>
-          <KeepAliveOutlet />
-        </Test.Provider>
+        <div>
+          <Test.Provider value={count}>
+            <KeepAliveOutlet cacheProps={metadata} />
+          </Test.Provider>
+        </div>
       </div>
     </div>
   )

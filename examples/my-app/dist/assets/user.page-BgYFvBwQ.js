@@ -1,1 +1,0 @@
-import{G as e,q as t,t as n}from"./jsx-runtime-C4LsWpS4.js";import{t as r}from"./button-CUdzBYKH.js";var i=t(e()),a=n();function o(){let[e,t]=(0,i.useState)(0);return(0,a.jsxs)(r,{type:`primary`,onClick:()=>t(e+1),children:[`用户 `,e]})}export{o as default};

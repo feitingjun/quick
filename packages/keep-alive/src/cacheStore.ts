@@ -1,302 +1,140 @@
 import type { ReactNode } from 'react'
-import type { CacheNode } from './types'
+import type { CacheProps } from './types'
 
-type StoreListener = () => void
-type ScrollTarget = Window | HTMLElement
-
-interface ScrollPosition {
-  target: ScrollTarget
-  top: number
-  left: number
-}
-
-export interface CacheEntrySnapshot {
-  id: string
-  scopeId: string
-  name: string
-  active: boolean
-  element: ReactNode
-  props: Record<string, unknown>
-}
-
-interface SyncScopePayload {
-  scopeId: string
-  name: string
-  element: ReactNode
-  props?: Record<string, unknown>
-}
-
-function shallowEqualRecord(
-  left: Record<string, unknown>,
-  right: Record<string, unknown>
-): boolean {
-  const leftKeys = Object.keys(left)
-  const rightKeys = Object.keys(right)
-
-  if (leftKeys.length !== rightKeys.length) {
-    return false
+export class CacheNode {
+  cacheId: string
+  private outlet: ReactNode = null
+  private cacheProps: CacheProps = undefined
+  private active: boolean
+  /** 状态变更监听器 */
+  private readonly listeners = new Set<() => void>()
+  /**销毁监听器 */
+  private readonly destroyListeners = new Set<() => void>()
+  constructor(cacheId: string) {
+    this.cacheId = cacheId
+    this.active = false
   }
-
-  return leftKeys.every(key => Object.is(left[key], right[key]))
-}
-
-function isScrollableElement(node: HTMLElement): boolean {
-  const style = window.getComputedStyle(node)
-  const canScrollY =
-    /(auto|scroll|overlay)/.test(style.overflowY) && node.scrollHeight > node.clientHeight
-  const canScrollX =
-    /(auto|scroll|overlay)/.test(style.overflowX) && node.scrollWidth > node.clientWidth
-
-  return canScrollY || canScrollX
-}
-
-function collectAncestorScrollTargets(target: HTMLElement): ScrollTarget[] {
-  const targets: ScrollTarget[] = []
-  let current = target.parentElement
-
-  while (current) {
-    if (isScrollableElement(current)) {
-      targets.push(current)
-    }
-    current = current.parentElement
-  }
-
-  if (document.scrollingElement && !targets.includes(window)) {
-    targets.push(window)
-  }
-
-  return targets
-}
-
-function collectDescendantScrollTargets(root: HTMLElement): HTMLElement[] {
-  const targets: HTMLElement[] = []
-
-  if (isScrollableElement(root)) {
-    targets.push(root)
-  }
-
-  root.querySelectorAll<HTMLElement>('*').forEach(node => {
-    if (isScrollableElement(node)) {
-      targets.push(node)
-    }
-  })
-
-  return targets
-}
-
-function collectScrollTargets(root: HTMLElement): ScrollTarget[] {
-  const targets: ScrollTarget[] = [...collectAncestorScrollTargets(root)]
-
-  for (const node of collectDescendantScrollTargets(root)) {
-    if (!targets.includes(node)) {
-      targets.push(node)
-    }
-  }
-
-  return targets
-}
-
-function readScrollPosition(target: ScrollTarget): ScrollPosition {
-  if (target instanceof Window) {
-    return {
-      target,
-      top: window.scrollY,
-      left: window.scrollX
-    }
-  }
-
-  return {
-    target,
-    top: target.scrollTop,
-    left: target.scrollLeft
-  }
-}
-
-function writeScrollPosition({ target, top, left }: ScrollPosition): void {
-  if (target instanceof Window) {
-    window.scrollTo(left, top)
-    return
-  }
-
-  if (!target.isConnected) {
-    return
-  }
-
-  target.scrollTop = top
-  target.scrollLeft = left
-}
-
-export function createEntryId(scopeId: string, name: string): string {
-  return `${scopeId}:${name}`
-}
-
-export class CacheStore {
-  private readonly entries = new Map<string, CacheEntrySnapshot>()
-  private readonly listeners = new Set<StoreListener>()
-  private readonly scrollPositions = new Map<string, ScrollPosition[]>()
-  private entriesSnapshot: CacheEntrySnapshot[] = []
-
-  subscribe(listener: StoreListener): () => void {
+  // 添加监听器
+  subscribe(listener: () => void) {
     this.listeners.add(listener)
     return () => {
       this.listeners.delete(listener)
     }
   }
+  // 添加销毁监听器
+  subscribeDestroy(listener: () => void) {
+    this.destroyListeners.add(listener)
+    return () => {
+      this.destroyListeners.delete(listener)
+    }
+  }
+  // 触发销毁监听器
+  emitDestroy() {
+    this.destroyListeners.forEach(listener => listener())
+  }
+  // 设置激活状态
+  setActive(active: boolean) {
+    if (active === this.active) return
+    this.active = active
+    this.emit()
+  }
+  // 获取激活状态
+  getActive() {
+    return this.active
+  }
+  // 设置缓存节点
+  setOutlet(outlet: ReactNode) {
+    this.outlet = outlet
+  }
+  // 获取outlet
+  getOutlet() {
+    return this.outlet
+  }
+  // 设置cacheProps
+  setCacheProps(cacheProps: CacheProps) {
+    this.cacheProps = cacheProps
+  }
+  // 获取cacheProps
+  getCacheProps() {
+    return this.cacheProps
+  }
+  // 触发更新，通知所有监听器缓存节点发生了变化。
+  emit() {
+    this.listeners.forEach(listener => listener())
+  }
+}
 
-  getEntriesSnapshot = (): CacheEntrySnapshot[] => {
+export class CacheStore {
+  private entries = new Map<string, CacheNode>()
+  /**列表变更监听器 */
+  private readonly listeners = new Set<() => void>()
+  private entriesSnapshot: CacheNode[] = []
+
+  // 添加监听器，当缓存节点发生变化时调用。
+  subscribe(listener: () => void) {
+    this.listeners.add(listener)
+    return () => {
+      this.listeners.delete(listener)
+    }
+  }
+  // 获取缓存节点
+  getCacheNodes() {
     return this.entriesSnapshot
   }
-
-  syncScope({ scopeId, name, element, props }: SyncScopePayload): void {
-    const activeId = createEntryId(scopeId, name)
-    const nextProps = { ...(props ?? {}) }
+  // 创建一个新的缓存节点，返回该节点的引用。
+  getOrCreate(cacheId: string, outlet: ReactNode, cacheProps?: CacheProps) {
+    let cacheNode = this.entries.get(cacheId)
     let changed = false
-
-    const current = this.entries.get(activeId)
-    if (!current) {
-      this.entries.set(activeId, {
-        id: activeId,
-        scopeId,
-        name,
-        active: true,
-        element,
-        props: nextProps
+    if (!cacheNode) {
+      cacheNode = new CacheNode(cacheId)
+      this.entries.set(cacheId, cacheNode)
+      changed = true
+    }
+    if (!Object.is(outlet, cacheNode.getOutlet())) {
+      cacheNode.setOutlet(outlet)
+    }
+    if (!Object.is(cacheProps, cacheNode.getCacheProps())) {
+      cacheNode.setCacheProps(cacheProps)
+    }
+    if (changed) this.emit()
+    return cacheNode
+  }
+  // 激活缓存节点，将其他设置为未激活状态
+  activate(cacheId: string) {
+    const cacheNode = this.entries.get(cacheId)
+    if (cacheNode) {
+      cacheNode.setActive(true)
+      this.entries.forEach(node => {
+        if (node !== cacheNode) {
+          node.setActive(false)
+        }
       })
-      changed = true
-    } else if (!current.active || !shallowEqualRecord(current.props, nextProps)) {
-      this.entries.set(activeId, {
-        ...current,
-        active: true,
-        props: nextProps
-      })
-      changed = true
-    }
-
-    this.entries.forEach((entry, id) => {
-      if (id === activeId || entry.scopeId !== scopeId || !entry.active) {
-        return
-      }
-
-      this.entries.set(id, {
-        ...entry,
-        active: false
-      })
-      changed = true
-    })
-
-    if (changed) {
       this.emit()
     }
   }
-
-  deactivateScope(scopeId: string): void {
-    let changed = false
-
-    this.entries.forEach((entry, id) => {
-      if (entry.scopeId !== scopeId || !entry.active) {
-        return
-      }
-
-      this.entries.set(id, {
-        ...entry,
-        active: false
-      })
-      changed = true
-    })
-
-    if (changed) {
+  // 销毁缓存节点
+  destroy(cacheId: string) {
+    const cacheNode = this.entries.get(cacheId)
+    if (cacheNode && !cacheNode.getActive()) {
+      this.entries.delete(cacheId)
       this.emit()
     }
   }
-
-  destroy(name: string | string[]): void {
-    const names = typeof name === 'string' ? [name] : name
-    let changed = false
-
-    this.entries.forEach((entry, id) => {
-      if (entry.active || !names.includes(entry.name)) {
-        return
+  // 销毁所有节点
+  destroyAll() {
+    const unActiveCacheIds: string[] = []
+    this.entries.forEach(node => {
+      if (!node.getActive()) {
+        unActiveCacheIds.push(node.cacheId)
       }
-
-      this.entries.delete(id)
-      this.scrollPositions.delete(id)
-      changed = true
     })
-
-    if (changed) {
-      this.emit()
-    }
+    unActiveCacheIds.forEach(cacheId => this.entries.delete(cacheId))
+    this.emit()
   }
 
-  destroyAll(): void {
-    let changed = false
-
-    this.entries.forEach((entry, id) => {
-      if (entry.active) {
-        return
-      }
-
-      this.entries.delete(id)
-      this.scrollPositions.delete(id)
-      changed = true
-    })
-
-    if (changed) {
-      this.emit()
-    }
-  }
-
-  clearScope(scopeId: string): void {
-    let changed = false
-
-    this.entries.forEach((entry, id) => {
-      if (entry.scopeId !== scopeId) {
-        return
-      }
-
-      this.entries.delete(id)
-      this.scrollPositions.delete(id)
-      changed = true
-    })
-
-    if (changed) {
-      this.emit()
-    }
-  }
-
-  captureScrollPositions(id: string, root: HTMLElement | null): void {
-    if (!root) {
-      this.scrollPositions.delete(id)
-      return
-    }
-
-    this.scrollPositions.set(id, collectScrollTargets(root).map(readScrollPosition))
-  }
-
-  restoreScrollPositions(id: string): void {
-    const positions = this.scrollPositions.get(id)
-    if (!positions?.length) {
-      return
-    }
-
-    for (let index = positions.length - 1; index >= 0; index -= 1) {
-      writeScrollPosition(positions[index])
-    }
-  }
-
-  getCacheNodes(): CacheNode[] {
-    return this.entriesSnapshot.map(entry => ({
-      name: entry.name,
-      active: entry.active,
-      props: { ...entry.props }
-    }))
-  }
-
+  // 触发更新，通知所有监听器缓存节点发生了变化。
   private emit(): void {
-    this.entriesSnapshot = Array.from(this.entries.values()).map(entry => ({
-      ...entry,
-      props: { ...entry.props }
-    }))
+    this.entriesSnapshot = Array.from(this.entries.values())
     this.listeners.forEach(listener => listener())
   }
 }

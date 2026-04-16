@@ -1,4 +1,3 @@
-export { KeepAliveOutlet } from './KeepAliveOutlet'
-export { ScopeProvider } from './ScopeProvider'
-export type { CacheNode, KeepAliveOutletProps } from './types'
-export { useActivate, useAliveController, useUnactivate } from './hooks'
+export { default as ScopeProvider } from './scope-provider'
+export { default as KeepAliveOutlet } from './keep-alive-outlet'
+export * from './hooks'
