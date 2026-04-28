@@ -16,13 +16,5 @@ export default function Table<T extends AnyObject = AnyObject>({
 }: TableProps<T>) {
   const cols = useColumns(columns, actions, actionFixed, actionTitle, actionWidth)
   const summary = useSummary(cols, summaryMap, rowSelection)
-  return (
-    <AntdTable
-      rowKey={rowKey}
-      columns={cols}
-      rowSelection={rowSelection}
-      summary={summary}
-      {...props}
-    />
-  )
+  return <AntdTable rowKey={rowKey} columns={cols} rowSelection={rowSelection} summary={summary} {...props} />
 }

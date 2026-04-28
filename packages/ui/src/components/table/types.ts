@@ -1,6 +1,6 @@
 import type { TableColumnType, TableProps as AntdTableProps } from 'antd'
 import type { DictCode, TableStatus } from '@/dicts'
-import type { ButtonProps } from '@/components/button'
+import type { ButtonProps } from '@/components'
 
 export type AnyObject = Record<string, any>
 

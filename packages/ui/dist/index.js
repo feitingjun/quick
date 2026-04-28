@@ -1,17 +1,18 @@
-import { createContext, useContext, useMemo, useCallback, useEffect, useState, useActionState, startTransition, isValidElement, cloneElement } from 'react';
-import { DatePicker, Table, Checkbox, Button, ConfigProvider as ConfigProvider$1, App, Form, Space, Tooltip, Dropdown, Popover } from 'antd';
+import { createContext, forwardRef, useContext, useMemo, useState, useCallback, useEffectEvent, useLayoutEffect, useImperativeHandle, useEffect, useRef, isValidElement, cloneElement } from 'react';
+import { useSearchParams, useNavigate } from 'react-router';
+export { useLocation, useNavigate, useOutlet, useParams, useSearchParams } from 'react-router';
+import Bignumber from 'bignumber.js';
+import { DatePicker, Table, Checkbox, Button, Form, Space, Tooltip, Dropdown, Popover, ConfigProvider as ConfigProvider$1, App } from 'antd';
 export { Checkbox, Dropdown, Form, Input, InputNumber, Popover, Space, Tooltip } from 'antd';
 import { StyleProvider } from '@ant-design/cssinjs';
-import zhCN from 'antd/locale/zh_CN';
-import Bignumber from 'bignumber.js';
+import zhCN from 'antd/es/locale/zh_CN';
 import 'dayjs/locale/zh-cn';
-import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
+import { jsxs, jsx, Fragment } from 'react/jsx-runtime';
 import { createStyles } from 'antd-style';
 import dayjs, { isDayjs } from 'dayjs';
 import { RedoOutlined, SearchOutlined, ColumnHeightOutlined, SettingOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import { useSearchParams, useNavigate } from 'react-router';
 import copy from 'copy-to-clipboard';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 // src/theme/index.ts
 var defaultTheme = {
@@ -69,10 +70,12 @@ function useDictStatus(code, value) {
 // src/dicts/index.ts
 var defineDicts = (dicts) => dicts;
 function thousands(num) {
-  if (!isNumber(num)) return num;
-  const arr = String(num).split(".");
-  const intPart = arr[0].replace(/(\d)(?=(\d{3})+$)/g, "$1,");
-  return arr[1] ? `${intPart}.${arr[1]}` : intPart;
+  if (!num) return num;
+  return String(num).replace(/\d+(\.\d+)?/g, (s) => {
+    const arr = s.split(".");
+    const intPart = arr[0].replace(/(\d)(?=(\d{3})+$)/g, "$1,");
+    return arr[1] ? `${intPart}.${arr[1]}` : intPart;
+  });
 }
 function round(num, n = 2) {
   return new Bignumber(num).decimalPlaces(n, Bignumber.ROUND_HALF_UP).toNumber();
@@ -108,19 +111,198 @@ function merge(...objects) {
   }
   return result;
 }
+
+// src/hooks/use-query.ts
+function useQuery() {
+  const [query] = useSearchParams();
+  return useMemo(
+    () => Array.from(query.entries()).reduce(
+      (acc, [key, value]) => {
+        if (value === "undefined") {
+          acc[key] = void 0;
+        } else if (value === "null") {
+          acc[key] = null;
+        } else if (value.length <= 16 && isNumber(value)) {
+          acc[key] = Number(value);
+        } else if (value.includes(",")) {
+          acc[key] = value.split(",").map((item) => isNumber(item) ? Number(item) : item);
+        } else {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {}
+    ),
+    [query]
+  );
+}
+function useAsyncReducer(action, initialState, initialPayload) {
+  const [state, setState] = useState(initialState);
+  const [isPending, setIsPending] = useState(false);
+  const lastPromise = useRef(null);
+  const createSerialTask = useCallback(
+    (payload) => {
+      if (!lastPromise.current) {
+        lastPromise.current = action(state, payload);
+        return lastPromise.current;
+      }
+      lastPromise.current = lastPromise.current.then((prev) => {
+        return action(prev, payload).catch((e) => {
+          setState(prev);
+          return Promise.reject(e);
+        });
+      });
+      return lastPromise.current;
+    },
+    [state, setState, action]
+  );
+  const dispatch = useCallback(
+    async (payload) => {
+      setIsPending(true);
+      const task = createSerialTask(payload);
+      task.then((s) => {
+        if (task === lastPromise.current) {
+          setState(s);
+        }
+      }).finally(() => {
+        if (task === lastPromise.current) {
+          lastPromise.current = null;
+          setIsPending(false);
+        }
+      });
+      return task;
+    },
+    [createSerialTask, setState, setIsPending]
+  );
+  const immediate = useEffectEvent(() => {
+    if (arguments.length >= 3) {
+      dispatch(initialPayload);
+    }
+  });
+  useLayoutEffect(immediate, []);
+  return [state, dispatch, isPending];
+}
+var use_async_reducer_default = useAsyncReducer;
+function useAsyncState(action, initialState, initialPayload) {
+  const [state, setState] = useState(initialState);
+  const [isPending, setIsPending] = useState(false);
+  const callId = useRef(0);
+  const tasks = useRef(/* @__PURE__ */ new Map());
+  const reset = useCallback(() => {
+    setIsPending(false);
+    callId.current = 0;
+    tasks.current.clear();
+  }, [setIsPending]);
+  const lastSuccess = useCallback(
+    (taskId) => {
+      const task = tasks.current.get(taskId);
+      return task?.catch(() => lastSuccess(taskId - 1));
+    },
+    [setState, reset]
+  );
+  const dispatch = useCallback(
+    async (payload) => {
+      setIsPending(true);
+      const taskId = ++callId.current;
+      const task = action(payload);
+      tasks.current.set(taskId, task);
+      task.finally(() => {
+        if (taskId === callId.current) {
+          const success = lastSuccess(taskId);
+          success.then((s) => {
+            if (taskId === callId.current) {
+              setState(s);
+            }
+          }).finally(() => {
+            if (taskId === callId.current) {
+              reset();
+            }
+          });
+        }
+      });
+      return task;
+    },
+    [action, setState, reset, lastSuccess]
+  );
+  const immediate = useEffectEvent(() => {
+    if (arguments.length >= 3) {
+      dispatch(initialPayload);
+    }
+  });
+  useLayoutEffect(immediate, []);
+  return [state, dispatch, isPending];
+}
+var use_async_state_default = useAsyncState;
+function useAsync(action, initialPayload) {
+  const [isPending, setIsPending] = useState(false);
+  const tasks = useRef(0);
+  const dispatch = useCallback(
+    async (payload) => {
+      setIsPending(true);
+      const task = action(payload);
+      tasks.current++;
+      task.finally(() => {
+        tasks.current--;
+        if (tasks.current <= 0) {
+          setIsPending(false);
+        }
+      });
+      return task;
+    },
+    [action, setIsPending]
+  );
+  const immediate = useEffectEvent(() => {
+    if (arguments.length >= 2) {
+      dispatch(initialPayload);
+    }
+  });
+  useLayoutEffect(immediate, []);
+  return [dispatch, isPending];
+}
+var use_async_default = useAsync;
 var message;
-var useRegisterMessage = () => {
-  const { message: messageInstance } = App.useApp();
+var modal;
+var notification;
+var useRegisterStatic = () => {
+  const { message: messageInstance, modal: modalInstance, notification: notificationInstance } = App.useApp();
   message = messageInstance;
+  modal = modalInstance;
+  notification = notificationInstance;
   return null;
 };
 function Register({ children }) {
-  useRegisterMessage();
+  useRegisterStatic();
   return children;
 }
-function ConfigProvider({ theme = {}, dicts = {}, children }) {
-  const mergedToken = useMemo(() => merge(defaultTheme, theme), [theme]);
-  return /* @__PURE__ */ jsx(StyleProvider, { layer: true, children: /* @__PURE__ */ jsx(ConfigProvider$1, { theme: { token: mergedToken }, locale: zhCN, children: /* @__PURE__ */ jsx(ConfigContext.Provider, { value: { dicts }, children: /* @__PURE__ */ jsx(App, { children: /* @__PURE__ */ jsx(Register, { children }) }) }) }) });
+function ConfigProvider({
+  token = {},
+  dicts = {},
+  children,
+  layer,
+  locale = zhCN,
+  httpRequest,
+  transformResponse,
+  transformRequest,
+  sortFieldName = "sort",
+  orderFieldName = "order",
+  requestMethod = "get"
+}) {
+  const mergedToken = useMemo(() => merge(defaultTheme, token), [token]);
+  return /* @__PURE__ */ jsx(StyleProvider, { layer, children: /* @__PURE__ */ jsx(ConfigProvider$1, { theme: { token: mergedToken }, locale, children: /* @__PURE__ */ jsx(
+    ConfigContext.Provider,
+    {
+      value: {
+        dicts,
+        httpRequest,
+        transformResponse,
+        transformRequest,
+        requestMethod,
+        sortFieldName,
+        orderFieldName
+      },
+      children: /* @__PURE__ */ jsx(App, { children: /* @__PURE__ */ jsx(Register, { children }) })
+    }
+  ) }) });
 }
 var button_default = Button;
 var { RangePicker: AntdRangePicker } = DatePicker;
@@ -166,10 +348,7 @@ var usePresets = (showTime, allowEmpty) => {
       { label: "\u672C\u5468", value: [dayjs().startOf("week"), dayjs().endOf("week")] },
       {
         label: "\u4E0A\u5468",
-        value: [
-          dayjs().subtract(1, "week").startOf("week"),
-          dayjs().subtract(1, "week").endOf("week")
-        ]
+        value: [dayjs().subtract(1, "week").startOf("week"), dayjs().subtract(1, "week").endOf("week")]
       },
       { label: "\u672C\u6708", value: [dayjs().startOf("month"), dayjs().endOf("month")] },
       {
@@ -200,11 +379,7 @@ var useStyles = createStyles({
     }
   }
 });
-function RangePicker({
-  showTime,
-  allowEmpty = [true, true],
-  ...props
-}) {
+function RangePicker({ showTime, allowEmpty = [true, true], ...props }) {
   const presets = usePresets(showTime, allowEmpty);
   const { styles } = useStyles();
   return /* @__PURE__ */ jsx(
@@ -225,36 +400,6 @@ function RangePicker({
 
 // src/components/date-picker/index.tsx
 var date_picker_default = DatePicker;
-function useQuery() {
-  const [query] = useSearchParams();
-  return useMemo(
-    () => Array.from(query.entries()).reduce(
-      (acc, [key, value]) => {
-        if (value === "undefined") {
-          acc[key] = void 0;
-        } else if (value === "null") {
-          acc[key] = null;
-        } else if (value.length <= 16 && isNumber(value)) {
-          acc[key] = Number(value);
-        } else if (value.includes(",")) {
-          acc[key] = value.split(",").map((item) => isNumber(item) ? Number(item) : item);
-        } else {
-          acc[key] = value;
-        }
-        return acc;
-      },
-      {}
-    ),
-    [query]
-  );
-}
-function useAsyncAction(dispatch) {
-  const [_, action, loading] = useActionState(
-    (_2, payload) => dispatch(payload),
-    void 0
-  );
-  return [(values) => startTransition(() => action(values)), loading];
-}
 var useStyles2 = createStyles(
   ({ token }, { colWidth, size }) => {
     let controlHeight = token.controlHeight;
@@ -315,6 +460,7 @@ function Search({
   size = "middle",
   form: externalForm,
   initialValues,
+  loading: propLoading,
   ...props
 }) {
   if (Object.values(initialValues ?? {}).some(
@@ -325,9 +471,9 @@ function Search({
   const { styles } = useStyles2({ colWidth, size });
   const [form] = Form.useForm(externalForm);
   const query = useQuery();
-  const [onFinish, loading] = useAsyncAction(async (values) => {
+  const [onFinish, loading] = use_async_default(async (values) => {
     if (typeof onSearch === "function") {
-      onSearch(values);
+      await onSearch(values);
     }
   });
   const onClear = useCallback(async () => {
@@ -346,9 +492,18 @@ function Search({
   const btns = useMemo(() => {
     return /* @__PURE__ */ jsxs("div", { className: styles.btns, children: [
       /* @__PURE__ */ jsx(button_default, { onClick: onClear, icon: /* @__PURE__ */ jsx(RedoOutlined, {}), children: resetText }),
-      /* @__PURE__ */ jsx(button_default, { type: "primary", htmlType: "submit", loading, icon: /* @__PURE__ */ jsx(SearchOutlined, {}), children: okText })
+      /* @__PURE__ */ jsx(
+        button_default,
+        {
+          type: "primary",
+          htmlType: "submit",
+          loading: typeof propLoading !== "undefined" ? propLoading : loading,
+          icon: /* @__PURE__ */ jsx(SearchOutlined, {}),
+          children: okText
+        }
+      )
     ] });
-  }, [loading, onClear, okText, resetText, colWidth]);
+  }, [propLoading, loading, onClear, okText, resetText, colWidth]);
   return /* @__PURE__ */ jsx(
     Form,
     {
@@ -555,22 +710,15 @@ var handleColumn = (col, dicts, navigate, styles) => {
       if (isNumber(precision)) value = round(value, precision);
       if (fill === true) fill = precision || 0;
       if (isNumber(fill)) value = zerofill(value, fill);
-      if (typeof thousandNum === "function" ? thousandNum(value, record, index) : col.thousand) {
-        value = thousands(value);
-      }
       if (percent) value = `${value}%`;
     }
-    return /* @__PURE__ */ jsxs(
-      "span",
-      {
-        className: classNames.join(" "),
-        onClick: link ? () => navigate(link) : void 0,
-        children: [
-          value,
-          suffix ?? null
-        ]
-      }
-    );
+    if (typeof thousandNum === "function" ? thousandNum(value, record, index) : col.thousand) {
+      value = thousands(value);
+    }
+    return /* @__PURE__ */ jsxs("span", { className: classNames.join(" "), onClick: link ? () => navigate(link) : void 0, children: [
+      value,
+      suffix ?? null
+    ] });
   };
   const children = col.children;
   return {
@@ -703,16 +851,7 @@ function Table2({
 }) {
   const cols = useColumns(columns, actions, actionFixed, actionTitle, actionWidth);
   const summary = useSummary(cols, summaryMap, rowSelection);
-  return /* @__PURE__ */ jsx(
-    Table,
-    {
-      rowKey,
-      columns: cols,
-      rowSelection,
-      summary,
-      ...props
-    }
-  );
+  return /* @__PURE__ */ jsx(Table, { rowKey, columns: cols, rowSelection, summary, ...props });
 }
 
 // src/components/table/index.tsx
@@ -720,74 +859,6 @@ function defineColumns(columns) {
   return columns;
 }
 var table_default = Table2;
-var CustomError = class {
-  name;
-  message;
-  code = "ERR_CUSTOM";
-  data;
-  config;
-  constructor(message2, data, config) {
-    this.name = "CustomError";
-    this.message = message2;
-    this.data = data;
-    this.config = config;
-  }
-};
-axios.defaults.validateStatus = (status) => {
-  return status >= 200 && status < 300;
-};
-axios.defaults.responseType = "json";
-axios.interceptors.response.use(
-  (response) => response.data,
-  (error) => {
-    let errorMsg = error.message || "\u672A\u77E5\u9519\u8BEF";
-    let data = null;
-    if (axios.isAxiosError(error)) {
-      errorMsg = error.message;
-      data = error.response?.data;
-    }
-    if (error instanceof CustomError) {
-      errorMsg = error.message;
-      data = error.data;
-    }
-    if (!error?.config?.skipErrorHandler) {
-      message.error(errorMsg);
-    }
-    return data;
-  }
-);
-var request = {
-  _internalResponseHandler: void 0,
-  /**初始化配置 */
-  init(config) {
-    axios.defaults.baseURL = config.baseURL;
-    Object.entries(config.headers ?? {}).forEach(([key, value]) => {
-      axios.defaults.headers.common[key] = value;
-    });
-    axios.defaults.timeout = config.timeout;
-    axios.defaults.responseType = config.responseType ?? "json";
-    this._internalResponseHandler = config?.internalResponseHandler;
-    axios.defaults.transformResponse = [
-      ...Array.isArray(axios.defaults.transformResponse) ? axios.defaults.transformResponse : axios.defaults.transformResponse ? [axios.defaults.transformResponse] : [],
-      function(data) {
-        const error = config.responseError?.(data);
-        if (error) {
-          throw new CustomError(error, data, this);
-        }
-        return data;
-      }
-    ];
-  },
-  request: (config) => axios.request(config),
-  get: (url, config) => axios.get(url, config),
-  post: (url, data, config) => axios.post(url, data, config),
-  put: (url, data, config) => axios.put(url, data, config),
-  delete: (url, config) => axios.delete(url, config),
-  patch: (url, data, config) => axios.patch(url, data, config),
-  all: axios.all,
-  spread: axios.spread
-};
-var request_default = request;
 function Actions({ actions, size }) {
   return /* @__PURE__ */ jsx("div", { children: actions?.map(({ title, ...props }, i) => {
     return /* @__PURE__ */ jsx(button_default, { size, ...props, children: title }, i);
@@ -921,14 +992,15 @@ var useStyles5 = createStyles(({ token }) => ({
 function Page({
   okText,
   resetText,
-  initLoad,
+  initLoad = true,
   url,
-  method = "get",
+  method: propMethod,
   paramsLocation,
-  params,
+  params: defaultParams,
   onRequestComplete,
   onSearch: onSearchPage,
   onReset: onResetPage,
+  onChange: onChangeTable,
   dataSource: propsDataSource,
   colWidth,
   children,
@@ -938,41 +1010,109 @@ function Page({
   actions,
   showTool = true,
   columns,
+  totalExtra,
   ...props
-}) {
+}, ref) {
   const { styles } = useStyles5();
+  const {
+    httpRequest,
+    transformResponse,
+    transformRequest,
+    orderFieldName = "order",
+    sortFieldName = "sort",
+    requestMethod
+  } = useContext(ConfigContext);
+  if (!propsDataSource && url && !httpRequest) {
+    throw new Error("\u8981\u4F7F\u7528\u8FDC\u7A0B\u6570\u636E\u83B7\u53D6\u529F\u80FD\uFF0C\u5FC5\u987B\u914D\u7F6E ConfigProvider \u7684 http \u53C2\u6570");
+  }
+  const method = propMethod ?? requestMethod ?? "get";
   paramsLocation = paramsLocation ?? (method === "get" ? "query" : "body");
-  const [dataSource, setDataSource] = useState([]);
   const defaultHiddenKeys = useMemo(() => {
     return columns?.filter((col) => !!col.hidden).map((col) => col.title) ?? [];
   }, [columns]);
   const [size, setSize] = useState(defaultSize);
   const [hiddenKeys, setHiddenKeys] = useState(defaultHiddenKeys);
-  const [onSearch, loading] = useAsyncAction(async (values) => {
-    const vals = await onSearchPage?.(values);
-    if (!url) return;
-    const config = {};
-    if (paramsLocation === "query") {
-      Object.assign(config, { params: { ...params ?? {}, ...vals ?? {} } });
-    } else {
-      Object.assign(config, { data: { ...params ?? {}, ...vals ?? {} } });
+  const [data, onSearch, loading] = use_async_reducer_default(
+    async (preData, values) => {
+      if (!url || !httpRequest) return preData;
+      let vals = {
+        page: preData.page,
+        pageSize: preData.pageSize,
+        ...preData.params,
+        ...values
+      };
+      let params = { ...defaultParams ?? {}, ...vals };
+      if (typeof onSearchPage === "function") {
+        params = await onSearchPage?.(vals);
+      }
+      const config = {};
+      if (typeof transformRequest === "function") {
+        params = transformRequest(params, method);
+      }
+      if (paramsLocation === "query") {
+        Object.assign(config, { params });
+      } else {
+        Object.assign(config, { data: params });
+      }
+      let responseData = await httpRequest?.request({
+        url,
+        method,
+        ...config
+      });
+      let result = {
+        dataSource: responseData?.data ?? [],
+        total: responseData?.total ?? 0,
+        pageSize: responseData?.pageSize ?? 10,
+        page: responseData?.page ?? 1
+      };
+      if (typeof transformResponse === "function") {
+        result = transformResponse(responseData);
+      }
+      let dataSource = result.dataSource;
+      if (typeof onRequestComplete === "function") {
+        dataSource = await onRequestComplete(result.dataSource);
+      }
+      delete vals.page;
+      delete vals.pageSize;
+      return {
+        dataSource: dataSource ?? [],
+        total: result?.total ?? 0,
+        pageSize: result?.pageSize ?? 10,
+        page: result?.page ?? 1,
+        summaryMap: result?.summaryMap,
+        params: vals ?? {}
+      };
+    },
+    {
+      dataSource: [],
+      total: 0,
+      pageSize: 10,
+      page: 1,
+      params: {}
     }
-    let res = await request_default.request({
-      url,
-      method,
-      ...config
-    });
-    if (request_default._internalResponseHandler?.all) {
-      res = await request_default._internalResponseHandler.all(res);
-    }
-    if (request_default._internalResponseHandler?.page) {
-      res = await request_default._internalResponseHandler.page(res);
-    }
-    if (typeof onRequestComplete === "function") {
-      res = await onRequestComplete(res);
-    }
-    setDataSource(res?.dataSource ?? []);
-  });
+  );
+  const onChange = useCallback(
+    async (pagination, filters, sorter, extra) => {
+      let values = {
+        pageSize: pagination.pageSize,
+        page: pagination.current
+      };
+      if (sorter && typeof sorter === "object" && !Array.isArray(sorter)) {
+        values.sort = sorter.field;
+        const column = sorter.column;
+        if (column && column.sorterField) {
+          values[sortFieldName] = column.sorterField;
+        }
+        values[orderFieldName] = sorter.order;
+      }
+      if (typeof onChangeTable === "function") {
+        const newValues = await onChangeTable(pagination, filters, sorter, extra);
+        if (newValues) values = newValues;
+      }
+      onSearch(values);
+    },
+    [onChangeTable, onSearch]
+  );
   const onReset = useCallback(async () => {
     await onResetPage?.();
   }, [onResetPage]);
@@ -992,6 +1132,20 @@ function Page({
       [[], []]
     ) ?? [[], []];
   }, [actions]);
+  const immediate = useEffectEvent(() => {
+    if (initLoad && !children) {
+      onSearch(data.params);
+    }
+  });
+  useLayoutEffect(() => {
+    immediate();
+  }, []);
+  useImperativeHandle(ref, () => ({
+    refresh: async (values = {}) => {
+      await onSearch(values);
+    },
+    reset: onReset
+  }));
   return /* @__PURE__ */ jsxs("div", { className: styles.root, children: [
     children && /* @__PURE__ */ jsx(
       search_default,
@@ -1003,7 +1157,10 @@ function Page({
         resetText,
         colWidth,
         size,
-        onSearch,
+        loading,
+        onSearch: async (values) => {
+          await onSearch(values);
+        },
         onReset,
         children
       }
@@ -1026,16 +1183,69 @@ function Page({
       /* @__PURE__ */ jsx(
         table_default,
         {
-          dataSource: propsDataSource || dataSource,
+          dataSource: propsDataSource || data.dataSource,
           columns: tableColumns,
           actions: tableActions,
           loading,
           size,
+          summaryMap: data.summaryMap,
+          onChange,
+          pagination: {
+            current: propsDataSource ? void 0 : data.page,
+            pageSize: data.pageSize,
+            total: propsDataSource ? void 0 : data.total,
+            responsive: true,
+            showSizeChanger: true,
+            pageSizeOptions: ["5", "10", "20", "30", "50", "100"],
+            showTotal: (total) => {
+              let extra = totalExtra;
+              if (typeof totalExtra === "function") {
+                extra = totalExtra(data);
+              }
+              return `\u5171 ${thousands(total)} \u6761\u6570\u636E${extra ? `\uFF0C${extra}` : ""}`;
+            },
+            showQuickJumper: {
+              goButton: /* @__PURE__ */ jsx(button_default, { className: "page-quick-jumper", size, type: "primary", ghost: true, children: "\u8DF3\u8F6C" })
+            }
+          },
           ...props
         }
       )
     ] })
   ] });
 }
+var page_default = forwardRef(Page);
+function validateDataFunc(response, validateData, reject) {
+  if (validateData && !validateData(response.data)) {
+    const error = new AxiosError(
+      "Response data validation failed",
+      "ERR_VALIDATE_DATA",
+      response.config,
+      response.request,
+      response
+    );
+    return reject?.(error);
+  }
+  return response.data;
+}
+var request_default = {
+  ...axios,
+  create(config) {
+    const axiosInstance = axios.create({
+      baseURL: config.baseURL,
+      headers: config.headers,
+      timeout: config.timeout,
+      responseType: config.responseType ?? "json",
+      validateStatus: config.validateStatus,
+      transformResponse: config.transformResponse
+    });
+    axiosInstance.interceptors.response.use((response) => {
+      return validateDataFunc(response, config.validateData, config.reject);
+    }, config.reject);
+    return axiosInstance;
+  }
+};
 
-export { button_default as Button, ConfigProvider, date_picker_default as DatePicker, Page, RangePicker, Register, search_default as Search, table_default as Table, defaultTheme, defineColumns, defineDicts, message, request_default as request, useDict, useDictItem, useDictLabel, useDictStatus, useDicts };
+export { button_default as Button, ConfigProvider, date_picker_default as DatePicker, page_default as Page, RangePicker, Register, search_default as Search, table_default as Table, defaultTheme, defineColumns, defineDicts, message, modal, notification, request_default as request, use_async_default as useAsync, use_async_reducer_default as useAsyncReducer, use_async_state_default as useAsyncState, useDict, useDictItem, useDictLabel, useDictStatus, useDicts, useQuery };
+//# sourceMappingURL=index.js.map
+//# sourceMappingURL=index.js.map

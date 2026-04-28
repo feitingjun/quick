@@ -1,7 +1,10 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "moduleResolution": "node"
+    "moduleResolution": "bundler",
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "src/index.ts",

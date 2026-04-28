@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@ant-design/cssinjs": "^2.1.2",
     "@quick/ui": "workspace:*",
     "@quick/keep-alive": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",

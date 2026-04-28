@@ -31,7 +31,13 @@ declare const useAliveController: () => {
  * @param {EffectCallback} callback 首次挂载时执行的函数，返回销毁时执行的函数
  *  */
 declare const useMountEffect: (callback: EffectCallback) => void;
-/**组件首次挂载和依赖变更时执行的useEffect(排除激活触发) */
-declare const useDepsEffect: (callback: EffectCallback, deps?: any[]) => void;
+/**
+ * 组件首次挂载和依赖变更时执行的useEffect(排除激活触发)
+ *
+ * deps = [] 时等同于 useMountEffect
+ * @param {EffectCallback} callback 首次挂载和依赖变更时执行的函数
+ * @param {any[]} deps 依赖列表
+ * */
+declare const useDepsEffect: (callback: EffectCallback, deps: any[]) => void;
 
 export { KeepAliveOutlet, ScopeProvider, useAliveController, useDepsEffect, useMountEffect };

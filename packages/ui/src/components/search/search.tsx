@@ -2,10 +2,9 @@ import { isDayjs } from 'dayjs'
 import { useCallback, useEffect, useMemo } from 'react'
 import { createStyles } from 'antd-style'
 import { SearchOutlined, RedoOutlined } from '@ant-design/icons'
-import { Form, type FormProps } from '@/components'
-import Button from '@/components/button'
+import { Form, type FormProps, Button } from '@/components'
 import useQuery from '@/hooks/use-query'
-import useAsyncAction from '@/hooks/use-async-action'
+import { useAsync } from '@/hooks'
 
 export interface SearchProps extends FormProps {
   okText?: React.ReactNode
@@ -14,6 +13,7 @@ export interface SearchProps extends FormProps {
   onSearch?: (values: Record<string, any>) => void | Promise<void>
   onReset?: () => Promise<void> | void
   colWidth?: number
+  loading?: boolean
 }
 
 const useStyles = createStyles(
@@ -77,6 +77,7 @@ export default function Search({
   size = 'middle',
   form: externalForm,
   initialValues,
+  loading: propLoading,
   ...props
 }: SearchProps) {
   if (
@@ -91,9 +92,9 @@ export default function Search({
   // 获取url参数
   const query = useQuery()
 
-  const [onFinish, loading] = useAsyncAction<Record<string, any>>(async values => {
+  const [onFinish, loading] = useAsync(async (values: Record<string, any>) => {
     if (typeof onSearch === 'function') {
-      onSearch(values)
+      await onSearch(values)
     }
   })
 
@@ -118,12 +119,17 @@ export default function Search({
         <Button onClick={onClear} icon={<RedoOutlined />}>
           {resetText}
         </Button>
-        <Button type='primary' htmlType='submit' loading={loading} icon={<SearchOutlined />}>
+        <Button
+          type='primary'
+          htmlType='submit'
+          loading={typeof propLoading !== 'undefined' ? propLoading : loading}
+          icon={<SearchOutlined />}
+        >
           {okText}
         </Button>
       </div>
     )
-  }, [loading, onClear, okText, resetText, colWidth])
+  }, [propLoading, loading, onClear, okText, resetText, colWidth])
 
   return (
     <Form

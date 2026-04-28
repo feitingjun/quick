@@ -199,7 +199,11 @@ function toRouteFile(
 }
 
 /** 判断文件是否匹配路由约定。 */
-function isRouteFile(relativeFile: string, kind: FileKind, allowRootIndexAsLayout = false): boolean {
+function isRouteFile(
+  relativeFile: string,
+  kind: FileKind,
+  allowRootIndexAsLayout = false
+): boolean {
   const fileName = getFileName(relativeFile)
   if (isInsideLayoutDir(relativeFile) && !isNestedLayoutIndexFile(relativeFile)) {
     return false
@@ -470,11 +474,7 @@ function buildRouteProps(
   isRoot: boolean
 ): string[] {
   if (isRoot && node.page && !node.layout && renderedChildren.length === 0) {
-    return [
-      renderPathProperty([]),
-      renderRouteMetaProperty(false),
-      renderLazyProperty(node.page)
-    ]
+    return [renderPathProperty([]), renderRouteMetaProperty(false), renderLazyProperty(node.page)]
   }
   const props: string[] = isRoot ? [] : [renderPathProperty(segments)]
   const children = [...renderedChildren]

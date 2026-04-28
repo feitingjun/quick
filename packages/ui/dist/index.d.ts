@@ -1,12 +1,12 @@
+export { useLocation, useNavigate, useOutlet, useParams, useSearchParams } from 'react-router';
 import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as react from 'react';
-import { ThemeConfig, FormProps, Form, TableColumnType, TableProps as TableProps$1, ButtonProps } from 'antd';
+import { GetProp, App, FormProps, Form, TableColumnType, TableProps as TableProps$1, ButtonProps, ThemeConfig, GetProps, ConfigProviderProps as ConfigProviderProps$1 } from 'antd';
 export { Button, ButtonProps, Checkbox, CheckboxProps, DatePicker, DatePickerProps, Dropdown, DropdownProps, Form, FormProps, Input, InputNumber, InputNumberProps, InputProps, Popover, PopoverProps, Space, SpaceProps, Tooltip, TooltipProps } from 'antd';
 import { RangePickerProps } from 'antd/es/date-picker';
 export { RangePickerProps } from 'antd/es/date-picker';
-import { MessageInstance } from 'antd/es/message/interface';
 import * as axios from 'axios';
-import { ResponseType, AxiosRequestConfig } from 'axios';
+import { AxiosRequestConfig, ResponseType, AxiosError, AxiosResponse, AxiosResponseTransformer, AxiosInstance } from 'axios';
 
 declare const defaultTheme: {
     colorPrimary: string;
@@ -59,20 +59,62 @@ declare function useDictStatus<T extends DictCode>(code: T, value: Dicts[T][numb
 
 declare const defineDicts: <T extends Dicts>(dicts: T) => T;
 
-interface ConfigProviderProps {
-    theme?: ThemeConfig['token'];
-    dicts?: Dicts;
-    children?: React.ReactNode;
-}
-/**注册全局静态方法 */
-declare function Register({ children }: {
-    children: React.ReactNode;
-}): react.ReactNode;
-declare function ConfigProvider({ theme, dicts, children }: ConfigProviderProps): react_jsx_runtime.JSX.Element;
+declare function useQuery(): Record<string, any>;
+
+/**
+ * 带请求状态的异步 Reducer hook，多个调用将排队并按顺序触发，每个调用都将接受前一次调用的结果
+ *
+ * 如果请求 Rejected，队列后续 action 将不会触发，且 dispatch 触发 Rejected，state 将保持最后一次成功的 action 的结果
+ * @param action 实际请求函数
+ * @param action.state 最新的state
+ * @param action.payload 本次请求的参数
+ * @param initialState 初始数据
+ * @param initialPayload 初始请求参数(可选)，存在时会在初始化时立即发送一次请求(即使传入undefined)
+ * @returns [state, dispatch, isPending]
+ * - state: 当前状态
+ * - dispatch: 触发函数
+ * - isPending: 请求状态
+ */
+declare function useAsyncReducer<State>(action: (state: Readonly<State>) => State | Promise<State>, initialState: State): [State, () => Promise<State>, boolean];
+declare function useAsyncReducer<State>(action: (state: Readonly<State>) => State | Promise<State>, initialState: State, initialPayload: true): [State, () => Promise<State>, boolean];
+declare function useAsyncReducer<State, Payload>(action: (state: Readonly<State>, payload: Payload) => State | Promise<State>, initialState: State): [State, (payload: Payload) => Promise<State>, boolean];
+declare function useAsyncReducer<State, Payload>(action: (state: Readonly<State>, payload: Payload) => State | Promise<State>, initialState: State, initialPayload: Payload): [State, (payload: Payload) => Promise<State>, boolean];
+
+/**
+ * 带请求状态的异步数据请求 hook
+ *
+ * 多个调用将按照触发顺序返回最后一次请求成功的状态和结果
+ ** 若最后一次请求成功，直接返回完成状态和其结果，不会等待前面的请求完成
+ ** 若最后一次请求失败，将依次查询并等待上一次调用，直到找到调用成功的，返回其完成状态和结果
+ * @param action 请求函数
+ * @param action.payload 本次请求的参数
+ * @param initialState 初始数据
+ * @param initialPayload 初始请求参数(可选)，存在时会在初始化时立即发送一次请求(即使传入undefined)
+ * @returns [state, dispatch, isPending]
+ * - state: 当前状态
+ * - dispatch: 触发函数
+ * - isPending: 请求状态
+ */
+declare function useAsyncState<State>(action: () => Promise<State>, initialState: State, initialPayload?: true): [State, () => Promise<State>, boolean];
+declare function useAsyncState<State, Payload>(action: (payload: Payload) => Promise<State>, initialState: State, initialPayload?: Payload): [State, (payload: Payload) => Promise<State>, boolean];
+
+/**
+ * 触发异步请求 hook，多个请求同时触发时，全部完成后更新请求状态
+ * @param action 实际请求函数
+ * @param action.payload 请求参数
+ * @param initialPayload 初始请求参数
+ * @returns [dispatch, isPending]
+ * - dispatch: 触发函数
+ * - isPending: 请求状态
+ */
+declare function useAsync(action: () => Promise<void>, initialPayload?: true): [() => Promise<void>, boolean];
+declare function useAsync<Payload>(action: (payload: Payload) => Promise<void>, initialPayload?: Payload): [(payload: Payload) => Promise<void>, boolean];
 
 declare function RangePicker({ showTime, allowEmpty, ...props }: RangePickerProps): react_jsx_runtime.JSX.Element;
 
-declare let message: MessageInstance;
+declare let message: GetProp<ReturnType<typeof App.useApp>, 'message'>;
+declare let modal: GetProp<ReturnType<typeof App.useApp>, 'modal'>;
+declare let notification: GetProp<ReturnType<typeof App.useApp>, 'notification'>;
 
 interface SearchProps extends FormProps {
     okText?: React.ReactNode;
@@ -81,8 +123,9 @@ interface SearchProps extends FormProps {
     onSearch?: (values: Record<string, any>) => void | Promise<void>;
     onReset?: () => Promise<void> | void;
     colWidth?: number;
+    loading?: boolean;
 }
-declare function Search$1({ children, okText, resetText, initLoad, onSearch, onReset, colWidth, size, form: externalForm, initialValues, ...props }: SearchProps): react_jsx_runtime.JSX.Element;
+declare function Search$1({ children, okText, resetText, initLoad, onSearch, onReset, colWidth, size, form: externalForm, initialValues, loading: propLoading, ...props }: SearchProps): react_jsx_runtime.JSX.Element;
 
 type FormItemProps = React.ComponentProps<typeof Form.Item>;
 interface SearchItemProps extends FormItemProps {
@@ -99,6 +142,21 @@ type CompoundedComponent = typeof Search$1 & {
     Item: typeof Item;
 };
 declare const Search: CompoundedComponent;
+
+declare const _default$1: react.ForwardRefExoticComponent<Omit<TableProps<AnyObject>, "onChange" | "size" | "actions" | "summaryMap"> & Omit<SearchProps, "size" | "onSearch"> & {
+    size?: Exclude<TableProps["size"], "middle">;
+    url?: string;
+    method?: "get" | "post" | "put" | "delete" | "patch";
+    paramsLocation?: "query" | "body";
+    params?: Record<string, any>;
+    onRequestComplete?: ((data: any) => AnyObject[] | Promise<AnyObject[]>) | undefined;
+    onSearch?: (values: Record<string, any>) => Record<string, any> | Promise<Record<string, any>>;
+    onChange?: TabelOnChange<AnyObject> | undefined;
+    colWidth?: number;
+    actions?: PageAction<AnyObject>[] | undefined;
+    showTool?: boolean;
+    totalExtra?: react.ReactNode | ((data: PageDatabase<AnyObject>) => React.ReactNode);
+} & react.RefAttributes<PageRef>>;
 
 type AnyObject = Record<string, any>;
 type SummaryStatus = 'success' | 'error' | 'default';
@@ -149,7 +207,7 @@ interface ColumnGroupType<RecordType extends AnyObject = AnyObject> extends Omit
     children?: ColumnType<RecordType>[];
 }
 type ColumnProps<RecordType extends AnyObject = AnyObject> = ColumnType<RecordType> | ColumnGroupType<RecordType>;
-interface Action$2<RecordType extends AnyObject = AnyObject> extends Omit<ButtonProps, 'className' | 'title' | 'onClick'> {
+interface Action<RecordType extends AnyObject = AnyObject> extends Omit<ButtonProps, 'className' | 'title' | 'onClick'> {
     title?: React.ReactNode;
     onClick?: (event: React.MouseEvent<HTMLElement>, record: RecordType, index: number) => void;
     visible?: boolean | ((record: RecordType, index: number) => boolean);
@@ -159,7 +217,7 @@ interface Action$2<RecordType extends AnyObject = AnyObject> extends Omit<Button
 interface TableProps<RecordType extends AnyObject = AnyObject> extends TableProps$1<RecordType> {
     columns?: ColumnProps<RecordType>[];
     /**操作栏内容 */
-    actions?: Action$2<RecordType>[];
+    actions?: Action<RecordType>[];
     /**操作栏宽度 */
     actionWidth?: number;
     /**操作栏位置 */
@@ -172,21 +230,32 @@ interface TableProps<RecordType extends AnyObject = AnyObject> extends TableProp
 
 declare function Table<T extends AnyObject = AnyObject>({ columns, actionFixed, actionTitle, actionWidth, actions, summaryMap, rowSelection, rowKey, ...props }: TableProps<T>): react_jsx_runtime.JSX.Element;
 
-/**仅在 dataSource[number] 类型未知时使用，通过columns内容自动推断 dataSource[number] 的类型  */
-declare function defineColumns<const T extends ColumnProps<AnyObject>[]>(columns: T): ColumnProps<{ [K in T[number] extends {
-    dataIndex: string;
-} ? T[number]["dataIndex"] : never]: any; } & AnyObject>[];
+declare function defineColumns<const T extends AnyObject>(columns: ColumnProps<T>[]): ColumnProps<T>[];
 
-interface Action$1 extends Omit<ButtonProps, 'title'> {
+type TabelOnChange<RecordType extends AnyObject> = (...args: Parameters<GetProp<TableProps<RecordType>, 'onChange'>>) => any;
+interface OperationAction extends Omit<ButtonProps, 'title'> {
     title?: React.ReactNode;
 }
-
-type Action<RecordType extends AnyObject = AnyObject> = (Action$1 & {
+type PageAction<RecordType extends AnyObject = AnyObject> = (OperationAction & {
     display?: 'page';
-}) | (Action$2<RecordType> & {
+}) | (Action<RecordType> & {
     display: 'table';
 });
-type PageProps<RecordType extends AnyObject = AnyObject> = Omit<TableProps<RecordType>, 'actions' | 'summaryMap' | 'size'> & Omit<SearchProps, 'onSearch' | 'size'> & {
+interface Pagination {
+    total: number;
+    pageSize: number;
+    page: number;
+}
+interface PageDatabase<RecordType extends AnyObject = AnyObject> extends Pagination {
+    dataSource: RecordType[];
+    summaryMap?: Record<string, number>;
+    params: Record<string, any>;
+}
+interface TransformResult extends Pagination {
+    dataSource: AnyObject[];
+    summaryMap?: Record<string, number>;
+}
+type PageProps<RecordType extends AnyObject = AnyObject> = Omit<TableProps<RecordType>, 'actions' | 'summaryMap' | 'size' | 'onChange'> & Omit<SearchProps, 'onSearch' | 'size'> & {
     size?: Exclude<TableProps['size'], 'middle'>;
     /**请求路径 */
     url?: string;
@@ -196,57 +265,127 @@ type PageProps<RecordType extends AnyObject = AnyObject> = Omit<TableProps<Recor
     paramsLocation?: 'query' | 'body';
     /**额外的请求参数 */
     params?: Record<string, any>;
-    /**数据请求完成后的回调，data为经过request.internalResponseHandler处理后的数据 */
+    /**数据请求完成后的回调，data为经过request.internal处理后的数据 */
     onRequestComplete?: (data: any) => RecordType[] | Promise<RecordType[]>;
     onSearch?: (values: Record<string, any>) => Record<string, any> | Promise<Record<string, any>>;
+    /**表格change事件，包括分页、排序、筛选变化，返回新的查询条件或undefined */
+    onChange?: TabelOnChange<RecordType>;
     colWidth?: number;
     /**页面操作按钮 */
-    actions?: Action<RecordType>[];
+    actions?: PageAction<RecordType>[];
     /**是否显示工具栏 */
     showTool?: boolean;
+    /**表格Pagination.showTotal额外的内容 */
+    totalExtra?: React.ReactNode | ((data: PageDatabase<RecordType>) => React.ReactNode);
 };
-declare function Page<RecordType extends AnyObject = AnyObject>({ okText, resetText, initLoad, url, method, paramsLocation, params, onRequestComplete, onSearch: onSearchPage, onReset: onResetPage, dataSource: propsDataSource, colWidth, children, initialValues, form, size: defaultSize, actions, showTool, columns, ...props }: PageProps<RecordType>): react_jsx_runtime.JSX.Element;
+type PageRef = {
+    refresh: (values?: Record<string, any>) => Promise<void>;
+    reset: () => void;
+};
+
+interface RequestConfig$1 {
+    url?: string;
+    method?: PageProps['method'];
+    params?: any;
+    data?: any;
+    [key: string]: any;
+}
+interface HttpRequest {
+    request: (config: RequestConfig$1) => Promise<any>;
+}
+
+type Locale = GetProps<ConfigProviderProps$1>['locale'];
+interface ConfigProviderProps {
+    /**antd 主题Token配置 */
+    token?: ThemeConfig['token'];
+    /**数据字典 */
+    dicts?: Dicts;
+    children?: React.ReactNode;
+    /**antd 样式启用 layer*/
+    layer?: boolean;
+    /**antd 国际化配置 */
+    locale?: Locale;
+    /**带远程数据获取功能的组件所使用的请求方法实例 */
+    httpRequest?: HttpRequest;
+    /**Page 组件统一转换数据格式（Select 组件远程获取的数据格式不具有普遍性，不做统一处理）*/
+    transformResponse?: (response: any) => TransformResult;
+    /**Page 组件统一转换请求数据格式 */
+    transformRequest?: (params: Record<string, any>, method: PageProps['method']) => Record<string, any>;
+    /**Page组件默认请求方法 */
+    requestMethod?: PageProps['method'];
+    /**排序sort字段重命名 */
+    sortFieldName?: string;
+    /**排序order字段重命名 */
+    orderFieldName?: string;
+}
+/**注册全局静态方法 */
+declare function Register({ children }: {
+    children: React.ReactNode;
+}): react.ReactNode;
+declare function ConfigProvider({ token, dicts, children, layer, locale, httpRequest, transformResponse, transformRequest, sortFieldName, orderFieldName, requestMethod }: ConfigProviderProps): react_jsx_runtime.JSX.Element;
 
 declare module 'axios' {
     interface AxiosRequestConfig {
         skipErrorHandler?: boolean;
     }
 }
-interface RequestInit {
+interface Request<ResponseData> extends Omit<AxiosInstance, 'request' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'head' | 'options' | 'postForm' | 'putForm' | 'patchForm'> {
+    request: <T = ResponseData>(config: AxiosRequestConfig) => Promise<T>;
+    get: <T = ResponseData>(url: string, config?: AxiosRequestConfig) => Promise<T>;
+    post: <T = ResponseData>(url: string, data?: any, config?: AxiosRequestConfig) => Promise<T>;
+    put: <T = ResponseData>(url: string, data?: any, config?: AxiosRequestConfig) => Promise<T>;
+    delete: <T = ResponseData>(url: string, config?: AxiosRequestConfig) => Promise<T>;
+    patch: <T = ResponseData>(url: string, data?: any, config?: AxiosRequestConfig) => Promise<T>;
+    head: <T = ResponseData>(url: string, config?: AxiosRequestConfig) => Promise<T>;
+    options: <T = ResponseData>(url: string, config?: AxiosRequestConfig) => Promise<T>;
+    postForm: <T = ResponseData>(url: string, data?: any, config?: AxiosRequestConfig) => Promise<T>;
+    putForm: <T = ResponseData>(url: string, data?: any, config?: AxiosRequestConfig) => Promise<T>;
+    patchForm: <T = ResponseData>(url: string, data?: any, config?: AxiosRequestConfig) => Promise<T>;
+}
+interface RequestConfig<T> {
     /**请求基础路径 */
     baseURL?: string;
     /**额外的请求头信息 */
-    headers?: Record<string, string>;
+    headers?: AxiosRequestConfig['headers'];
     /**请求超时时间 */
     timeout?: number;
     /**响应数据格式，默认json */
     responseType?: ResponseType;
-    /**根据服务器返回数据自定义错误，返回null时表示没有错误 */
-    responseError?: (data: any) => string | null;
-    /**为带数据请求功能的组件定义统一的response处理 */
-    internalResponseHandler?: {
-        all?: (data: any) => any;
-        select?: (data: any) => Record<string, any>[];
-        page?: (data: any) => {
-            dataSource: Record<string, any>[];
-            total: number;
-            pageSize: number;
-            page: number;
-        };
-    };
+    /**异常处理 */
+    reject?: (error: AxiosError<T>) => void;
+    /**验证response.data，返回false时进入异常处理 */
+    validateData?: (response: AxiosResponse<T>['data']) => boolean;
+    /**验证http状态码，返回false时进入异常处理 */
+    validateStatus?: (status: number) => boolean;
+    transformResponse?: AxiosResponseTransformer;
 }
-declare const request: {
-    _internalResponseHandler: RequestInit["internalResponseHandler"];
-    /**初始化配置 */
-    init(config: RequestInit): void;
-    request: <T = any>(config: AxiosRequestConfig<T>) => Promise<T | undefined>;
-    get: <T = any>(url: string, config?: AxiosRequestConfig<T>) => Promise<T | undefined>;
-    post: <T = any>(url: string, data?: any, config?: AxiosRequestConfig<T>) => Promise<T | undefined>;
-    put: <T = any>(url: string, data?: any, config?: AxiosRequestConfig<T>) => Promise<T | undefined>;
-    delete: <T = any>(url: string, config?: AxiosRequestConfig<T>) => Promise<T | undefined>;
-    patch: <T = any>(url: string, data?: any, config?: AxiosRequestConfig<T>) => Promise<T | undefined>;
+declare const _default: {
+    create<T = unknown>(config: RequestConfig<T>): Request<T>;
+    Cancel: axios.CancelStatic;
+    CancelToken: axios.CancelTokenStatic;
+    Axios: typeof axios.Axios;
+    AxiosError: typeof AxiosError;
+    HttpStatusCode: typeof axios.HttpStatusCode;
+    VERSION: string;
+    isCancel: typeof axios.isCancel;
     all: typeof axios.all;
     spread: typeof axios.spread;
+    isAxiosError: typeof axios.isAxiosError;
+    toFormData: typeof axios.toFormData;
+    formToJSON: typeof axios.formToJSON;
+    getAdapter: typeof axios.getAdapter;
+    CanceledError: typeof axios.CanceledError;
+    AxiosHeaders: typeof axios.AxiosHeaders;
+    mergeConfig: typeof axios.mergeConfig;
+    defaults: Omit<axios.AxiosDefaults, "headers"> & {
+        headers: axios.HeadersDefaults & {
+            [key: string]: axios.AxiosHeaderValue;
+        };
+    };
+    interceptors: {
+        request: axios.AxiosInterceptorManager<axios.InternalAxiosRequestConfig>;
+        response: axios.AxiosInterceptorManager<AxiosResponse>;
+    };
 };
 
-export { type ColumnProps, type ColumnStatus, ConfigProvider, type ConfigProviderProps, type DictCode, type DictItem, type Dicts, Page, type Action as PageAction, type PageProps, RangePicker, Register, Search, type SearchItemProps, type SearchProps, type SummaryProps, Table, type Action$2 as TableAction, type TableProps, type TableStatus, defaultTheme, defineColumns, defineDicts, message, request, useDict, useDictItem, useDictLabel, useDictStatus, useDicts };
+export { type ColumnProps, type ColumnStatus, ConfigProvider, type ConfigProviderProps, type DictCode, type DictItem, type Dicts, _default$1 as Page, type PageAction, type PageProps, RangePicker, Register, Search, type SearchItemProps, type SearchProps, type SummaryProps, Table, type Action as TableAction, type TableProps, type TableStatus, defaultTheme, defineColumns, defineDicts, message, modal, notification, _default as request, useAsync, useAsyncReducer, useAsyncState, useDict, useDictItem, useDictLabel, useDictStatus, useDicts, useQuery };

@@ -1,10 +1,12 @@
 import { useMemo } from 'react'
 import { DatePicker } from 'antd'
-import { createStyles } from 'antd-style'
 import type { RangePickerProps } from 'antd/es/date-picker'
+import { createStyles } from 'antd-style'
 import dayjs, { Dayjs } from 'dayjs'
 
 const { RangePicker: AntdRangePicker } = DatePicker
+
+export type { RangePickerProps }
 
 type Preset = {
   label: React.ReactNode
@@ -58,10 +60,7 @@ const usePresets = (
           { label: '本周', value: [dayjs().startOf('week'), dayjs().endOf('week')] },
           {
             label: '上周',
-            value: [
-              dayjs().subtract(1, 'week').startOf('week'),
-              dayjs().subtract(1, 'week').endOf('week')
-            ]
+            value: [dayjs().subtract(1, 'week').startOf('week'), dayjs().subtract(1, 'week').endOf('week')]
           },
           { label: '本月', value: [dayjs().startOf('month'), dayjs().endOf('month')] },
           {
@@ -95,11 +94,7 @@ const useStyles = createStyles({
   }
 })
 
-export default function RangePicker({
-  showTime,
-  allowEmpty = [true, true],
-  ...props
-}: RangePickerProps) {
+export default function RangePicker({ showTime, allowEmpty = [true, true], ...props }: RangePickerProps) {
   const presets = usePresets(showTime, allowEmpty)
   const { styles } = useStyles()
   return (

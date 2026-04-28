@@ -240,7 +240,7 @@ var useMountEffect = (callback) => {
     }
   }, []);
 };
-var useDepsEffect = (callback, deps = []) => {
+var useDepsEffect = (callback, deps) => {
   const isMomunt = useRef2(false);
   const isActive = useRef2(false);
   const isDeactive = useRef2(false);

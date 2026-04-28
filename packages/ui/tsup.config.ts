@@ -4,7 +4,7 @@ import { defineConfig } from 'tsup'
 export default defineConfig(options => [
   // esm
   {
-    entry: ['src/**/*.ts{,x}'],
+    entry: ['src/index.ts'],
     format: ['esm'],
     dts:
       options.env?.NODE_ENV === 'development'
@@ -16,6 +16,6 @@ export default defineConfig(options => [
     treeshake: true,
     sourcemap: options.env?.NODE_ENV === 'development',
     clean: true,
-    splitting: false
+    splitting: true
   }
 ])

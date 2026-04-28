@@ -312,11 +312,7 @@ function renderRouteEntries(node, parentSegments = [], isRoot = false) {
 }
 function buildRouteProps(node, segments, renderedChildren, isRoot) {
   if (isRoot && node.page && !node.layout && renderedChildren.length === 0) {
-    return [
-      renderPathProperty([]),
-      renderRouteMetaProperty(false),
-      renderLazyProperty(node.page)
-    ];
+    return [renderPathProperty([]), renderRouteMetaProperty(false), renderLazyProperty(node.page)];
   }
   const props = isRoot ? [] : [renderPathProperty(segments)];
   const children = [...renderedChildren];

@@ -1,13 +1,5 @@
-import { Button, type ButtonProps } from '@/components'
-
-export interface Action extends Omit<ButtonProps, 'title'> {
-  title?: React.ReactNode
-}
-
-interface ActionsProps {
-  actions?: Action[]
-  size?: 'small' | 'medium' | 'large'
-}
+import { Button } from '@/components'
+import type { ActionsProps } from './types'
 
 export default function Actions({ actions, size }: ActionsProps) {
   return (

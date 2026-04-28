@@ -54,12 +54,7 @@ const copyText = (e: MouseEvent<HTMLTableCellElement>) => {
   }
 }
 
-const handleStatus = (
-  status: ColumnProps<any>['status'],
-  value: any,
-  record: AnyObject,
-  index: number
-) => {
+const handleStatus = (status: ColumnProps<any>['status'], value: any, record: AnyObject, index: number) => {
   let statusStr = typeof status === 'function' ? status(value, record, index) : status
   switch (statusStr) {
     case 'completed':
@@ -123,7 +118,7 @@ const handleColumn = <T extends AnyObject = AnyObject>(
     // 处理粗体
     if (bold) classNames.push(styles.bold)
     if (isNumber(value)) {
-      // 处理百分比(先*100,处理完千分位和四舍五入等在添加%号)
+      // 处理百分比(先*100,处理完四舍五入等操作再添加%号)
       if (percent) value = multiply(value, 100)
       // 处理四舍五入
       if (precision === true) precision = 2
@@ -131,18 +126,15 @@ const handleColumn = <T extends AnyObject = AnyObject>(
       // 小数补零
       if (fill === true) fill = precision || 0
       if (isNumber(fill)) value = zerofill(value, fill)
-      // 处理千分位
-      if (typeof thousandNum === 'function' ? thousandNum(value, record, index) : col.thousand) {
-        value = thousands(value)
-      }
       // 添加%
       if (percent) value = `${value}%`
     }
+    // 处理千分位
+    if (typeof thousandNum === 'function' ? thousandNum(value, record, index) : col.thousand) {
+      value = thousands(value)
+    }
     return (
-      <span
-        className={classNames.join(' ')}
-        onClick={link ? () => navigate(link as string) : undefined}
-      >
+      <span className={classNames.join(' ')} onClick={link ? () => navigate(link as string) : undefined}>
         {value}
         {suffix ?? null}
       </span>

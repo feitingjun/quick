@@ -1,0 +1,103 @@
+/* 
+ * 使用 inline，tailwindcss会将主题变量直接替换为@theme内定义的值，而不是变量引用
+ * 如使用 text-primary 类时，默认样式为 color: var(--color-primary)
+ * 添加inline后为 color: var(--ant-color-primary)
+ * 这样可以避免主题内直接引用antd的css变量失效的问题
+ * 因为tailwincss主题变量定义在:root，antd的css变量定义在.ant-app内，.ant-app是:root的子级，作用域的问题导致其不生效
+ */
+
+@theme inline {
+  /* 颜色相关 */
+  --color-*: initial;
+  --color-black: black;
+  --color-white: white;
+  --color-primary: var(--ant-color-primary);
+  --color-primary-hover: var(--ant-color-primary-hover);
+  --color-primary-active: var(--ant-color-primary-active);
+  --color-success: var(--ant-color-success);
+  --color-success-hover: var(--ant-color-success-hover);
+  --color-success-active: var(--ant-color-success-active);
+  --color-warning: var(--ant-color-warning);
+  --color-warning-hover: var(--ant-color-warning-hover);
+  --color-warning-active: var(--ant-color-warning-active);
+  --color-error: var(--ant-color-error);
+  --color-error-hover: var(--ant-color-error-hover);
+  --color-error-active: var(--ant-color-error-active);
+  --color-info: var(--ant-color-info);
+  --color-info-hover: var(--ant-color-info-hover);
+  --color-info-active: var(--ant-color-info-active);
+  --color-link: var(--ant-color-link);
+  --color-link-hover: var(--ant-color-link-hover);
+  --color-link-active: var(--ant-color-link-active);
+  --color-blue: var(--ant-blue);
+  --color-yellow: var(--ant-yellow);
+  --color-urple: var(--ant-urple);
+  --color-green: var(--ant-green);
+  --color-cyan: var(--ant-cyan);
+  --color-highlight: var(--ant-color-highlight);
+  /* 字号相关 */
+  --text-*: initial;
+  --text-size: var(--ant-font-size);
+  --text-size-sm: var(--ant-font-size-sm);
+  --text-size-lg: var(--ant-font-size-lg);
+  --text-size-xl: var(--ant-font-size-xl);
+  /* 圆角边框相关 */
+  --radius-*: initial;
+  --radius-base: var(--ant-border-radius);
+  --radius-xs: var(--ant-border-radius-xs);
+  --radius-sm: var(--ant-border-radius-sm);
+  --radius-lg: var(--ant-border-radius-lg);
+  /* spacing基础 */
+  --spacing: var(--ant-size-unit);
+}
+
+/* @import theme 时 tailwind vscode提示插件没有@layer utilities的提示，这里使用@plugin去实现*/
+@plugin './tailwind-plugin.ts';
+
+/* @layer utilities {
+  .text-base {
+    color: var(--ant-color-text-base);
+  }
+  .text-heading {
+    color: var(--ant-color-text-heading);
+  }
+  .text-label {
+    color: var(--ant-color-text-label);
+  }
+  .test-secondary {
+    color: var(--ant-color-text-secondary);
+  }
+  .text-placeholder {
+    color: var(--ant-color-text-placeholder);
+  }
+  .text-disabled {
+    color: var(--ant-color-text-disabled);
+  }
+  .text-hover {
+    color: var(--ant-color-bg-text-hover);
+  }
+  .text-active {
+    color: var(--ant-color-bg-text-active);
+  }
+  .border-disabled {
+    border-color: var(--ant-color-border-disabled);
+  }
+  .border-secondary {
+    border-color: var(--ant-color-border-secondary);
+  }
+  .border-primary-hover {
+    border-color: var(--ant-color-primary-border-hover);
+  }
+  .bg-base {
+    background-color: var(--ant-color-bg-base);
+  }
+  .bg-disabled{
+    background-color: var(--ant-color-bg-container-disabled);
+  }
+  .bg-container {
+    background-color: var(--ant-color-bg-container);
+  }
+  .bg-layout {
+    background-color: var(--ant-color-bg-layout);
+  }
+}  */

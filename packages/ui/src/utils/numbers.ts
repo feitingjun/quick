@@ -2,10 +2,12 @@ import Bignumber from 'bignumber.js'
 
 /**千分位 */
 export function thousands(num: number | string) {
-  if (!isNumber(num)) return num
-  const arr = String(num).split('.')
-  const intPart = arr[0].replace(/(\d)(?=(\d{3})+$)/g, '$1,')
-  return arr[1] ? `${intPart}.${arr[1]}` : intPart
+  if (!num) return num
+  return String(num).replace(/\d+(\.\d+)?/g, s => {
+    const arr = s.split('.')
+    const intPart = arr[0].replace(/(\d)(?=(\d{3})+$)/g, '$1,')
+    return arr[1] ? `${intPart}.${arr[1]}` : intPart
+  })
 }
 
 /**小数保留n位 */

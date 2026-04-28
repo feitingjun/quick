@@ -5,6 +5,15 @@
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "style": "./theme.css",
+      "default": "./dist/index.js"
+    },
+    "./theme": "./theme.css",
+    "./tailwind-plugin": "./tailwind-plugin.ts"
+  },
   "scripts": {
     "dev": "tsup --watch --env.NODE_ENV=development",
     "build": "tsup"
@@ -14,7 +23,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.18.1",
   "dependencies": {
-    "@ant-design/cssinjs": "^1.24.0",
+    "@ant-design/cssinjs": "^2.1.2",
     "@ant-design/icons": "^6.1.0",
     "antd": "^6.1.2",
     "antd-style": "^4.1.0",
