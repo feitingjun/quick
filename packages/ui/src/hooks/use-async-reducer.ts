@@ -6,39 +6,37 @@ import { useLayoutEffect, useCallback, useState, useRef, useEffectEvent } from '
  * 如果请求 Rejected，队列后续 action 将不会触发，且 dispatch 触发 Rejected，state 将保持最后一次成功的 action 的结果
  * @param action 实际请求函数
  * @param action.state 最新的state
- * @param action.payload 本次请求的参数
+ * @param action.payload 本次请求的参数，存在时如果不需要立即触发，请不要传入 immediate 参数，如果传入 immediate 参数（true 或 条件判断，条件判断说明可能为 true，必为 false 则没必要传），initialPayload 必传
  * @param initialState 初始数据
- * @param initialPayload 初始请求参数(可选)，存在时会在初始化时立即发送一次请求(即使传入undefined)
+ * @param immediate 是否立即触发请求
+ * @param initialPayload 初始请求参数
  * @returns [state, dispatch, isPending]
  * - state: 当前状态
  * - dispatch: 触发函数
  * - isPending: 请求状态
  */
 function useAsyncReducer<State>(
-  action: (state: Readonly<State>) => State | Promise<State>,
-  initialState: State
-): [State, () => Promise<State>, boolean]
-
-function useAsyncReducer<State>(
-  action: (state: Readonly<State>) => State | Promise<State>,
+  action: (state: Readonly<State>) => Promise<State>,
   initialState: State,
-  initialPayload: true
+  immediate?: boolean
 ): [State, () => Promise<State>, boolean]
 
 function useAsyncReducer<State, Payload>(
-  action: (state: Readonly<State>, payload: Payload) => State | Promise<State>,
+  action: (state: Readonly<State>, payload: Payload) => Promise<State>,
   initialState: State
 ): [State, (payload: Payload) => Promise<State>, boolean]
 
 function useAsyncReducer<State, Payload>(
-  action: (state: Readonly<State>, payload: Payload) => State | Promise<State>,
+  action: (state: Readonly<State>, payload: Payload) => Promise<State>,
   initialState: State,
+  immediate: boolean,
   initialPayload: Payload
 ): [State, (payload: Payload) => Promise<State>, boolean]
 
 function useAsyncReducer<State, Payload>(
   action: (state: Readonly<State>, payload: Payload) => Promise<State>,
   initialState: State,
+  immediate?: boolean,
   initialPayload?: Payload
 ) {
   const [state, setState] = useState(initialState)
@@ -83,13 +81,13 @@ function useAsyncReducer<State, Payload>(
     [createSerialTask, setState, setIsPending]
   )
 
-  const immediate = useEffectEvent(() => {
-    if (arguments.length >= 3) {
+  const immediateFn = useEffectEvent(() => {
+    if (immediate) {
       dispatch(initialPayload as Payload)
     }
   })
 
-  useLayoutEffect(immediate, [])
+  useLayoutEffect(immediateFn, [])
 
   return [state, dispatch, isPending]
 }

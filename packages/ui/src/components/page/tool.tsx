@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from 'react'
 import type { CheckboxChangeEvent } from 'antd'
 import { createStyles } from 'antd-style'
-import { ColumnHeightOutlined, SettingOutlined } from '@ant-design/icons'
+import { RedoOutlined, LoadingOutlined, ColumnHeightOutlined, SettingOutlined } from '@ant-design/icons'
 import type { ColumnProps, AnyObject } from '@/components/table'
 import { Space, Tooltip, Dropdown, Popover, Checkbox } from '@/components'
 
@@ -24,7 +24,9 @@ interface ContentProps<RecordType extends AnyObject = AnyObject> {
 
 interface ToolProps<RecordType extends AnyObject = AnyObject> extends ContentProps<RecordType> {
   size?: Size
+  loading?: boolean
   setSize?: (size: Size) => void
+  refresh?: () => void
 }
 
 const useStyles = createStyles(({ token }) => ({
@@ -43,6 +45,12 @@ const useStyles = createStyles(({ token }) => ({
     display: 'flex',
     flexDirection: 'column',
     gap: token.sizeUnit
+  },
+  refresh: {
+    cursor: 'pointer',
+    '&:hover': {
+      color: token.colorPrimary
+    }
   }
 }))
 
@@ -94,15 +102,25 @@ const Content = <RecordType extends AnyObject>({
 
 export default function Tool<RecordType extends AnyObject = AnyObject>({
   size = 'medium',
+  loading,
   hiddenKeys,
   defaultHiddenKeys,
   setHiddenKeys,
   setSize,
+  refresh,
   columns,
   ...props
 }: ToolProps<RecordType>) {
+  const { styles } = useStyles()
   return (
     <Space size={size} {...props}>
+      <Tooltip title='刷新'>
+        {loading ? (
+          <LoadingOutlined />
+        ) : (
+          <RedoOutlined className={styles.refresh} onClick={() => refresh?.()} />
+        )}
+      </Tooltip>
       <Tooltip title='密度'>
         <Dropdown
           trigger={['click']}

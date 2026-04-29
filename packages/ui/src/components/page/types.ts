@@ -68,5 +68,4 @@ export type PageProps<RecordType extends AnyObject = AnyObject> = Omit<
 
 export type PageRef = {
   refresh: (values?: Record<string, any>) => Promise<void>
-  reset: () => void
 }

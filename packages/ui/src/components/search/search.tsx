@@ -5,6 +5,7 @@ import { SearchOutlined, RedoOutlined } from '@ant-design/icons'
 import { Form, type FormProps, Button } from '@/components'
 import useQuery from '@/hooks/use-query'
 import { useAsync } from '@/hooks'
+import { classnames } from '@/utils'
 
 export interface SearchProps extends FormProps {
   okText?: React.ReactNode
@@ -78,6 +79,7 @@ export default function Search({
   form: externalForm,
   initialValues,
   loading: propLoading,
+  className,
   ...props
 }: SearchProps) {
   if (
@@ -139,7 +141,7 @@ export default function Search({
       onFinish={onFinish}
       initialValues={initialValues}
       preserve
-      className={styles.form}
+      className={classnames(styles.form, className, 'quick-ui-search')}
       {...props}
     >
       <>

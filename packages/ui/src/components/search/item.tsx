@@ -55,6 +55,7 @@ export default function Item({
   format,
   initialValue,
   children,
+  className,
   ...props
 }: SearchItemProps) {
   if (Array.isArray(initialValue) ? initialValue.some(i => isDayjs(i)) : isDayjs(initialValue)) {
@@ -81,9 +82,7 @@ export default function Item({
                   value: names.map(n => parseDate(values[n], getFormat(format, child))),
                   onChange: (originalValue: any) => {
                     const value = formatDate(originalValue, getFormat(format, child))
-                    props.setFieldsValue(
-                      names.reduce((acc, n, i) => ({ ...acc, [n]: value?.[i] }), {})
-                    )
+                    props.setFieldsValue(names.reduce((acc, n, i) => ({ ...acc, [n]: value?.[i] }), {}))
                   }
                 })
               : child

@@ -15,7 +15,7 @@ import Table, { type AnyObject, type Action as TableActions, type TableProps } f
 import { Button, Search } from '@/components'
 import { useAsyncReducer } from '@/hooks'
 import { ConfigContext } from '@/config-provider/context'
-import { thousands } from '@/utils'
+import { thousands, classnames } from '@/utils'
 import Actions from './actions'
 import Tool from './tool'
 import type { OperationAction, PageProps, PageDatabase, TransformResult, PageRef } from './types'
@@ -32,6 +32,9 @@ const useStyles = createStyles(({ token }) => ({
   },
   tool: {
     backgroundColor: token.colorBgContainer
+  },
+  jumper: {
+    marginLeft: token.marginXS
   }
 }))
 
@@ -46,7 +49,7 @@ export function Page<RecordType extends AnyObject = AnyObject>(
     params: defaultParams,
     onRequestComplete,
     onSearch: onSearchPage,
-    onReset: onResetPage,
+    onReset,
     onChange: onChangeTable,
     dataSource: propsDataSource,
     colWidth,
@@ -58,6 +61,7 @@ export function Page<RecordType extends AnyObject = AnyObject>(
     showTool = true,
     columns,
     totalExtra,
+    className,
     ...props
   }: PageProps<RecordType>,
   ref: Ref<PageRef>
@@ -65,11 +69,14 @@ export function Page<RecordType extends AnyObject = AnyObject>(
   const { styles } = useStyles()
   const {
     httpRequest,
-    transformResponse,
-    transformRequest,
-    orderFieldName = 'order',
-    sortFieldName = 'sort',
-    requestMethod
+    page: {
+      transformResponse,
+      transformRequest,
+      orderFieldName = 'order',
+      sortFieldName = 'sort',
+      requestMethod,
+      sticky
+    } = {}
   } = useContext(ConfigContext)
   if (!propsDataSource && url && !httpRequest) {
     throw new Error('要使用远程数据获取功能，必须配置 ConfigProvider 的 http 参数')
@@ -170,10 +177,6 @@ export function Page<RecordType extends AnyObject = AnyObject>(
     [onChangeTable, onSearch]
   )
 
-  const onReset = useCallback(async () => {
-    await onResetPage?.()
-  }, [onResetPage])
-
   const tableColumns = useMemo(() => {
     return columns
       ?.filter(col => !hiddenKeys.includes(col.title as string))
@@ -209,12 +212,10 @@ export function Page<RecordType extends AnyObject = AnyObject>(
   useImperativeHandle(ref, () => ({
     refresh: async (values: Record<string, any> = {}) => {
       await onSearch(values)
-    },
-    reset: onReset
+    }
   }))
-
   return (
-    <div className={styles.root}>
+    <div className={classnames(styles.root, className, 'quick-ui-page')}>
       {children && (
         <Search
           form={form}
@@ -226,7 +227,7 @@ export function Page<RecordType extends AnyObject = AnyObject>(
           size={size}
           loading={loading}
           onSearch={async values => {
-            await onSearch(values)
+            await onSearch({ ...values, page: 1 })
           }}
           onReset={onReset}
         >
@@ -241,10 +242,12 @@ export function Page<RecordType extends AnyObject = AnyObject>(
               <Tool
                 size={size}
                 columns={columns}
+                loading={loading}
                 setSize={setSize}
                 hiddenKeys={hiddenKeys}
                 defaultHiddenKeys={defaultHiddenKeys}
                 setHiddenKeys={setHiddenKeys}
+                refresh={() => onSearch({})}
               />
             )}
           </div>
@@ -273,12 +276,20 @@ export function Page<RecordType extends AnyObject = AnyObject>(
             },
             showQuickJumper: {
               goButton: (
-                <Button className='page-quick-jumper' size={size} type='primary' ghost>
+                <Button
+                  className='page-quick-jumper'
+                  rootClassName={styles.jumper}
+                  size={size}
+                  type='primary'
+                  ghost
+                >
                   跳转
                 </Button>
               )
             }
           }}
+          sticky={sticky}
+          scroll={{ x: 200 }}
           {...props}
         />
       </div>

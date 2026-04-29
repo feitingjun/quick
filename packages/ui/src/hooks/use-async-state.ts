@@ -7,9 +7,10 @@ import { useState, useLayoutEffect, useRef, useCallback, useEffectEvent } from '
  ** 若最后一次请求成功，直接返回完成状态和其结果，不会等待前面的请求完成
  ** 若最后一次请求失败，将依次查询并等待上一次调用，直到找到调用成功的，返回其完成状态和结果
  * @param action 请求函数
- * @param action.payload 本次请求的参数
+ * @param action.payload 本次请求的参数，存在时如果不需要立即触发，请不要传入 immediate 参数，如果传入 immediate 参数（true 或 条件判断，条件判断说明可能为 true，必为 false 则没必要传），initialPayload 必传
  * @param initialState 初始数据
- * @param initialPayload 初始请求参数(可选)，存在时会在初始化时立即发送一次请求(即使传入undefined)
+ * @param immediate 是否立即触发请求
+ * @param initialPayload 初始请求参数
  * @returns [state, dispatch, isPending]
  * - state: 当前状态
  * - dispatch: 触发函数
@@ -18,18 +19,25 @@ import { useState, useLayoutEffect, useRef, useCallback, useEffectEvent } from '
 function useAsyncState<State>(
   action: () => Promise<State>,
   initialState: State,
-  initialPayload?: true
+  immediate?: boolean
 ): [State, () => Promise<State>, boolean]
 
 function useAsyncState<State, Payload>(
   action: (payload: Payload) => Promise<State>,
-  initialState: State,
-  initialPayload?: Payload
+  initialState: State
 ): [State, (payload: Payload) => Promise<State>, boolean]
 
 function useAsyncState<State, Payload>(
   action: (payload: Payload) => Promise<State>,
   initialState: State,
+  immediate: boolean,
+  initialPayload: Payload
+): [State, (payload: Payload) => Promise<State>, boolean]
+
+function useAsyncState<State, Payload>(
+  action: (payload: Payload) => Promise<State>,
+  initialState: State,
+  immediate?: boolean,
   initialPayload?: Payload
 ) {
   const [state, setState] = useState(initialState)
@@ -79,13 +87,13 @@ function useAsyncState<State, Payload>(
     },
     [action, setState, reset, lastSuccess]
   )
-  const immediate = useEffectEvent(() => {
-    if (arguments.length >= 3) {
+  const immediateFn = useEffectEvent(() => {
+    if (immediate) {
       dispatch(initialPayload as Payload)
     }
   })
 
-  useLayoutEffect(immediate, [])
+  useLayoutEffect(immediateFn, [])
 
   return [state, dispatch, isPending]
 }

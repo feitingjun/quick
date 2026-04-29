@@ -10,21 +10,24 @@ createRoot(document.getElementById('root')!).render(
     <ConfigProvider
       layer
       httpRequest={request}
-      transformResponse={d => {
-        return {
-          dataSource: d?.data?.records ?? [],
-          total: d?.data?.total ?? 0,
-          pageSize: d?.data?.pageSize ?? 10,
-          page: d?.data?.page ?? 10
-        }
-      }}
-      requestMethod='post'
-      transformRequest={({ page, pageSize, ...params }) => {
-        return {
-          page,
-          pageSize,
-          params
-        }
+      page={{
+        transformResponse: d => {
+          return {
+            dataSource: d?.data?.records ?? [],
+            total: d?.data?.total ?? 0,
+            pageSize: d?.data?.pageSize ?? 10,
+            page: d?.data?.page ?? 10
+          }
+        },
+        requestMethod: 'post',
+        transformRequest: ({ page, pageSize, ...params }) => {
+          return {
+            page,
+            pageSize,
+            params
+          }
+        },
+        sticky: true
       }}
     >
       <RouterProvider history='hash' />

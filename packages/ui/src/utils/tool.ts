@@ -8,3 +8,6 @@ export const debounce = (fn: Function, delay: number) => {
     }, delay)
   }
 }
+
+/**多个classname合并 */
+export const classnames = (...classes: (string | undefined)[]) => classes.filter(Boolean).join(' ')

@@ -10,7 +10,7 @@ import 'dayjs/locale/zh-cn';
 import { jsxs, jsx, Fragment } from 'react/jsx-runtime';
 import { createStyles } from 'antd-style';
 import dayjs, { isDayjs } from 'dayjs';
-import { RedoOutlined, SearchOutlined, ColumnHeightOutlined, SettingOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { RedoOutlined, SearchOutlined, LoadingOutlined, ColumnHeightOutlined, SettingOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import copy from 'copy-to-clipboard';
 import axios, { AxiosError } from 'axios';
 
@@ -30,12 +30,12 @@ var defaultTheme = {
   colorBgLayout: "#f5f5f5",
   fontSize: 14,
   fontSizeSM: 12,
-  fontSizeLG: "16px",
-  fontSizeXL: "20px",
+  fontSizeLG: 16,
+  fontSizeXL: 20,
   borderRadius: 4,
   borderRadiusXS: 2,
   borderRadiusSM: 4,
-  borderRadiusLG: 8,
+  borderRadiusLG: 6,
   controlHeight: 32,
   controlHeightLG: 40,
   controlHeightSM: 24,
@@ -69,6 +69,9 @@ function useDictStatus(code, value) {
 
 // src/dicts/index.ts
 var defineDicts = (dicts) => dicts;
+
+// src/utils/tool.ts
+var classnames = (...classes) => classes.filter(Boolean).join(" ");
 function thousands(num) {
   if (!num) return num;
   return String(num).replace(/\d+(\.\d+)?/g, (s) => {
@@ -136,7 +139,7 @@ function useQuery() {
     [query]
   );
 }
-function useAsyncReducer(action, initialState, initialPayload) {
+function useAsyncReducer(action, initialState, immediate, initialPayload) {
   const [state, setState] = useState(initialState);
   const [isPending, setIsPending] = useState(false);
   const lastPromise = useRef(null);
@@ -174,16 +177,16 @@ function useAsyncReducer(action, initialState, initialPayload) {
     },
     [createSerialTask, setState, setIsPending]
   );
-  const immediate = useEffectEvent(() => {
-    if (arguments.length >= 3) {
+  const immediateFn = useEffectEvent(() => {
+    if (immediate) {
       dispatch(initialPayload);
     }
   });
-  useLayoutEffect(immediate, []);
+  useLayoutEffect(immediateFn, []);
   return [state, dispatch, isPending];
 }
 var use_async_reducer_default = useAsyncReducer;
-function useAsyncState(action, initialState, initialPayload) {
+function useAsyncState(action, initialState, immediate, initialPayload) {
   const [state, setState] = useState(initialState);
   const [isPending, setIsPending] = useState(false);
   const callId = useRef(0);
@@ -224,16 +227,16 @@ function useAsyncState(action, initialState, initialPayload) {
     },
     [action, setState, reset, lastSuccess]
   );
-  const immediate = useEffectEvent(() => {
-    if (arguments.length >= 3) {
+  const immediateFn = useEffectEvent(() => {
+    if (immediate) {
       dispatch(initialPayload);
     }
   });
-  useLayoutEffect(immediate, []);
+  useLayoutEffect(immediateFn, []);
   return [state, dispatch, isPending];
 }
 var use_async_state_default = useAsyncState;
-function useAsync(action, initialPayload) {
+function useAsync(action, immediate, initialPayload) {
   const [isPending, setIsPending] = useState(false);
   const tasks = useRef(0);
   const dispatch = useCallback(
@@ -251,12 +254,12 @@ function useAsync(action, initialPayload) {
     },
     [action, setIsPending]
   );
-  const immediate = useEffectEvent(() => {
-    if (arguments.length >= 2) {
+  const immediateFn = useEffectEvent(() => {
+    if (immediate) {
       dispatch(initialPayload);
     }
   });
-  useLayoutEffect(immediate, []);
+  useLayoutEffect(immediateFn, []);
   return [dispatch, isPending];
 }
 var use_async_default = useAsync;
@@ -281,11 +284,14 @@ function ConfigProvider({
   layer,
   locale = zhCN,
   httpRequest,
-  transformResponse,
-  transformRequest,
-  sortFieldName = "sort",
-  orderFieldName = "order",
-  requestMethod = "get"
+  page: {
+    sticky,
+    transformResponse,
+    transformRequest,
+    sortFieldName = "sort",
+    orderFieldName = "order",
+    requestMethod = "get"
+  } = {}
 }) {
   const mergedToken = useMemo(() => merge(defaultTheme, token), [token]);
   return /* @__PURE__ */ jsx(StyleProvider, { layer, children: /* @__PURE__ */ jsx(ConfigProvider$1, { theme: { token: mergedToken }, locale, children: /* @__PURE__ */ jsx(
@@ -294,11 +300,14 @@ function ConfigProvider({
       value: {
         dicts,
         httpRequest,
-        transformResponse,
-        transformRequest,
-        requestMethod,
-        sortFieldName,
-        orderFieldName
+        page: {
+          sticky,
+          requestMethod,
+          sortFieldName,
+          orderFieldName,
+          transformResponse,
+          transformRequest
+        }
       },
       children: /* @__PURE__ */ jsx(App, { children: /* @__PURE__ */ jsx(Register, { children }) })
     }
@@ -461,6 +470,7 @@ function Search({
   form: externalForm,
   initialValues,
   loading: propLoading,
+  className,
   ...props
 }) {
   if (Object.values(initialValues ?? {}).some(
@@ -513,7 +523,7 @@ function Search({
       onFinish,
       initialValues,
       preserve: true,
-      className: styles.form,
+      className: classnames(styles.form, className, "quick-ui-search"),
       ...props,
       children: /* @__PURE__ */ jsxs(Fragment, { children: [
         children,
@@ -555,6 +565,7 @@ function Item({
   format,
   initialValue,
   children,
+  className,
   ...props
 }) {
   if (Array.isArray(initialValue) ? initialValue.some((i) => isDayjs(i)) : isDayjs(initialValue)) {
@@ -577,9 +588,7 @@ function Item({
               value: names.map((n) => parseDate(values[n], getFormat(format, child))),
               onChange: (originalValue) => {
                 const value = formatDate(originalValue, getFormat(format, child));
-                props2.setFieldsValue(
-                  names.reduce((acc, n, i) => ({ ...acc, [n]: value?.[i] }), {})
-                );
+                props2.setFieldsValue(names.reduce((acc, n, i) => ({ ...acc, [n]: value?.[i] }), {}));
               }
             }) : child;
           }
@@ -886,6 +895,12 @@ var useStyles4 = createStyles(({ token }) => ({
     display: "flex",
     flexDirection: "column",
     gap: token.sizeUnit
+  },
+  refresh: {
+    cursor: "pointer",
+    "&:hover": {
+      color: token.colorPrimary
+    }
   }
 }));
 var Content = ({
@@ -934,14 +949,18 @@ var Content = ({
 };
 function Tool({
   size = "medium",
+  loading,
   hiddenKeys,
   defaultHiddenKeys,
   setHiddenKeys,
   setSize,
+  refresh,
   columns,
   ...props
 }) {
+  const { styles } = useStyles4();
   return /* @__PURE__ */ jsxs(Space, { size, ...props, children: [
+    /* @__PURE__ */ jsx(Tooltip, { title: "\u5237\u65B0", children: loading ? /* @__PURE__ */ jsx(LoadingOutlined, {}) : /* @__PURE__ */ jsx(RedoOutlined, { className: styles.refresh, onClick: () => refresh?.() }) }),
     /* @__PURE__ */ jsx(Tooltip, { title: "\u5BC6\u5EA6", children: /* @__PURE__ */ jsx(
       Dropdown,
       {
@@ -987,6 +1006,9 @@ var useStyles5 = createStyles(({ token }) => ({
   },
   tool: {
     backgroundColor: token.colorBgContainer
+  },
+  jumper: {
+    marginLeft: token.marginXS
   }
 }));
 function Page({
@@ -999,7 +1021,7 @@ function Page({
   params: defaultParams,
   onRequestComplete,
   onSearch: onSearchPage,
-  onReset: onResetPage,
+  onReset,
   onChange: onChangeTable,
   dataSource: propsDataSource,
   colWidth,
@@ -1011,16 +1033,20 @@ function Page({
   showTool = true,
   columns,
   totalExtra,
+  className,
   ...props
 }, ref) {
   const { styles } = useStyles5();
   const {
     httpRequest,
-    transformResponse,
-    transformRequest,
-    orderFieldName = "order",
-    sortFieldName = "sort",
-    requestMethod
+    page: {
+      transformResponse,
+      transformRequest,
+      orderFieldName = "order",
+      sortFieldName = "sort",
+      requestMethod,
+      sticky
+    } = {}
   } = useContext(ConfigContext);
   if (!propsDataSource && url && !httpRequest) {
     throw new Error("\u8981\u4F7F\u7528\u8FDC\u7A0B\u6570\u636E\u83B7\u53D6\u529F\u80FD\uFF0C\u5FC5\u987B\u914D\u7F6E ConfigProvider \u7684 http \u53C2\u6570");
@@ -1113,9 +1139,6 @@ function Page({
     },
     [onChangeTable, onSearch]
   );
-  const onReset = useCallback(async () => {
-    await onResetPage?.();
-  }, [onResetPage]);
   const tableColumns = useMemo(() => {
     return columns?.filter((col) => !hiddenKeys.includes(col.title))?.map((col) => ({ ...col, hidden: false }));
   }, [columns, hiddenKeys]);
@@ -1143,10 +1166,9 @@ function Page({
   useImperativeHandle(ref, () => ({
     refresh: async (values = {}) => {
       await onSearch(values);
-    },
-    reset: onReset
+    }
   }));
-  return /* @__PURE__ */ jsxs("div", { className: styles.root, children: [
+  return /* @__PURE__ */ jsxs("div", { className: classnames(styles.root, className, "quick-ui-page"), children: [
     children && /* @__PURE__ */ jsx(
       search_default,
       {
@@ -1159,7 +1181,7 @@ function Page({
         size,
         loading,
         onSearch: async (values) => {
-          await onSearch(values);
+          await onSearch({ ...values, page: 1 });
         },
         onReset,
         children
@@ -1173,10 +1195,12 @@ function Page({
           {
             size,
             columns,
+            loading,
             setSize,
             hiddenKeys,
             defaultHiddenKeys,
-            setHiddenKeys
+            setHiddenKeys,
+            refresh: () => onSearch({})
           }
         )
       ] }),
@@ -1205,9 +1229,21 @@ function Page({
               return `\u5171 ${thousands(total)} \u6761\u6570\u636E${extra ? `\uFF0C${extra}` : ""}`;
             },
             showQuickJumper: {
-              goButton: /* @__PURE__ */ jsx(button_default, { className: "page-quick-jumper", size, type: "primary", ghost: true, children: "\u8DF3\u8F6C" })
+              goButton: /* @__PURE__ */ jsx(
+                button_default,
+                {
+                  className: "page-quick-jumper",
+                  rootClassName: styles.jumper,
+                  size,
+                  type: "primary",
+                  ghost: true,
+                  children: "\u8DF3\u8F6C"
+                }
+              )
             }
           },
+          sticky,
+          scroll: { x: 200 },
           ...props
         }
       )

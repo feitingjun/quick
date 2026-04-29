@@ -23,8 +23,8 @@ declare const defaultTheme: {
     colorBgLayout: string;
     fontSize: number;
     fontSizeSM: number;
-    fontSizeLG: string;
-    fontSizeXL: string;
+    fontSizeLG: number;
+    fontSizeXL: number;
     borderRadius: number;
     borderRadiusXS: number;
     borderRadiusSM: number;
@@ -67,18 +67,18 @@ declare function useQuery(): Record<string, any>;
  * 如果请求 Rejected，队列后续 action 将不会触发，且 dispatch 触发 Rejected，state 将保持最后一次成功的 action 的结果
  * @param action 实际请求函数
  * @param action.state 最新的state
- * @param action.payload 本次请求的参数
+ * @param action.payload 本次请求的参数，存在时如果不需要立即触发，请不要传入 immediate 参数，如果传入 immediate 参数（true 或 条件判断，条件判断说明可能为 true，必为 false 则没必要传），initialPayload 必传
  * @param initialState 初始数据
- * @param initialPayload 初始请求参数(可选)，存在时会在初始化时立即发送一次请求(即使传入undefined)
+ * @param immediate 是否立即触发请求
+ * @param initialPayload 初始请求参数
  * @returns [state, dispatch, isPending]
  * - state: 当前状态
  * - dispatch: 触发函数
  * - isPending: 请求状态
  */
-declare function useAsyncReducer<State>(action: (state: Readonly<State>) => State | Promise<State>, initialState: State): [State, () => Promise<State>, boolean];
-declare function useAsyncReducer<State>(action: (state: Readonly<State>) => State | Promise<State>, initialState: State, initialPayload: true): [State, () => Promise<State>, boolean];
-declare function useAsyncReducer<State, Payload>(action: (state: Readonly<State>, payload: Payload) => State | Promise<State>, initialState: State): [State, (payload: Payload) => Promise<State>, boolean];
-declare function useAsyncReducer<State, Payload>(action: (state: Readonly<State>, payload: Payload) => State | Promise<State>, initialState: State, initialPayload: Payload): [State, (payload: Payload) => Promise<State>, boolean];
+declare function useAsyncReducer<State>(action: (state: Readonly<State>) => Promise<State>, initialState: State, immediate?: boolean): [State, () => Promise<State>, boolean];
+declare function useAsyncReducer<State, Payload>(action: (state: Readonly<State>, payload: Payload) => Promise<State>, initialState: State): [State, (payload: Payload) => Promise<State>, boolean];
+declare function useAsyncReducer<State, Payload>(action: (state: Readonly<State>, payload: Payload) => Promise<State>, initialState: State, immediate: boolean, initialPayload: Payload): [State, (payload: Payload) => Promise<State>, boolean];
 
 /**
  * 带请求状态的异步数据请求 hook
@@ -87,28 +87,32 @@ declare function useAsyncReducer<State, Payload>(action: (state: Readonly<State>
  ** 若最后一次请求成功，直接返回完成状态和其结果，不会等待前面的请求完成
  ** 若最后一次请求失败，将依次查询并等待上一次调用，直到找到调用成功的，返回其完成状态和结果
  * @param action 请求函数
- * @param action.payload 本次请求的参数
+ * @param action.payload 本次请求的参数，存在时如果不需要立即触发，请不要传入 immediate 参数，如果传入 immediate 参数（true 或 条件判断，条件判断说明可能为 true，必为 false 则没必要传），initialPayload 必传
  * @param initialState 初始数据
- * @param initialPayload 初始请求参数(可选)，存在时会在初始化时立即发送一次请求(即使传入undefined)
+ * @param immediate 是否立即触发请求
+ * @param initialPayload 初始请求参数
  * @returns [state, dispatch, isPending]
  * - state: 当前状态
  * - dispatch: 触发函数
  * - isPending: 请求状态
  */
-declare function useAsyncState<State>(action: () => Promise<State>, initialState: State, initialPayload?: true): [State, () => Promise<State>, boolean];
-declare function useAsyncState<State, Payload>(action: (payload: Payload) => Promise<State>, initialState: State, initialPayload?: Payload): [State, (payload: Payload) => Promise<State>, boolean];
+declare function useAsyncState<State>(action: () => Promise<State>, initialState: State, immediate?: boolean): [State, () => Promise<State>, boolean];
+declare function useAsyncState<State, Payload>(action: (payload: Payload) => Promise<State>, initialState: State): [State, (payload: Payload) => Promise<State>, boolean];
+declare function useAsyncState<State, Payload>(action: (payload: Payload) => Promise<State>, initialState: State, immediate: boolean, initialPayload: Payload): [State, (payload: Payload) => Promise<State>, boolean];
 
 /**
  * 触发异步请求 hook，多个请求同时触发时，全部完成后更新请求状态
  * @param action 实际请求函数
- * @param action.payload 请求参数
+ * @param action.payload 本次请求的参数，存在时如果不需要立即触发，请不要传入 immediate 参数，如果传入 immediate 参数（true 或 条件判断，条件判断说明可能为 true，必为 false 则没必要传），initialPayload 必传
+ * @param immediate 是否立即触发请求
  * @param initialPayload 初始请求参数
  * @returns [dispatch, isPending]
  * - dispatch: 触发函数
  * - isPending: 请求状态
  */
-declare function useAsync(action: () => Promise<void>, initialPayload?: true): [() => Promise<void>, boolean];
-declare function useAsync<Payload>(action: (payload: Payload) => Promise<void>, initialPayload?: Payload): [(payload: Payload) => Promise<void>, boolean];
+declare function useAsync(action: () => Promise<void>, immediate?: boolean): [() => Promise<void>, boolean];
+declare function useAsync<Payload>(action: (payload: Payload) => Promise<void>): [(payload: Payload) => Promise<void>, boolean];
+declare function useAsync<Payload>(action: (payload: Payload) => Promise<void>, immediate: boolean, initialPayload: Payload): [(payload: Payload) => Promise<void>, boolean];
 
 declare function RangePicker({ showTime, allowEmpty, ...props }: RangePickerProps): react_jsx_runtime.JSX.Element;
 
@@ -125,7 +129,7 @@ interface SearchProps extends FormProps {
     colWidth?: number;
     loading?: boolean;
 }
-declare function Search$1({ children, okText, resetText, initLoad, onSearch, onReset, colWidth, size, form: externalForm, initialValues, loading: propLoading, ...props }: SearchProps): react_jsx_runtime.JSX.Element;
+declare function Search$1({ children, okText, resetText, initLoad, onSearch, onReset, colWidth, size, form: externalForm, initialValues, loading: propLoading, className, ...props }: SearchProps): react_jsx_runtime.JSX.Element;
 
 type FormItemProps = React.ComponentProps<typeof Form.Item>;
 interface SearchItemProps extends FormItemProps {
@@ -136,7 +140,7 @@ interface SearchItemProps extends FormItemProps {
     /**以数组形式接受多个值 */
     names?: string[];
 }
-declare function Item({ span, name, names, format, initialValue, children, ...props }: SearchItemProps): react_jsx_runtime.JSX.Element;
+declare function Item({ span, name, names, format, initialValue, children, className, ...props }: SearchItemProps): react_jsx_runtime.JSX.Element;
 
 type CompoundedComponent = typeof Search$1 & {
     Item: typeof Item;
@@ -280,7 +284,6 @@ type PageProps<RecordType extends AnyObject = AnyObject> = Omit<TableProps<Recor
 };
 type PageRef = {
     refresh: (values?: Record<string, any>) => Promise<void>;
-    reset: () => void;
 };
 
 interface RequestConfig$1 {
@@ -292,6 +295,19 @@ interface RequestConfig$1 {
 }
 interface HttpRequest {
     request: (config: RequestConfig$1) => Promise<any>;
+}
+interface PageComponentConfig {
+    /**设置表格的粘性头部和滚动条 */
+    sticky?: TableProps$1['sticky'];
+    /**默认请求方法 */
+    requestMethod?: PageProps['method'];
+    /**排序sort字段重命名 */
+    sortFieldName?: string;
+    /**排序order字段重命名 */
+    orderFieldName?: string;
+    transformRequest?: (params: Record<string, any>, method: PageProps['method']) => Record<string, any>;
+    /**统一转换数据格式*/
+    transformResponse?: (response: any) => TransformResult;
 }
 
 type Locale = GetProps<ConfigProviderProps$1>['locale'];
@@ -307,22 +323,14 @@ interface ConfigProviderProps {
     locale?: Locale;
     /**带远程数据获取功能的组件所使用的请求方法实例 */
     httpRequest?: HttpRequest;
-    /**Page 组件统一转换数据格式（Select 组件远程获取的数据格式不具有普遍性，不做统一处理）*/
-    transformResponse?: (response: any) => TransformResult;
-    /**Page 组件统一转换请求数据格式 */
-    transformRequest?: (params: Record<string, any>, method: PageProps['method']) => Record<string, any>;
-    /**Page组件默认请求方法 */
-    requestMethod?: PageProps['method'];
-    /**排序sort字段重命名 */
-    sortFieldName?: string;
-    /**排序order字段重命名 */
-    orderFieldName?: string;
+    /**page组件相关设置 */
+    page?: PageComponentConfig;
 }
 /**注册全局静态方法 */
 declare function Register({ children }: {
     children: React.ReactNode;
 }): react.ReactNode;
-declare function ConfigProvider({ token, dicts, children, layer, locale, httpRequest, transformResponse, transformRequest, sortFieldName, orderFieldName, requestMethod }: ConfigProviderProps): react_jsx_runtime.JSX.Element;
+declare function ConfigProvider({ token, dicts, children, layer, locale, httpRequest, page: { sticky, transformResponse, transformRequest, sortFieldName, orderFieldName, requestMethod } }: ConfigProviderProps): react_jsx_runtime.JSX.Element;
 
 declare module 'axios' {
     interface AxiosRequestConfig {
